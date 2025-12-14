@@ -1,3 +1,6 @@
+[providers.node]
+version = "20"
+
 [phases.install]
 cmds = ["yarn install --frozen-lockfile"]
 
