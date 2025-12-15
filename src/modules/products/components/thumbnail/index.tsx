@@ -3,6 +3,7 @@ import Image from "next/image"
 import React from "react"
 
 import PlaceholderImage from "@modules/common/icons/placeholder-image"
+import { getImageUrl } from "@lib/util/image"
 
 type ThumbnailProps = {
   thumbnail?: string | null
@@ -50,9 +51,10 @@ const ImageOrPlaceholder = ({
   image,
   size,
 }: Pick<ThumbnailProps, "size"> & { image?: string }) => {
-  return image ? (
+  const imageUrl = image ? getImageUrl(image) : null
+  return imageUrl ? (
     <Image
-      src={image}
+      src={imageUrl}
       alt="Thumbnail"
       className="absolute inset-0 object-cover object-center"
       draggable={false}
