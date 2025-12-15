@@ -34,6 +34,14 @@ export const paymentInfoMap: Record<
     title: "Manual Payment",
     icon: <CreditCard />,
   },
+  emt: {
+    title: "EMT Payment",
+    icon: <CreditCard />,
+  },
+  pp_emt_emt: {
+    title: "EMT Payment",
+    icon: <CreditCard />,
+  },
   // Add more payment providers here
 }
 
@@ -49,6 +57,10 @@ export const isPaypal = (providerId?: string) => {
 }
 export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default")
+}
+
+export const isEmt = (providerId?: string) => {
+  return providerId === "emt" || providerId === "pp_emt_emt" || providerId?.startsWith("pp_emt_")
 }
 
 // Add currencies that don't need to be divided by 100

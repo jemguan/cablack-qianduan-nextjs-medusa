@@ -235,21 +235,56 @@ export async function setShippingMethod({
 }
 
 export async function initiatePaymentSession(
-  cart: HttpTypes.StoreCart,
+  cart: HttpTypes.StoreCart | string,
   data: HttpTypes.StoreInitializePaymentSession
 ) {
   const headers = {
     ...(await getAuthHeaders()),
   }
 
-  return sdk.store.payment
-    .initiatePaymentSession(cart, data, {}, headers)
-    .then(async (resp) => {
-      const cartCacheTag = await getCacheTag("carts")
-      revalidateTag(cartCacheTag)
-      return resp
-    })
-    .catch(medusaError)
+  try {
+    // If cart is a string (cart ID), retrieve the cart first
+    let cartObj: HttpTypes.StoreCart
+    if (typeof cart === "string") {
+      // Retrieve cart with payment_collection fields
+      const retrievedCart = await retrieveCart(
+        cart,
+        "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, *payment_collection, *payment_collection.payment_sessions"
+      )
+      if (!retrievedCart) {
+        throw new Error("Cart not found")
+      }
+      cartObj = retrievedCart
+    } else {
+      cartObj = cart
+    }
+
+    const resp = await sdk.store.payment.initiatePaymentSession(
+      cartObj,
+      data,
+      {},
+      headers
+    )
+    const cartCacheTag = await getCacheTag("carts")
+    revalidateTag(cartCacheTag)
+    return resp
+  } catch (error: any) {
+    console.error("initiatePaymentSession error:", error)
+    console.error("Error type:", typeof error)
+    console.error("Error message:", error?.message)
+    console.error("Error stack:", error?.stack)
+    const cartId = typeof cart === "string" ? cart : cart?.id
+    console.error("Cart ID:", cartId)
+    if (typeof cart !== "string") {
+      console.error("Cart region_id:", cart?.region_id)
+    }
+    console.error("Provider ID:", data.provider_id)
+    if (error?.config) {
+      console.error("Request URL:", error.config.url)
+      console.error("Request method:", error.config.method)
+    }
+    throw medusaError(error)
+  }
 }
 
 export async function applyPromotions(codes: string[]) {

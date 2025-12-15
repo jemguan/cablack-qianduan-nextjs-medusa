@@ -9,9 +9,16 @@ export default function medusaError(error: any): never {
     console.error("Headers:", error.response.headers)
 
     // Extracting the error message from the response data
-    const message = error.response.data.message || error.response.data
+    let message = error.response.data.message || error.response.data
+    
+    // Handle string messages
+    if (typeof message === 'string') {
+      message = message.charAt(0).toUpperCase() + message.slice(1) + "."
+    } else if (typeof message === 'object' && message.message) {
+      message = message.message
+    }
 
-    throw new Error(message.charAt(0).toUpperCase() + message.slice(1) + ".")
+    throw new Error(message)
   } else if (error.request) {
     // The request was made but no response was received
     throw new Error("No response received: " + error.request)

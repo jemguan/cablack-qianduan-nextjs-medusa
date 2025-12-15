@@ -65,6 +65,8 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
 
 export default PaymentContainer
 
+export type { PaymentContainerProps }
+
 export const StripeCardContainer = ({
   paymentProviderId,
   selectedPaymentOptionId,
@@ -127,3 +129,5 @@ export const StripeCardContainer = ({
     </PaymentContainer>
   )
 }
+
+export { default as EmtContainer } from "./emt-container"
