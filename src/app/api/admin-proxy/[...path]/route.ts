@@ -6,7 +6,20 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-const ADMIN_API_URL = process.env.ADMIN_API_URL || 'http://localhost:3003';
+// 确保 ADMIN_API_URL 包含协议
+function normalizeAdminApiUrl(url: string | undefined): string {
+  if (!url) {
+    return 'http://localhost:3003';
+  }
+  // 如果已经包含协议，直接返回
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  // 否则添加 https://（生产环境默认使用 HTTPS）
+  return `https://${url}`;
+}
+
+const ADMIN_API_URL = normalizeAdminApiUrl(process.env.ADMIN_API_URL);
 const ADMIN_API_KEY = process.env.ADMIN_API_KEY || '';
 const MEDUSA_SHOP_DOMAIN = process.env.MEDUSA_SHOP_DOMAIN || 'medusa-store.local';
 
