@@ -9,15 +9,38 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import CountrySelect from "../country-select"
 import { HttpTypes } from "@medusajs/types"
 
-const SideMenuItems = {
+// 默认菜单项（当没有配置时使用）
+const DEFAULT_SIDE_MENU_ITEMS = {
   Home: "/",
   Store: "/store",
   Account: "/account",
   Cart: "/cart",
 }
 
-const SideMenu = ({ regions }: { regions: HttpTypes.StoreRegion[] | null }) => {
+export interface MenuItem {
+  id: string;
+  label: string;
+  url: string;
+  openInNewTab?: boolean;
+  children?: MenuItem[];
+}
+
+export interface SideMenuProps {
+  regions: HttpTypes.StoreRegion[] | null;
+  menuItems?: MenuItem[];
+}
+
+const SideMenu = ({ regions, menuItems }: SideMenuProps) => {
   const toggleState = useToggleState()
+
+  // 如果没有配置菜单项，使用默认菜单项
+  const displayMenuItems = menuItems && menuItems.length > 0
+    ? menuItems
+    : Object.entries(DEFAULT_SIDE_MENU_ITEMS).map(([label, url]) => ({
+        id: label.toLowerCase(),
+        label,
+        url,
+      }))
 
   return (
     <div className="h-full">
@@ -63,17 +86,50 @@ const SideMenu = ({ regions }: { regions: HttpTypes.StoreRegion[] | null }) => {
                       </button>
                     </div>
                     <ul className="flex flex-col gap-6 items-start justify-start">
-                      {Object.entries(SideMenuItems).map(([name, href]) => {
+                      {displayMenuItems.map((item) => {
+                        const hasChildren = item.children && item.children.length > 0
                         return (
-                          <li key={name}>
-                            <LocalizedClientLink
-                              href={href}
-                              className="text-3xl leading-10 hover:text-ui-fg-disabled"
-                              onClick={close}
-                              data-testid={`${name.toLowerCase()}-link`}
-                            >
-                              {name}
-                            </LocalizedClientLink>
+                          <li key={item.id} className="w-full">
+                            {hasChildren ? (
+                              <div className="flex flex-col gap-4">
+                                <LocalizedClientLink
+                                  href={item.url}
+                                  className="text-3xl leading-10 hover:text-ui-fg-disabled"
+                                  onClick={close}
+                                  data-testid={`${item.id}-link`}
+                                  {...(item.openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                >
+                                  {item.label}
+                                </LocalizedClientLink>
+                                {item.children && (
+                                  <ul className="flex flex-col gap-3 ml-4">
+                                    {item.children.map((child) => (
+                                      <li key={child.id}>
+                                        <LocalizedClientLink
+                                          href={child.url}
+                                          className="text-xl leading-8 hover:text-ui-fg-disabled text-ui-fg-subtle"
+                                          onClick={close}
+                                          data-testid={`${child.id}-link`}
+                                          {...(child.openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                        >
+                                          {child.label}
+                                        </LocalizedClientLink>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            ) : (
+                              <LocalizedClientLink
+                                href={item.url}
+                                className="text-3xl leading-10 hover:text-ui-fg-disabled"
+                                onClick={close}
+                                data-testid={`${item.id}-link`}
+                                {...(item.openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                              >
+                                {item.label}
+                              </LocalizedClientLink>
+                            )}
                           </li>
                         )
                       })}
