@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { getCacheConfig } from "@lib/config/cache"
 import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -53,6 +54,8 @@ export const listProducts = async ({
     ...(await getCacheOptions("products")),
   }
 
+  const cacheConfig = getCacheConfig("PRODUCT_LIST")
+
   return sdk.client
     .fetch<{ products: HttpTypes.StoreProduct[]; count: number }>(
       `/store/products`,
@@ -68,7 +71,7 @@ export const listProducts = async ({
         },
         headers,
         next,
-        cache: "force-cache",
+        ...cacheConfig,
       }
     )
     .then(({ products, count }) => {

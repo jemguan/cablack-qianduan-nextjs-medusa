@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { getCacheConfig } from "@lib/config/cache"
 import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { getCacheOptions } from "./cookies"
@@ -10,11 +11,13 @@ export const listRegions = async () => {
     ...(await getCacheOptions("regions")),
   }
 
+  const cacheConfig = getCacheConfig("REGION")
+
   return sdk.client
     .fetch<{ regions: HttpTypes.StoreRegion[] }>(`/store/regions`, {
       method: "GET",
       next,
-      cache: "force-cache",
+      ...cacheConfig,
     })
     .then(({ regions }) => regions)
     .catch(medusaError)
@@ -25,11 +28,13 @@ export const retrieveRegion = async (id: string) => {
     ...(await getCacheOptions(["regions", id].join("-"))),
   }
 
+  const cacheConfig = getCacheConfig("REGION")
+
   return sdk.client
     .fetch<{ region: HttpTypes.StoreRegion }>(`/store/regions/${id}`, {
       method: "GET",
       next,
-      cache: "force-cache",
+      ...cacheConfig,
     })
     .then(({ region }) => region)
     .catch(medusaError)

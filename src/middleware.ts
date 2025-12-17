@@ -24,16 +24,25 @@ async function getRegionMap(cacheId: string) {
     regionMapUpdated < Date.now() - 3600 * 1000
   ) {
     // Fetch regions from Medusa. We can't use the JS client here because middleware is running on Edge and the client needs a Node environment.
-    const { regions } = await fetch(`${BACKEND_URL}/store/regions`, {
+    // In development, always fetch fresh data (no cache)
+    // In production, use Next.js cache with 1 hour revalidation
+    const fetchOptions: RequestInit = {
       headers: {
         "x-publishable-api-key": PUBLISHABLE_API_KEY!,
       },
-      next: {
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      fetchOptions.cache = "no-store"
+    } else {
+      fetchOptions.cache = "force-cache"
+      fetchOptions.next = {
         revalidate: 3600,
         tags: [`regions-${cacheId}`],
-      },
-      cache: "force-cache",
-    }).then(async (response) => {
+      }
+    }
+
+    const { regions } = await fetch(`${BACKEND_URL}/store/regions`, fetchOptions).then(async (response) => {
       const json = await response.json()
 
       if (!response.ok) {

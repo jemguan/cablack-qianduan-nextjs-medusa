@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { getCacheConfig } from "@lib/config/cache"
 import { HttpTypes } from "@medusajs/types"
 
 import { getAuthHeaders, getCacheOptions } from "./cookies"
@@ -20,6 +21,8 @@ export const retrieveVariant = async (
     ...(await getCacheOptions("variants")),
   }
 
+  const cacheConfig = getCacheConfig("VARIANT")
+
   return await sdk.client
     .fetch<{ variant: HttpTypes.StoreProductVariant }>(
       `/store/product-variants/${variant_id}`,
@@ -30,7 +33,7 @@ export const retrieveVariant = async (
         },
         headers,
         next,
-        cache: "force-cache",
+        ...cacheConfig,
       }
     )
     .then(({ variant }) => variant)

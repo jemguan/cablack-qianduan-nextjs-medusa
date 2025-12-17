@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { getCacheConfig } from "@lib/config/cache"
 import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
@@ -29,6 +30,8 @@ export const retrieveCustomer =
       ...(await getCacheOptions("customers")),
     }
 
+    const cacheConfig = getCacheConfig("CUSTOMER")
+
     return await sdk.client
       .fetch<{ customer: HttpTypes.StoreCustomer }>(`/store/customers/me`, {
         method: "GET",
@@ -37,7 +40,7 @@ export const retrieveCustomer =
         },
         headers,
         next,
-        cache: "force-cache",
+        ...cacheConfig,
       })
       .then(({ customer }) => customer)
       .catch(() => null)

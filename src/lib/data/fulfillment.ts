@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { getCacheConfig } from "@lib/config/cache"
 import { HttpTypes } from "@medusajs/types"
 import { getAuthHeaders, getCacheOptions } from "./cookies"
 
@@ -13,6 +14,8 @@ export const listCartShippingMethods = async (cartId: string) => {
     ...(await getCacheOptions("fulfillment")),
   }
 
+  const cacheConfig = getCacheConfig("FULFILLMENT")
+
   return sdk.client
     .fetch<HttpTypes.StoreShippingOptionListResponse>(
       `/store/shipping-options`,
@@ -23,7 +26,7 @@ export const listCartShippingMethods = async (cartId: string) => {
         },
         headers,
         next,
-        cache: "force-cache",
+        ...cacheConfig,
       }
     )
     .then(({ shipping_options }) => shipping_options)
