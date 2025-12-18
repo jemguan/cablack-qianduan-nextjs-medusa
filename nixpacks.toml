@@ -1,9 +1,9 @@
 [phases.install]
-cmds = ["yarn install --frozen-lockfile"]
+cmds = ["npm ci"]
 
 [phases.build]
-cmds = ["yarn build"]
+cmds = ["npm run build"]
 
 [start]
-cmd = "next start -p ${PORT:-8000}"
+cmd = "npm start"
 
