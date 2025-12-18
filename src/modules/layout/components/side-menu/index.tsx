@@ -1,13 +1,16 @@
 "use client"
 
-import { Popover, PopoverPanel, Transition } from "@headlessui/react"
+import { Popover, PopoverButton, PopoverPanel, Transition } from "@headlessui/react"
 import { ArrowRightMini, XMark } from "@medusajs/icons"
 import { Text, clx, useToggleState } from "@medusajs/ui"
 import { Fragment } from "react"
+import { usePathname } from "next/navigation"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CountrySelect from "../country-select"
+import MenuIcon from "@modules/common/icons/menu"
 import { HttpTypes } from "@medusajs/types"
+import { signout } from "@lib/data/customer"
 
 // 默认菜单项（当没有配置时使用）
 const DEFAULT_SIDE_MENU_ITEMS = {
@@ -32,6 +35,7 @@ export interface SideMenuProps {
 
 const SideMenu = ({ regions, menuItems }: SideMenuProps) => {
   const toggleState = useToggleState()
+  const pathname = usePathname()
 
   // 如果没有配置菜单项，使用默认菜单项
   const displayMenuItems = menuItems && menuItems.length > 0
@@ -49,17 +53,17 @@ const SideMenu = ({ regions, menuItems }: SideMenuProps) => {
           {({ open, close }) => (
             <>
               <div className="relative flex h-full">
-                <Popover.Button
+                <PopoverButton
                   data-testid="nav-menu-button"
-                  className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none hover:text-ui-fg-base"
+                  className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none text-ui-fg-subtle hover:text-ui-fg-base"
                 >
-                  Menu
-                </Popover.Button>
+                  <MenuIcon className="w-6 h-6" />
+                </PopoverButton>
               </div>
 
               {open && (
                 <div
-                  className="fixed inset-0 z-[50] bg-black/0 pointer-events-auto"
+                  className="fixed inset-0 z-[50] bg-background/60 backdrop-blur-md transition-opacity"
                   onClick={close}
                   data-testid="side-menu-backdrop"
                 />
@@ -68,95 +72,128 @@ const SideMenu = ({ regions, menuItems }: SideMenuProps) => {
               <Transition
                 show={open}
                 as={Fragment}
-                enter="transition ease-out duration-150"
-                enterFrom="opacity-0"
-                enterTo="opacity-100 backdrop-blur-2xl"
-                leave="transition ease-in duration-150"
-                leaveFrom="opacity-100 backdrop-blur-2xl"
-                leaveTo="opacity-0"
+                enter="transition ease-out duration-300 transform"
+                enterFrom="-translate-x-full"
+                enterTo="translate-x-0"
+                leave="transition ease-in duration-200 transform"
+                leaveFrom="translate-x-0"
+                leaveTo="-translate-x-full"
               >
-                <PopoverPanel className="flex flex-col absolute w-full pr-4 sm:pr-0 sm:w-1/3 2xl:w-1/4 sm:min-w-min h-[calc(100vh-1rem)] z-[51] inset-x-0 text-sm text-ui-fg-on-color m-2 backdrop-blur-2xl">
+                <PopoverPanel 
+                  className="flex flex-col fixed top-0 left-0 w-[85%] sm:w-[400px] h-screen max-h-screen z-[100] bg-background border-r border-border shadow-2xl"
+                >
                   <div
                     data-testid="nav-menu-popup"
-                    className="flex flex-col h-full bg-[rgba(3,7,18,0.5)] rounded-rounded justify-between p-6"
+                    className="flex flex-col h-full min-h-0 p-8 bg-background relative"
                   >
-                    <div className="flex justify-end" id="xmark">
-                      <button data-testid="close-menu-button" onClick={close}>
-                        <XMark />
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-8 shrink-0">
+                      <span className="text-xl font-bold text-foreground uppercase tracking-widest border-b-2 border-primary pb-1">Menu</span>
+                      <button 
+                        data-testid="close-menu-button" 
+                        onClick={close}
+                        className="p-2 rounded-full hover:bg-muted transition-colors text-ui-fg-subtle hover:text-ui-fg-base shrink-0"
+                      >
+                        <XMark className="w-6 h-6" />
                       </button>
                     </div>
-                    <ul className="flex flex-col gap-6 items-start justify-start">
-                      {displayMenuItems.map((item) => {
-                        const hasChildren = item.children && item.children.length > 0
-                        return (
-                          <li key={item.id} className="w-full">
-                            {hasChildren ? (
-                              <div className="flex flex-col gap-4">
+                    
+                    {/* Menu Items - Scrollable Area */}
+                    <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar pb-4">
+                      <ul className="flex flex-col gap-y-6 items-start justify-start py-4">
+                        {displayMenuItems.map((item) => {
+                          const hasChildren = item.children && item.children.length > 0
+                          const isActive = pathname === item.url || pathname.startsWith(`${item.url}/`) || pathname.includes(`/${item.url.replace(/^\//, '')}`)
+
+                          return (
+                            <li key={item.id} className="w-full">
+                              {hasChildren ? (
+                                <div className="flex flex-col gap-4">
+                                  <LocalizedClientLink
+                                    href={item.url}
+                                    className={clx(
+                                      "text-2xl font-bold transition-all hover:pl-2",
+                                      isActive ? "text-primary" : "text-foreground hover:text-primary"
+                                    )}
+                                    onClick={close}
+                                    data-testid={`${item.id}-link`}
+                                    {...(item.openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                  >
+                                    {item.label}
+                                  </LocalizedClientLink>
+                                  {item.children && (
+                                    <ul className="flex flex-col gap-3 ml-4 border-l-2 border-primary/20 pl-6 my-2">
+                                      {item.children.map((child) => {
+                                        const isChildActive = pathname === child.url || pathname.startsWith(`${child.url}/`) || pathname.includes(`/${child.url.replace(/^\//, '')}`)
+                                        
+                                        return (
+                                          <li key={child.id}>
+                                            <LocalizedClientLink
+                                              href={child.url}
+                                              className={clx(
+                                                "text-lg transition-all hover:pl-2",
+                                                isChildActive ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                                              )}
+                                              onClick={close}
+                                              data-testid={`${child.id}-link`}
+                                              {...(child.openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                            >
+                                              {child.label}
+                                            </LocalizedClientLink>
+                                          </li>
+                                        )
+                                      })}
+                                    </ul>
+                                  )}
+                                </div>
+                              ) : (
                                 <LocalizedClientLink
                                   href={item.url}
-                                  className="text-3xl leading-10 hover:text-ui-fg-disabled"
+                                  className={clx(
+                                    "text-2xl font-bold transition-all hover:pl-2",
+                                    isActive ? "text-primary" : "text-foreground hover:text-primary"
+                                  )}
                                   onClick={close}
                                   data-testid={`${item.id}-link`}
                                   {...(item.openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                                 >
                                   {item.label}
                                 </LocalizedClientLink>
-                                {item.children && (
-                                  <ul className="flex flex-col gap-3 ml-4">
-                                    {item.children.map((child) => (
-                                      <li key={child.id}>
-                                        <LocalizedClientLink
-                                          href={child.url}
-                                          className="text-xl leading-8 hover:text-ui-fg-disabled text-ui-fg-subtle"
-                                          onClick={close}
-                                          data-testid={`${child.id}-link`}
-                                          {...(child.openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                                        >
-                                          {child.label}
-                                        </LocalizedClientLink>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </div>
-                            ) : (
-                              <LocalizedClientLink
-                                href={item.url}
-                                className="text-3xl leading-10 hover:text-ui-fg-disabled"
-                                onClick={close}
-                                data-testid={`${item.id}-link`}
-                                {...(item.openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                              >
-                                {item.label}
-                              </LocalizedClientLink>
-                            )}
-                          </li>
-                        )
-                      })}
-                    </ul>
-                    <div className="flex flex-col gap-y-6">
+                              )}
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    </div>
+
+                    {/* Footer - Fixed at Bottom */}
+                    <div className="flex flex-col gap-y-6 pt-6 border-t border-border shrink-0 mt-auto relative z-10 bg-background">
                       <div
-                        className="flex justify-between"
+                        className="flex justify-between items-center group cursor-pointer p-4 rounded-lg bg-muted/30 hover:bg-muted transition-colors"
                         onMouseEnter={toggleState.open}
                         onMouseLeave={toggleState.close}
                       >
                         {regions && (
-                          <CountrySelect
-                            toggleState={toggleState}
-                            regions={regions}
-                          />
+                          <div className="flex-1">
+                            <CountrySelect
+                              toggleState={toggleState}
+                              regions={regions}
+                            />
+                          </div>
                         )}
                         <ArrowRightMini
                           className={clx(
-                            "transition-transform duration-150",
+                            "transition-transform duration-150 text-muted-foreground group-hover:text-foreground shrink-0",
                             toggleState.state ? "-rotate-90" : ""
                           )}
                         />
                       </div>
-                      <Text className="flex justify-between txt-compact-small">
-                        © {new Date().getFullYear()} Medusa Store. All rights
-                        reserved.
-                      </Text>
+                      
+                      <div className="flex flex-col gap-y-4 px-2">
+                        <Text className="text-muted-foreground text-xs uppercase tracking-widest">
+                          © {new Date().getFullYear()} Medusa Store
+                        </Text>
+                      </div>
                     </div>
                   </div>
                 </PopoverPanel>

@@ -29,17 +29,21 @@ const Summary = ({ cart }: SummaryProps) => {
 
   return (
     <div className="flex flex-col gap-y-4">
-      <Heading level="h2" className="text-[2rem] leading-[2.75rem]">
+      <Heading level="h2" className="text-xl small:text-[2rem] leading-tight small:leading-[2.75rem] text-foreground">
         Summary
       </Heading>
-      <DiscountCode cart={cart} />
-      <Divider />
-      <CartTotals totals={cart} />
+      <div className="text-foreground">
+        <DiscountCode cart={cart} />
+      </div>
+      <Divider className="bg-border" />
+      <div className="text-foreground">
+        <CartTotals totals={cart} />
+      </div>
       <LocalizedClientLink
         href={"/checkout?step=" + step}
         data-testid="checkout-button"
       >
-        <Button className="w-full h-10">Go to checkout</Button>
+        <Button className="w-full h-10 bg-primary text-primary-foreground hover:bg-primary/90">Go to checkout</Button>
       </LocalizedClientLink>
     </div>
   )

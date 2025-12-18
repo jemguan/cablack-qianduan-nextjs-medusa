@@ -2,6 +2,95 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    /* Medusa UI Variables Mapping - Light */
+    --ui-bg-base: 0 0% 100%;
+    --ui-bg-subtle: 210 40% 96.1%;
+    --ui-fg-base: 222.2 84% 4.9%;
+    --ui-fg-subtle: 215.4 16.3% 46.9%;
+    --ui-fg-muted: 215 20.2% 65.1%;
+    --ui-border-base: 214.3 31.8% 91.4%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+
+    /* Medusa UI Variables Mapping - Dark */
+    --ui-bg-base: 222.2 84% 4.9%;
+    --ui-bg-subtle: 217.2 32.6% 17.5%;
+    --ui-fg-base: 210 40% 98%;
+    --ui-fg-subtle: 215 20.2% 65.1%;
+    --ui-fg-muted: 215.4 16.3% 46.9%;
+    --ui-border-base: 217.2 32.6% 17.5%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border transition-colors duration-200;
+  }
+  body {
+    @apply bg-background text-foreground transition-colors duration-200;
+  }
+}
+
 @layer utilities {
   /* Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
@@ -35,9 +124,9 @@
   select:-webkit-autofill,
   select:-webkit-autofill:hover,
   select:-webkit-autofill:focus {
-    border: 1px solid #212121;
-    -webkit-text-fill-color: #212121;
-    -webkit-box-shadow: 0 0 0px 1000px #fff inset;
+    border: 1px solid hsl(var(--border));
+    -webkit-text-fill-color: hsl(var(--foreground));
+    -webkit-box-shadow: 0 0 0px 1000px hsl(var(--background)) inset;
     transition: background-color 5000s ease-in-out 0s;
   }
 
@@ -50,12 +139,25 @@
 }
 
 @layer components {
+  /* 主题过渡效果 */
+  .theme-transitioning * {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+
   .content-container {
     @apply max-w-[1440px] w-full mx-auto px-6;
   }
 
   .contrast-btn {
-    @apply px-4 py-2 border border-black rounded-full hover:bg-black hover:text-white transition-colors duration-200 ease-in;
+    @apply px-4 py-2 border border-primary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors duration-200 ease-in;
+  }
+
+  /* 侧边栏背景兜底修复 */
+  [data-testid="nav-menu-popup"] {
+    background-color: hsl(var(--background)) !important;
+  }
+  .dark [data-testid="nav-menu-popup"] {
+    background-color: hsl(var(--background)) !important;
   }
 
   .text-xsmall-regular {
@@ -108,5 +210,135 @@
 
   .text-3xl-semi {
     @apply text-[32px] leading-[44px] font-semibold;
+  }
+
+  /* Cart Item Select Dropdown Styles */
+  select {
+    font-size: 16px !important;
+  }
+
+  select option {
+    font-size: 16px !important;
+    padding: 8px 12px !important;
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .dark select option {
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Shadcn/ui animations */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes zoom-in {
+    from {
+      transform: scale(0.95);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes zoom-out {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(0.95);
+    }
+  }
+
+  @keyframes slide-in-from-top-2 {
+    from {
+      transform: translateY(-0.5rem);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-in-from-bottom-2 {
+    from {
+      transform: translateY(0.5rem);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-in-from-left-2 {
+    from {
+      transform: translateX(-0.5rem);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slide-in-from-right-2 {
+    from {
+      transform: translateX(0.5rem);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  .animate-in {
+    animation: fade-in 0.15s ease-out;
+  }
+
+  .animate-out {
+    animation: fade-out 0.15s ease-out;
+  }
+
+  .fade-in-0 {
+    animation: fade-in 0.15s ease-out;
+  }
+
+  .fade-out-0 {
+    animation: fade-out 0.15s ease-out;
+  }
+
+  .zoom-in-95 {
+    animation: zoom-in 0.15s ease-out;
+  }
+
+  .zoom-out-95 {
+    animation: zoom-out 0.15s ease-out;
+  }
+
+  .slide-in-from-top-2 {
+    animation: slide-in-from-top-2 0.15s ease-out;
+  }
+
+  .slide-in-from-bottom-2 {
+    animation: slide-in-from-bottom-2 0.15s ease-out;
+  }
+
+  .slide-in-from-left-2 {
+    animation: slide-in-from-left-2 0.15s ease-out;
+  }
+
+  .slide-in-from-right-2 {
+    animation: slide-in-from-right-2 0.15s ease-out;
   }
 }

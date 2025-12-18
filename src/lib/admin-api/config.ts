@@ -82,9 +82,14 @@ export interface MedusaConfig {
       brandNamePart2?: string;
       brandNamePart2ColorClass?: string;
       brandNameSize?: string;
+      brandNameSizeClass?: string;
       brandNameWeight?: string;
+      brandNameWeightClass?: string;
       brandNameTracking?: string;
+      brandNameTrackingClass?: string;
       brandNameGap?: string;
+      brandNameGapClass?: string;
+      showBrandName?: boolean;
     };
     menu?: {
       menuItems?: Array<{

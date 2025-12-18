@@ -65,14 +65,15 @@ const EditAddress: React.FC<EditAddressProps> = ({
     <>
       <div
         className={clx(
-          "border rounded-rounded p-5 min-h-[220px] h-full w-full flex flex-col justify-between transition-colors",
+          "border rounded-lg p-5 min-h-[220px] h-full w-full flex flex-col justify-between transition-all bg-card shadow-sm hover:shadow-md",
           {
-            "border-gray-900": isActive,
+            "border-primary ring-1 ring-primary": isActive,
+            "border-border": !isActive,
           }
         )}
         data-testid="address-container"
       >
-        <div className="flex flex-col">
+        <div className="flex flex-col text-foreground">
           <Heading
             className="text-left text-base-semi"
             data-testid="address-name"
@@ -81,13 +82,13 @@ const EditAddress: React.FC<EditAddressProps> = ({
           </Heading>
           {address.company && (
             <Text
-              className="txt-compact-small text-ui-fg-base"
+              className="txt-compact-small text-muted-foreground"
               data-testid="address-company"
             >
               {address.company}
             </Text>
           )}
-          <Text className="flex flex-col text-left text-base-regular mt-2">
+          <Text className="flex flex-col text-left text-base-regular mt-2 text-muted-foreground">
             <span data-testid="address-address">
               {address.address_1}
               {address.address_2 && <span>, {address.address_2}</span>}
@@ -101,21 +102,21 @@ const EditAddress: React.FC<EditAddressProps> = ({
             </span>
           </Text>
         </div>
-        <div className="flex items-center gap-x-4">
+        <div className="flex items-center gap-x-4 border-t border-border pt-4">
           <button
-            className="text-small-regular text-ui-fg-base flex items-center gap-x-2"
+            className="text-small-regular text-muted-foreground hover:text-foreground flex items-center gap-x-2 transition-colors"
             onClick={open}
             data-testid="address-edit-button"
           >
-            <Edit />
+            <Edit className="w-4 h-4" />
             Edit
           </button>
           <button
-            className="text-small-regular text-ui-fg-base flex items-center gap-x-2"
+            className="text-small-regular text-muted-foreground hover:text-destructive flex items-center gap-x-2 transition-colors"
             onClick={removeAddress}
             data-testid="address-delete-button"
           >
-            {removing ? <Spinner /> : <Trash />}
+            {removing ? <Spinner /> : <Trash className="w-4 h-4" />}
             Remove
           </button>
         </div>
@@ -222,7 +223,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 type="reset"
                 variant="secondary"
                 onClick={close}
-                className="h-10"
+                className="h-10 bg-muted hover:bg-muted/80 text-foreground border-border"
                 data-testid="cancel-button"
               >
                 Cancel

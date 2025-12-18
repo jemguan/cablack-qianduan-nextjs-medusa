@@ -40,7 +40,7 @@ const AccountNav = ({
           </LocalizedClientLink>
         ) : (
           <>
-            <div className="text-xl-semi mb-4 px-8">
+            <div className="text-xl-semi mb-4 px-8 text-foreground">
               Hello {customer?.first_name}
             </div>
             <div className="text-base-regular">
@@ -48,7 +48,7 @@ const AccountNav = ({
                 <li>
                   <LocalizedClientLink
                     href="/account/profile"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                    className="flex items-center justify-between py-4 border-b border-border px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
                     data-testid="profile-link"
                   >
                     <>
@@ -63,7 +63,7 @@ const AccountNav = ({
                 <li>
                   <LocalizedClientLink
                     href="/account/addresses"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                    className="flex items-center justify-between py-4 border-b border-border px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
                     data-testid="addresses-link"
                   >
                     <>
@@ -78,7 +78,7 @@ const AccountNav = ({
                 <li>
                   <LocalizedClientLink
                     href="/account/orders"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                    className="flex items-center justify-between py-4 border-b border-border px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
                     data-testid="orders-link"
                   >
                     <div className="flex items-center gap-x-2">
@@ -91,7 +91,7 @@ const AccountNav = ({
                 <li>
                   <button
                     type="button"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8 w-full"
+                    className="flex items-center justify-between py-4 border-b border-border px-8 w-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
                     onClick={handleLogout}
                     data-testid="logout-button"
                   >
@@ -110,7 +110,7 @@ const AccountNav = ({
       <div className="hidden small:block" data-testid="account-nav">
         <div>
           <div className="pb-4">
-            <h3 className="text-base-semi">Account</h3>
+            <h3 className="text-base-semi text-foreground">Account</h3>
           </div>
           <div className="text-base-regular">
             <ul className="flex mb-0 justify-start items-start flex-col gap-y-4">
@@ -150,7 +150,7 @@ const AccountNav = ({
                   Orders
                 </AccountNavLink>
               </li>
-              <li className="text-grey-700">
+              <li className="text-muted-foreground hover:text-foreground transition-colors">
                 <button
                   type="button"
                   onClick={handleLogout}
@@ -186,8 +186,8 @@ const AccountNavLink = ({
   return (
     <LocalizedClientLink
       href={href}
-      className={clx("text-ui-fg-subtle hover:text-ui-fg-base", {
-        "text-ui-fg-base font-semibold": active,
+      className={clx("text-muted-foreground hover:text-foreground transition-all", {
+        "text-primary font-semibold": active,
       })}
       data-testid={dataTestId}
     >

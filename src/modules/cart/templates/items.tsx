@@ -11,45 +11,70 @@ type ItemsTemplateProps = {
 
 const ItemsTemplate = ({ cart }: ItemsTemplateProps) => {
   const items = cart?.items
+  const sortedItems = items
+    ? items.sort((a, b) => {
+        return (a.created_at ?? "") > (b.created_at ?? "") ? -1 : 1
+      })
+    : []
+  
   return (
     <div>
-      <div className="pb-3 flex items-center">
-        <Heading className="text-[2rem] leading-[2.75rem]">Cart</Heading>
+      <div className="pb-3 flex items-center border-b border-border mb-4 small:mb-6">
+        <Heading className="text-xl small:text-[2rem] leading-tight small:leading-[2.75rem] text-foreground">Cart</Heading>
       </div>
-      <Table>
-        <Table.Header className="border-t-0">
-          <Table.Row className="text-ui-fg-subtle txt-medium-plus">
-            <Table.HeaderCell className="!pl-0">Item</Table.HeaderCell>
-            <Table.HeaderCell></Table.HeaderCell>
-            <Table.HeaderCell>Quantity</Table.HeaderCell>
-            <Table.HeaderCell className="hidden small:table-cell">
-              Price
-            </Table.HeaderCell>
-            <Table.HeaderCell className="!pr-0 text-right">
-              Total
-            </Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {items
-            ? items
-                .sort((a, b) => {
-                  return (a.created_at ?? "") > (b.created_at ?? "") ? -1 : 1
-                })
-                .map((item) => {
+      
+      {/* Mobile: Card Layout */}
+      <div className="small:hidden flex flex-col gap-4">
+        {sortedItems.length > 0
+          ? sortedItems.map((item) => {
+              return (
+                <Item
+                  key={item.id}
+                  item={item}
+                  currencyCode={cart?.currency_code}
+                  isMobile={true}
+                />
+              )
+            })
+          : repeat(5).map((i) => {
+              return <SkeletonLineItem key={i} />
+            })}
+      </div>
+
+      {/* Desktop: Table Layout */}
+      <div className="hidden small:block w-full overflow-x-auto overflow-y-hidden no-scrollbar">
+        <Table className="text-foreground w-full table-fixed">
+          <Table.Header className="border-t-0 border-b border-border">
+            <Table.Row className="text-muted-foreground txt-medium-plus">
+              <Table.HeaderCell className="px-4 w-[15%]">Item</Table.HeaderCell>
+              <Table.HeaderCell className="px-4 w-[35%]"></Table.HeaderCell>
+              <Table.HeaderCell className="px-4 w-[20%]">Quantity</Table.HeaderCell>
+              <Table.HeaderCell className="hidden small:table-cell text-right px-4 w-[15%]">
+                Price
+              </Table.HeaderCell>
+              <Table.HeaderCell className="text-right px-4 w-[15%]">
+                Total
+              </Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {sortedItems.length > 0
+              ? sortedItems.map((item) => {
                   return (
                     <Item
                       key={item.id}
                       item={item}
                       currencyCode={cart?.currency_code}
+                      isMobile={false}
                     />
                   )
                 })
-            : repeat(5).map((i) => {
-                return <SkeletonLineItem key={i} />
-              })}
-        </Table.Body>
-      </Table>
+              : repeat(5).map((i) => {
+                  return <SkeletonLineItem key={i} />
+                })}
+          </Table.Body>
+        </Table>
+      </div>
     </div>
   )
 }
