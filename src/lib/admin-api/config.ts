@@ -137,6 +137,9 @@ export interface MedusaConfig {
       text?: string;
       link?: string;
       linkText?: string;
+      imageUrl?: string;
+      lightLogoUrl?: string;
+      darkLogoUrl?: string;
     };
     newsletter?: {
       enabled?: boolean;
