@@ -3,12 +3,13 @@
 import { Popover, PopoverButton, PopoverPanel, Transition } from "@headlessui/react"
 import { ArrowRightMini, XMark } from "@medusajs/icons"
 import { Text, clx, useToggleState } from "@medusajs/ui"
-import { Fragment } from "react"
+import { Fragment, Suspense } from "react"
 import { usePathname } from "next/navigation"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CountrySelect from "../country-select"
 import MenuIcon from "@modules/common/icons/menu"
+import SearchBox from "../search-box"
 import { HttpTypes } from "@medusajs/types"
 import { signout } from "@lib/data/customer"
 
@@ -31,9 +32,10 @@ export interface MenuItem {
 export interface SideMenuProps {
   regions: HttpTypes.StoreRegion[] | null;
   menuItems?: MenuItem[];
+  regionId?: string;
 }
 
-const SideMenu = ({ regions, menuItems }: SideMenuProps) => {
+const SideMenu = ({ regions, menuItems, regionId }: SideMenuProps) => {
   const toggleState = useToggleState()
   const pathname = usePathname()
 
@@ -98,6 +100,15 @@ const SideMenu = ({ regions, menuItems }: SideMenuProps) => {
                       </button>
                     </div>
                     
+                    {/* Search Box */}
+                    <div className="mb-6 pb-6 border-b border-border">
+                      <div className="w-full">
+                        <Suspense fallback={<div className="w-full h-10" />}>
+                          <SearchBox variant="mobile" regionId={regionId} />
+                        </Suspense>
+                      </div>
+                    </div>
+
                     {/* Menu Items - Scrollable Area */}
                     <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar pb-4">
                       <ul className="flex flex-col gap-y-6 items-start justify-start py-4">

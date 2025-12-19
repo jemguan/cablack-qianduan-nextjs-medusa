@@ -4,12 +4,14 @@ import { listRegions, getRegion } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
+import AccountButton from "@modules/layout/components/account-button"
 import SideMenu from "@modules/layout/components/side-menu"
 import HeaderMenu from "@modules/layout/components/header-menu"
 import ThemeToggleButton from "@modules/layout/components/theme-toggle-button"
 import SearchBox from "@modules/layout/components/search-box"
 import { getMedusaConfig } from "@lib/admin-api/config"
 import { clx } from "@medusajs/ui"
+import User from "@modules/common/icons/user"
 
 export default async function Nav() {
   const regions = await listRegions().then((regions: StoreRegion[]) => regions)
@@ -36,7 +38,7 @@ export default async function Nav() {
           {/* Left: Branding & Mobile Menu */}
           <div className="flex-1 basis-0 h-full flex items-center gap-x-4">
             <div className="h-full flex items-center small:hidden">
-              <SideMenu regions={regions} menuItems={headerMenuItems} />
+              <SideMenu regions={regions} menuItems={headerMenuItems} regionId={currentRegionId} />
             </div>
             
             <LocalizedClientLink
@@ -113,22 +115,51 @@ export default async function Nav() {
           {/* Right: Actions */}
           <div className="flex items-center gap-x-4 h-full flex-1 basis-0 justify-end">
             <div className="hidden small:flex items-center gap-x-4 h-full">
-              <LocalizedClientLink
-                className="text-small-regular text-ui-fg-subtle hover:text-ui-fg-base transition-colors"
-                href="/account"
-                data-testid="nav-account-link"
-              >
-                Account
-              </LocalizedClientLink>
+              <Suspense fallback={
+                <div className="p-2">
+                  <User size="20" />
+                </div>
+              }>
+                <AccountButton />
+              </Suspense>
             </div>
             <ThemeToggleButton />
             <Suspense
               fallback={
                 <LocalizedClientLink
-                  className="text-small-regular text-ui-fg-subtle hover:text-ui-fg-base transition-colors flex items-center h-10 px-2"
+                  className="p-2 text-ui-fg-subtle hover:text-ui-fg-base transition-colors flex items-center justify-center relative"
                   href="/cart"
+                  aria-label="Cart"
                 >
-                  Cart (0)
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M6 2L3 6V20C3 20.5304 3.21071 21.0391 3.58579 21.4142C3.96086 21.7893 4.46957 22 5 22H19C19.5304 22 20.0391 21.7893 20.4142 21.4142C20.7893 21.0391 21 20.5304 21 20V6L18 2H6Z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M3 6H21"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M16 10C16 11.0609 15.5786 12.0783 14.8284 12.8284C14.0783 13.5786 13.0609 14 12 14C10.9391 14 9.92172 13.5786 9.17157 12.8284C8.42143 12.0783 8 11.0609 8 10"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </LocalizedClientLink>
               }
             >
@@ -152,16 +183,6 @@ export default async function Nav() {
           </div>
         </div>
       )}
-      {/* Mobile Search Box */}
-      <div className="small:hidden border-b border-border bg-background/90 backdrop-blur-xl relative z-40 overflow-visible">
-        <div className="content-container flex items-center justify-center py-2 overflow-visible">
-          <div className="relative z-[100] w-full max-w-md">
-            <Suspense fallback={<div className="w-full h-10" />}>
-              <SearchBox variant="mobile" regionId={currentRegionId} />
-            </Suspense>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
