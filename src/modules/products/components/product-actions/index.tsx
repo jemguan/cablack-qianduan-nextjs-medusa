@@ -11,7 +11,6 @@ import { useParams, usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import ProductPrice from "../product-price"
 import MobileActions from "./mobile-actions"
-import { useRouter } from "next/navigation"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -32,7 +31,6 @@ export default function ProductActions({
   product,
   disabled,
 }: ProductActionsProps) {
-  const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -75,6 +73,19 @@ export default function ProductActions({
     })
   }, [product.variants, options])
 
+  // 初始化时从 URL 读取 v_id（如果存在）
+  useEffect(() => {
+    const vIdFromUrl = searchParams.get("v_id")
+    if (vIdFromUrl && product.variants) {
+      const variantFromUrl = product.variants.find((v) => v.id === vIdFromUrl)
+      if (variantFromUrl) {
+        const variantOptions = optionsAsKeymap(variantFromUrl.options)
+        setOptions(variantOptions ?? {})
+      }
+    }
+  }, []) // 只在组件挂载时执行一次
+
+  // 使用 window.history.replaceState 更新 URL，避免触发服务器组件重新渲染
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString())
     const value = isValidVariant ? selectedVariant?.id : null
@@ -89,8 +100,11 @@ export default function ProductActions({
       params.delete("v_id")
     }
 
-    router.replace(pathname + "?" + params.toString())
-  }, [selectedVariant, isValidVariant])
+    // 使用 window.history.replaceState 而不是 router.replace
+    // 这样可以更新 URL 而不触发 Next.js 服务器组件重新执行
+    const newUrl = pathname + (params.toString() ? "?" + params.toString() : "")
+    window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, "", newUrl)
+  }, [selectedVariant, isValidVariant, pathname, searchParams])
 
   // check if the selected variant is in stock
   const inStock = useMemo(() => {

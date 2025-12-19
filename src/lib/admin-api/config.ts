@@ -165,6 +165,10 @@ export interface MedusaConfig {
       }>;
     };
   };
+  productPageConfig?: {
+    layout?: 'two-column' | 'three-column';
+    enabled?: boolean;
+  };
 }
 
 export interface MedusaCategory {
