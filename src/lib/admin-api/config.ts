@@ -151,6 +151,19 @@ export interface MedusaConfig {
       enabled?: boolean;
       platforms?: string[];
     };
+    copyright?: {
+      enabled?: boolean;
+      text?: string; // 例如: "© {year} Medusa Store. All rights reserved."
+    };
+    poweredBy?: {
+      enabled?: boolean;
+      text?: string; // 例如: "Powered by Medusa & Next.js"
+      links?: Array<{
+        text: string;
+        url: string;
+        openInNewTab?: boolean;
+      }>;
+    };
   };
 }
 

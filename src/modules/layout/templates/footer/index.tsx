@@ -21,7 +21,7 @@ export default async function Footer() {
   return (
     <footer className="border-t border-border w-full bg-background">
       <div className="content-container flex flex-col w-full text-foreground">
-        <div className="flex flex-col gap-y-6 xsmall:flex-row items-start justify-between py-40">
+        <div className="flex flex-col gap-y-6 xsmall:flex-row items-start justify-between py-10">
           <div className="text-small-regular gap-10 md:gap-x-16 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 flex-1">
             {/* 使用动态配置的菜单 */}
             {footerConfig?.menu?.menuItems && footerConfig.menu.menuItems.length > 0 ? (
@@ -208,11 +208,43 @@ export default async function Footer() {
               )}
           </div>
         </div>
-        <div className="flex w-full mb-16 justify-between text-ui-fg-muted">
-          <Text className="txt-compact-small">
-            © {new Date().getFullYear()} Medusa Store. All rights reserved.
-          </Text>
-          <MedusaCTA />
+        <div className="flex w-full mb-0 pt-[15px] pb-[15px] justify-between text-ui-fg-muted">
+          {/* Copyright - 左侧 */}
+          {footerConfig?.copyright?.enabled && footerConfig.copyright.text ? (
+            <Text className="txt-compact-small">
+              {footerConfig.copyright.text.replace('{year}', new Date().getFullYear().toString())}
+            </Text>
+          ) : !footerConfig?.copyright?.enabled && !footerConfig?.poweredBy?.enabled ? (
+            <Text className="txt-compact-small">
+              © {new Date().getFullYear()} Medusa Store. All rights reserved.
+            </Text>
+          ) : null}
+          
+          {/* PoweredBy - 右侧 */}
+          {footerConfig?.poweredBy?.enabled ? (
+            <Text className="flex gap-x-2 txt-compact-small-plus items-center">
+              {footerConfig.poweredBy.text || "Powered by"}
+              {footerConfig.poweredBy.links && footerConfig.poweredBy.links.length > 0 && (
+                <>
+                  {footerConfig.poweredBy.links.map((link, index) => (
+                    <span key={index}>
+                      {index > 0 && " & "}
+                      <a
+                        href={link.url}
+                        target={link.openInNewTab ? "_blank" : "_self"}
+                        rel={link.openInNewTab ? "noreferrer" : undefined}
+                        className="hover:text-ui-fg-base transition-colors"
+                      >
+                        {link.text}
+                      </a>
+                    </span>
+                  ))}
+                </>
+              )}
+            </Text>
+          ) : !footerConfig?.copyright?.enabled && !footerConfig?.poweredBy?.enabled ? (
+            <MedusaCTA />
+          ) : null}
         </div>
       </div>
     </footer>

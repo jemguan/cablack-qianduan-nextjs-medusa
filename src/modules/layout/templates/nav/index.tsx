@@ -1,12 +1,13 @@
 import { Suspense } from "react"
 
-import { listRegions } from "@lib/data/regions"
+import { listRegions, getRegion } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
 import SideMenu from "@modules/layout/components/side-menu"
 import HeaderMenu from "@modules/layout/components/header-menu"
 import ThemeToggleButton from "@modules/layout/components/theme-toggle-button"
+import SearchBox from "@modules/layout/components/search-box"
 import { getMedusaConfig } from "@lib/admin-api/config"
 import { clx } from "@medusajs/ui"
 
@@ -15,6 +16,9 @@ export default async function Nav() {
   const config = await getMedusaConfig()
   const headerConfig = config?.headerConfig
   const headerMenuItems = headerConfig?.menu?.menuItems || []
+  
+  // 获取默认区域 ID（使用第一个区域作为后备）
+  const currentRegionId = regions && regions.length > 0 ? regions[0].id : undefined
   
   // Branding settings
   const brand = headerConfig?.brand
@@ -27,8 +31,8 @@ export default async function Nav() {
 
   return (
     <div className="sticky top-0 inset-x-0 z-50">
-      <header className="relative h-16 mx-auto border-b duration-200 bg-background/90 backdrop-blur-xl border-border">
-        <nav className="content-container flex items-center justify-between w-full h-full text-foreground">
+      <header className="relative h-16 mx-auto border-b duration-200 bg-background/90 backdrop-blur-xl border-border overflow-visible">
+        <nav className="content-container flex items-center justify-between w-full h-full text-foreground overflow-visible relative">
           {/* Left: Branding & Mobile Menu */}
           <div className="flex-1 basis-0 h-full flex items-center gap-x-4">
             <div className="h-full flex items-center small:hidden">
@@ -47,8 +51,8 @@ export default async function Nav() {
                   alt={logo.logoAlt || "Logo"}
                   className={clx(
                     "w-auto object-contain dark:hidden",
-                    logo.mobileHeightClass || "h-8",
-                    logo.desktopHeightClass || "small:h-10"
+                    logo.mobileHeightClass && logo.mobileHeightClass.trim() ? logo.mobileHeightClass : "h-8",
+                    logo.desktopHeightClass && logo.desktopHeightClass.trim() ? logo.desktopHeightClass : "small:h-10"
                   )}
                 />
               )}
@@ -58,8 +62,8 @@ export default async function Nav() {
                   alt={logo.logoAlt || "Logo"}
                   className={clx(
                     "w-auto object-contain hidden dark:block",
-                    logo.mobileHeightClass || "h-8",
-                    logo.desktopHeightClass || "small:h-10"
+                    logo.mobileHeightClass && logo.mobileHeightClass.trim() ? logo.mobileHeightClass : "h-8",
+                    logo.desktopHeightClass && logo.desktopHeightClass.trim() ? logo.desktopHeightClass : "small:h-10"
                   )}
                 />
               )}
@@ -70,8 +74,8 @@ export default async function Nav() {
                   alt={logo.logoAlt || "Logo"}
                   className={clx(
                     "w-auto object-contain hidden dark:block",
-                    logo.mobileHeightClass || "h-8",
-                    logo.desktopHeightClass || "small:h-10"
+                    logo.mobileHeightClass && logo.mobileHeightClass.trim() ? logo.mobileHeightClass : "h-8",
+                    logo.desktopHeightClass && logo.desktopHeightClass.trim() ? logo.desktopHeightClass : "small:h-10"
                   )}
                 />
               )}
@@ -136,12 +140,28 @@ export default async function Nav() {
       
       {/* Desktop Menu - Separate Container Below Header (NOT inside header) */}
       {headerMenuItems.length > 0 && (
-        <div className="hidden small:block border-b border-border bg-background/90 backdrop-blur-xl">
-          <div className="content-container flex items-center justify-center py-1">
+        <div className="hidden small:block border-b border-border bg-background/90 backdrop-blur-xl relative z-40 overflow-visible">
+          <div className="content-container flex items-center justify-center gap-x-8 py-1 overflow-visible">
             <HeaderMenu menuItems={headerMenuItems} />
+            {/* Search Box in Menu */}
+            <div className="relative z-[100]">
+              <Suspense fallback={<div className="w-64 h-10" />}>
+                <SearchBox variant="desktop" regionId={currentRegionId} />
+              </Suspense>
+            </div>
           </div>
         </div>
       )}
+      {/* Mobile Search Box */}
+      <div className="small:hidden border-b border-border bg-background/90 backdrop-blur-xl relative z-40 overflow-visible">
+        <div className="content-container flex items-center justify-center py-2 overflow-visible">
+          <div className="relative z-[100] w-full max-w-md">
+            <Suspense fallback={<div className="w-full h-10" />}>
+              <SearchBox variant="mobile" regionId={currentRegionId} />
+            </Suspense>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
