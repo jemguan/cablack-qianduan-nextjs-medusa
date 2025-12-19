@@ -6,11 +6,12 @@ import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import Divider from "@modules/common/components/divider"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
-import { isEqual } from "lodash"
 import { useParams, usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { isEqual } from "lodash"
 import ProductPrice from "../product-price"
 import MobileActions from "./mobile-actions"
+import { useVariantSelection } from "@modules/products/contexts/variant-selection-context"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -34,36 +35,9 @@ export default function ProductActions({
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const [options, setOptions] = useState<Record<string, string | undefined>>({})
+  const { options, selectedVariant, setOptionValue, setOptions } = useVariantSelection()
   const [isAdding, setIsAdding] = useState(false)
   const countryCode = useParams().countryCode as string
-
-  // If there is only 1 variant, preselect the options
-  useEffect(() => {
-    if (product.variants?.length === 1) {
-      const variantOptions = optionsAsKeymap(product.variants[0].options)
-      setOptions(variantOptions ?? {})
-    }
-  }, [product.variants])
-
-  const selectedVariant = useMemo(() => {
-    if (!product.variants || product.variants.length === 0) {
-      return
-    }
-
-    return product.variants.find((v) => {
-      const variantOptions = optionsAsKeymap(v.options)
-      return isEqual(variantOptions, options)
-    })
-  }, [product.variants, options])
-
-  // update the options when a variant is selected
-  const setOptionValue = (optionId: string, value: string) => {
-    setOptions((prev) => ({
-      ...prev,
-      [optionId]: value,
-    }))
-  }
 
   //check if the selected options produce a valid variant
   const isValidVariant = useMemo(() => {
@@ -72,18 +46,6 @@ export default function ProductActions({
       return isEqual(variantOptions, options)
     })
   }, [product.variants, options])
-
-  // 初始化时从 URL 读取 v_id（如果存在）
-  useEffect(() => {
-    const vIdFromUrl = searchParams.get("v_id")
-    if (vIdFromUrl && product.variants) {
-      const variantFromUrl = product.variants.find((v) => v.id === vIdFromUrl)
-      if (variantFromUrl) {
-        const variantOptions = optionsAsKeymap(variantFromUrl.options)
-        setOptions(variantOptions ?? {})
-      }
-    }
-  }, []) // 只在组件挂载时执行一次
 
   // 使用 window.history.replaceState 更新 URL，避免触发服务器组件重新渲染
   useEffect(() => {
@@ -165,6 +127,8 @@ export default function ProductActions({
                       title={option.title ?? ""}
                       data-testid="product-options"
                       disabled={!!disabled || isAdding}
+                      product={product}
+                      options={options}
                     />
                   </div>
                 )

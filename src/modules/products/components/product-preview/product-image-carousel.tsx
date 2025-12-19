@@ -102,9 +102,9 @@ const ProductImageCarousel: React.FC<ProductImageCarouselProps> = ({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 w-full">
       {/* Main Carousel */}
-      <div className="relative overflow-hidden rounded-lg bg-ui-bg-subtle shadow-lg">
+      <div className="relative overflow-hidden rounded-lg bg-ui-bg-subtle shadow-lg w-full">
         <div ref={emblaRef} className="overflow-hidden">
           <div className="flex">
             {images.map((image, index) => (

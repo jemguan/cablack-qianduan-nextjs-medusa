@@ -23,7 +23,8 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
   className,
   "data-testid": dataTestid,
 }) => {
-  const initialImage = thumbnail || images?.[0]?.url
+  // Prioritize images array over thumbnail to show variant-specific images
+  const initialImage = images?.[0]?.url || thumbnail
 
   return (
     <Container

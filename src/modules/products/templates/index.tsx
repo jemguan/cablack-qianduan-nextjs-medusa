@@ -13,6 +13,7 @@ type ProductTemplateProps = {
   region: HttpTypes.StoreRegion
   countryCode: string
   images: HttpTypes.StoreProductImage[]
+  initialVariantId?: string
 }
 
 const ProductTemplate: React.FC<ProductTemplateProps> = async ({
@@ -20,6 +21,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = async ({
   region,
   countryCode,
   images,
+  initialVariantId,
 }) => {
   if (!product || !product.id) {
     return notFound()
@@ -44,12 +46,16 @@ const ProductTemplate: React.FC<ProductTemplateProps> = async ({
           product={product}
           region={region}
           images={images}
+          initialVariantId={initialVariantId}
+          shippingReturnsConfig={config?.shippingReturnsConfig}
         />
       ) : (
         <TwoColumnLayout
           product={product}
           region={region}
           images={images}
+          initialVariantId={initialVariantId}
+          shippingReturnsConfig={config?.shippingReturnsConfig}
         />
       )}
 

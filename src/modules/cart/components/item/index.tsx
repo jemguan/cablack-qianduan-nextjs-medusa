@@ -57,7 +57,7 @@ const Item = ({ item, type = "full", currencyCode, isMobile = false }: ItemProps
           >
             <Thumbnail
               thumbnail={item.thumbnail}
-              images={item.variant?.product?.images}
+              images={item.variant?.images || item.variant?.product?.images}
               size="square"
               className="rounded-lg border border-border w-24 h-24 small:w-20 small:h-20"
             />
@@ -137,7 +137,7 @@ const Item = ({ item, type = "full", currencyCode, isMobile = false }: ItemProps
         >
           <Thumbnail
             thumbnail={item.thumbnail}
-            images={item.variant?.product?.images}
+            images={item.variant?.images || item.variant?.product?.images}
             size="square"
             className="rounded-lg border border-border"
           />

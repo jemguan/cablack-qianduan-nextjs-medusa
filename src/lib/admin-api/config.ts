@@ -169,6 +169,16 @@ export interface MedusaConfig {
     layout?: 'two-column' | 'three-column';
     enabled?: boolean;
   };
+  shippingReturnsConfig?: {
+    enabled?: boolean;
+    items?: Array<{
+      id: string;
+      icon?: 'fastDelivery' | 'refresh' | 'back' | 'custom';
+      customIcon?: string; // URL or SVG for custom icon
+      title: string;
+      description: string;
+    }>;
+  };
 }
 
 export interface MedusaCategory {

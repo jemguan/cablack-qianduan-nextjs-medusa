@@ -1,69 +1,79 @@
 import React, { Suspense } from "react"
 import { HttpTypes } from "@medusajs/types"
-import ProductImageCarousel from "@modules/products/components/product-preview/product-image-carousel"
+import { Text } from "@medusajs/ui"
+import ProductImageCarouselClient from "@modules/products/components/product-image-carousel-client"
 import ProductInfo from "@modules/products/templates/product-info"
 import ProductActions from "@modules/products/components/product-actions"
 import ProductActionsWrapper from "../product-actions-wrapper"
 import ProductTabs from "@modules/products/components/product-tabs"
+import ProductPageClientWrapper from "@modules/products/components/product-page-client-wrapper"
+import { MedusaConfig } from "@lib/admin-api/config"
 
 type TwoColumnLayoutProps = {
   product: HttpTypes.StoreProduct
   region: HttpTypes.StoreRegion
   images: HttpTypes.StoreProductImage[]
+  initialVariantId?: string
+  shippingReturnsConfig?: MedusaConfig['shippingReturnsConfig']
 }
 
 const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
   product,
   region,
   images,
+  initialVariantId,
+  shippingReturnsConfig,
 }) => {
-  // 转换图片格式以匹配 ProductImageCarousel 的期望格式
-  const carouselImages = images.map((img) => ({
-    id: img.id,
-    url: img.url,
-  }))
-
-  // 获取当前选中的变体 ID（如果有）
-  const selectedVariantId = product.variants?.[0]?.id
-
   return (
-    <div
-      className="content-container flex flex-col small:flex-row small:items-start gap-6 py-6"
-      data-testid="product-container-two-column"
-    >
-      {/* 左侧：图片区域 */}
-      <div className="w-full small:w-1/2 flex-shrink-0">
-        <ProductImageCarousel
-          images={carouselImages}
-          productTitle={product.title}
-          variantId={selectedVariantId}
-        />
+    <ProductPageClientWrapper product={product} initialVariantId={initialVariantId}>
+      <div
+        className="content-container flex flex-col small:flex-row small:items-start gap-6 py-6"
+        data-testid="product-container-two-column"
+      >
+        {/* 左侧：图片区域 */}
+        <div className="w-full small:w-1/2 flex-shrink-0 small:self-start">
+          <ProductImageCarouselClient
+            product={product}
+            productTitle={product.title}
+          />
+        </div>
+
+        {/* 右侧：产品信息区域 */}
+        <div className="w-full small:w-1/2 flex flex-col gap-y-6 small:self-start">
+          {/* 产品基本信息 */}
+          <ProductInfo product={product} />
+
+          {/* 产品操作区域 */}
+          <Suspense
+            fallback={
+              <ProductActions
+                disabled={true}
+                product={product}
+                region={region}
+              />
+            }
+          >
+            <ProductActionsWrapper id={product.id} region={region} />
+          </Suspense>
+
+          {/* 产品描述 */}
+          {product.description && (
+            <Text
+              className="text-medium text-ui-fg-subtle whitespace-pre-line"
+              data-testid="product-description"
+            >
+              {product.description}
+            </Text>
+          )}
+
+          {/* 产品标签页 */}
+          <ProductTabs product={product} shippingReturnsConfig={shippingReturnsConfig} />
+        </div>
       </div>
-
-      {/* 右侧：产品信息区域 */}
-      <div className="w-full small:w-1/2 flex flex-col gap-y-6 small:sticky small:top-48">
-        {/* 产品基本信息 */}
-        <ProductInfo product={product} />
-
-        {/* 产品操作区域 */}
-        <Suspense
-          fallback={
-            <ProductActions
-              disabled={true}
-              product={product}
-              region={region}
-            />
-          }
-        >
-          <ProductActionsWrapper id={product.id} region={region} />
-        </Suspense>
-
-        {/* 产品标签页 */}
-        <ProductTabs product={product} />
-      </div>
-    </div>
+    </ProductPageClientWrapper>
   )
 }
 
 export default TwoColumnLayout
+
 
