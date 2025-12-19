@@ -5,14 +5,13 @@ import { XMark } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
 import { Fragment, useState, useMemo, useEffect } from "react"
 import { isEqual } from "lodash"
-import Image from "next/image"
-import { getImageUrl } from "@lib/util/image"
 import VariantSelector from "./variant-selector"
 import QuickAddButton from "./quick-add-button"
 import ProductPrice from "../product-price"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { Text } from "@medusajs/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import ProductImageCarousel from "./product-image-carousel"
 
 type QuickViewModalProps = {
   product: HttpTypes.StoreProduct
@@ -37,7 +36,6 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   onClose,
 }) => {
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
   // Initialize options if product has only one variant
   useEffect(() => {
@@ -46,13 +44,6 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
       setOptions(variantOptions ?? {})
     }
   }, [product.variants])
-
-  // Reset image index when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedImageIndex(0)
-    }
-  }, [isOpen])
 
   const selectedVariant = useMemo(() => {
     if (!product.variants || product.variants.length === 0) {
@@ -72,8 +63,82 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
     }))
   }
 
-  const images = product.images || []
-  const displayImages = images.length > 0 ? images : (product.thumbnail ? [{ url: product.thumbnail }] : [])
+  // Get images for selected variant (same logic as product preview card)
+  const displayImages = useMemo(() => {
+    const allImages = product.images || []
+    
+    // If no variant selected, return all product images
+    if (!selectedVariant || !product.variants) {
+      return allImages.length > 0 ? allImages : (product.thumbnail ? [{ url: product.thumbnail }] : [])
+    }
+
+    // Check if variant has images
+    if (!selectedVariant.images || selectedVariant.images.length === 0) {
+      // No variant images, return first product image
+      return allImages.length > 0 ? [allImages[0]] : (product.thumbnail ? [{ url: product.thumbnail }] : [])
+    }
+
+    // If variant has images, filter product images by variant image IDs
+    // Create a map of image ID to image object for quick lookup
+    const imageMap = new Map(allImages.map((img) => [img.id, img]))
+    
+    // Build variant images array in the order specified by variant.images
+    let variantImages = selectedVariant.images
+      .map((variantImg: any) => imageMap.get(variantImg.id))
+      .filter((img: any) => img !== undefined) // Remove any images not found in product.images
+    
+    // Find variant-specific images (images that appear in fewer variants)
+    // Collect all variant image IDs to find unique ones
+    const allVariantImageIds = new Set<string>()
+    product.variants?.forEach((v) => {
+      v.images?.forEach((img: any) => {
+        allVariantImageIds.add(img.id)
+      })
+    })
+    
+    // Count how many variants each image appears in
+    const imageVariantCount = new Map<string, number>()
+    product.variants?.forEach((v) => {
+      v.images?.forEach((img: any) => {
+        const count = imageVariantCount.get(img.id) || 0
+        imageVariantCount.set(img.id, count + 1)
+      })
+    })
+    
+    // Find variant-specific images (appear in only 1 variant) and common images (appear in all variants)
+    const variantSpecificImages: typeof variantImages = []
+    const commonImages: typeof variantImages = []
+    const otherImages: typeof variantImages = []
+    
+    variantImages.forEach((img) => {
+      if (!img?.id) return
+      const count = imageVariantCount.get(img.id) || 0
+      const totalVariants = product.variants?.length || 1
+      
+      if (count === 1) {
+        // Variant-specific (only appears in this variant)
+        variantSpecificImages.push(img)
+      } else if (count === totalVariants) {
+        // Common to all variants
+        commonImages.push(img)
+      } else {
+        // Appears in some but not all variants
+        otherImages.push(img)
+      }
+    })
+    
+    // Reorder: variant-specific first, then others maintaining original order
+    variantImages = [...variantSpecificImages, ...otherImages, ...commonImages]
+    
+    // If variant has matching images, return them; otherwise return first product image
+    if (variantImages.length > 0) {
+      return variantImages
+    }
+    
+    // Fallback to first product image if variant has no matching images
+    return allImages.length > 0 ? [allImages[0]] : (product.thumbnail ? [{ url: product.thumbnail }] : [])
+  }, [product.images, product.thumbnail, product.variants, selectedVariant])
+
 
   return (
     <Transition show={isOpen} as={Fragment}>
@@ -120,46 +185,12 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
                   {/* Left: Image Gallery */}
                   <div className="flex flex-col gap-4">
-                    {/* Main Image */}
-                    <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-ui-bg-subtle shadow-lg">
-                      {displayImages.length > 0 && displayImages[selectedImageIndex] && (
-                        <Image
-                          src={getImageUrl(displayImages[selectedImageIndex].url)}
-                          alt={product.title || "Product image"}
-                          fill
-                          className="object-cover transition-opacity duration-300"
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                          priority
-                        />
-                      )}
-                    </div>
-
-                    {/* Thumbnail Images */}
-                    {displayImages.length > 1 && (
-                      <div className="flex gap-2 overflow-x-auto pb-2">
-                        {displayImages.map((image, index) => (
-                          <button
-                            key={index}
-                            onClick={() => setSelectedImageIndex(index)}
-                            className={`
-                              relative flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-all hover:scale-105
-                              ${selectedImageIndex === index 
-                                ? 'border-primary ring-2 ring-primary ring-offset-2 shadow-md' 
-                                : 'border-border hover:border-primary/50 hover:shadow-sm'
-                              }
-                            `}
-                          >
-                            <Image
-                              src={getImageUrl(image.url)}
-                              alt={`Thumbnail ${index + 1}`}
-                              fill
-                              className="object-cover"
-                              sizes="80px"
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                    <ProductImageCarousel
+                      key={`carousel-${selectedVariant?.id || 'default'}-${displayImages[0]?.id || 0}`}
+                      images={displayImages}
+                      productTitle={product.title}
+                      variantId={selectedVariant?.id}
+                    />
                   </div>
 
                   {/* Right: Product Info */}

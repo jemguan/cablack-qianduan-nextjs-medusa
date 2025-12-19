@@ -36,7 +36,6 @@ const ProductPreview = ({
 }: ProductPreviewProps) => {
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false)
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
-  const [hoveredImageIndex, setHoveredImageIndex] = useState(0)
 
   const { cheapestPrice } = getProductPrice({ product })
 
@@ -66,9 +65,81 @@ const ProductPreview = ({
     }))
   }
 
-  const images = product.images || []
-  const displayImages = images.length > 0 ? images : (product.thumbnail ? [{ url: product.thumbnail }] : [])
-  const hasMultipleImages = displayImages.length > 1
+  // Get images for selected variant (same logic as product detail page)
+  const displayImages = useMemo(() => {
+    const allImages = product.images || []
+    
+    // If no variant selected, return all product images
+    if (!selectedVariant || !product.variants) {
+      return allImages.length > 0 ? allImages : (product.thumbnail ? [{ url: product.thumbnail }] : [])
+    }
+
+    // Check if variant has images
+    if (!selectedVariant.images || selectedVariant.images.length === 0) {
+      // No variant images, return first product image
+      return allImages.length > 0 ? [allImages[0]] : (product.thumbnail ? [{ url: product.thumbnail }] : [])
+    }
+
+    // If variant has images, filter product images by variant image IDs
+    // Create a map of image ID to image object for quick lookup
+    const imageMap = new Map(allImages.map((img) => [img.id, img]))
+    
+    // Build variant images array in the order specified by variant.images
+    let variantImages = selectedVariant.images
+      .map((variantImg: any) => imageMap.get(variantImg.id))
+      .filter((img: any) => img !== undefined) // Remove any images not found in product.images
+    
+    // Find variant-specific images (images that appear in fewer variants)
+    // Collect all variant image IDs to find unique ones
+    const allVariantImageIds = new Set<string>()
+    product.variants?.forEach((v) => {
+      v.images?.forEach((img: any) => {
+        allVariantImageIds.add(img.id)
+      })
+    })
+    
+    // Count how many variants each image appears in
+    const imageVariantCount = new Map<string, number>()
+    product.variants?.forEach((v) => {
+      v.images?.forEach((img: any) => {
+        const count = imageVariantCount.get(img.id) || 0
+        imageVariantCount.set(img.id, count + 1)
+      })
+    })
+    
+    // Find variant-specific images (appear in only 1 variant) and common images (appear in all variants)
+    const variantSpecificImages: typeof variantImages = []
+    const commonImages: typeof variantImages = []
+    const otherImages: typeof variantImages = []
+    
+    variantImages.forEach((img) => {
+      if (!img?.id) return
+      const count = imageVariantCount.get(img.id) || 0
+      const totalVariants = product.variants?.length || 1
+      
+      if (count === 1) {
+        // Variant-specific (only appears in this variant)
+        variantSpecificImages.push(img)
+      } else if (count === totalVariants) {
+        // Common to all variants
+        commonImages.push(img)
+      } else {
+        // Appears in some but not all variants
+        otherImages.push(img)
+      }
+    })
+    
+    // Reorder: variant-specific first, then others maintaining original order
+    variantImages = [...variantSpecificImages, ...otherImages, ...commonImages]
+    
+    // If variant has matching images, return them; otherwise return first product image
+    if (variantImages.length > 0) {
+      return variantImages
+    }
+    
+    // Fallback to first product image if variant has no matching images
+    return allImages.length > 0 ? [allImages[0]] : (product.thumbnail ? [{ url: product.thumbnail }] : [])
+  }, [product.images, product.thumbnail, product.variants, selectedVariant])
 
   // Check if product is on sale
   const isOnSale = cheapestPrice?.price_type === "sale"
@@ -125,29 +196,21 @@ const ProductPreview = ({
           />
           
           {/* Product Image */}
-          {displayImages.length > 0 && (
-            <div className="relative w-full h-full">
-              <Image
-                src={getImageUrl(displayImages[hoveredImageIndex]?.url || displayImages[0].url)}
-                alt={product.title || "Product"}
-                fill
-                className={clx(
-                  "object-cover transition-opacity duration-300",
-                  hasMultipleImages && "group-hover:opacity-0"
-                )}
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              />
-              {hasMultipleImages && displayImages[1] && (
+          {displayImages.length > 0 && displayImages[0]?.url && (() => {
+            const firstImageUrl = getImageUrl(displayImages[0].url || '')
+            if (!firstImageUrl) return null
+            return (
+              <div className="relative w-full h-full">
                 <Image
-                  src={getImageUrl(displayImages[1].url)}
+                  src={firstImageUrl}
                   alt={product.title || "Product"}
                   fill
-                  className="object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  className="object-cover"
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 />
-              )}
-            </div>
-          )}
+              </div>
+            )
+          })()}
 
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-2 z-20">

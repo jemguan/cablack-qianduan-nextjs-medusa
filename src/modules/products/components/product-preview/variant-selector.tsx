@@ -75,8 +75,20 @@ const VariantSelector: React.FC<VariantSelectorProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const [showExpandButton, setShowExpandButton] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const itemsRef = useRef<HTMLDivElement>(null)
+
+  // Check if mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const selectedVariant = useMemo(() => {
     if (!product.variants || product.variants.length === 0) {
@@ -150,9 +162,10 @@ const VariantSelector: React.FC<VariantSelectorProps> = ({
                              (option.values || []).some(v => isColorValue(v.value || ''))
 
         const values = option.values || []
-        // In compact mode, show max 5 items initially, otherwise show all
-        const maxVisible = compact ? 5 : values.length
-        const shouldShowExpand = compact && values.length > maxVisible
+        // In compact mode on mobile, always show all items (no expand button)
+        // On desktop compact mode, show max 5 items initially
+        const maxVisible = compact && !isMobile ? 5 : values.length
+        const shouldShowExpand = compact && !isMobile && values.length > maxVisible
         const visibleCount = shouldShowExpand && !isExpanded ? maxVisible : values.length
         const visibleValues = values.slice(0, visibleCount)
         const hiddenValues = values.slice(visibleCount)
@@ -168,10 +181,11 @@ const VariantSelector: React.FC<VariantSelectorProps> = ({
               <div 
                 className={clx(
                   "flex gap-2",
-                  compact && !isExpanded ? "flex-nowrap overflow-x-auto no-scrollbar" : "flex-wrap"
+                  compact && !isExpanded && !isMobile ? "flex-nowrap overflow-x-auto no-scrollbar" : "flex-wrap",
+                  compact && isMobile && "flex-nowrap overflow-x-auto no-scrollbar"
                 )}
                 ref={option.id === product.options?.[0]?.id ? itemsRef : undefined}
-                style={compact && !isExpanded ? { 
+                style={compact && !isExpanded && !isMobile ? { 
                   paddingRight: shouldShowExpand ? '60px' : '0'
                 } : {}}
               >
@@ -234,7 +248,8 @@ const VariantSelector: React.FC<VariantSelectorProps> = ({
                 )
               })}
               </div>
-              {shouldShowExpand && (
+              {/* Only show expand button on desktop, not on mobile */}
+              {shouldShowExpand && !isMobile && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
