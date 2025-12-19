@@ -26,35 +26,35 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
 }) => {
   return (
     <ProductPageClientWrapper product={product} initialVariantId={initialVariantId}>
-      <div
-        className="content-container flex flex-col small:flex-row small:items-start gap-6 py-6"
-        data-testid="product-container-two-column"
-      >
-        {/* 左侧：图片区域 */}
+    <div
+      className="content-container flex flex-col small:flex-row small:items-start gap-6 py-6"
+      data-testid="product-container-two-column"
+    >
+      {/* 左侧：图片区域 */}
         <div className="w-full small:w-1/2 flex-shrink-0 small:self-start">
           <ProductImageCarouselClient
             product={product}
-            productTitle={product.title}
-          />
-        </div>
+          productTitle={product.title}
+        />
+      </div>
 
-        {/* 右侧：产品信息区域 */}
+      {/* 右侧：产品信息区域 */}
         <div className="w-full small:w-1/2 flex flex-col gap-y-6 small:self-start">
-          {/* 产品基本信息 */}
-          <ProductInfo product={product} />
+        {/* 产品基本信息 */}
+        <ProductInfo product={product} />
 
-          {/* 产品操作区域 */}
-          <Suspense
-            fallback={
-              <ProductActions
-                disabled={true}
-                product={product}
-                region={region}
-              />
-            }
-          >
-            <ProductActionsWrapper id={product.id} region={region} />
-          </Suspense>
+        {/* 产品操作区域 */}
+        <Suspense
+          fallback={
+            <ProductActions
+              disabled={true}
+              product={product}
+              region={region}
+            />
+          }
+        >
+          <ProductActionsWrapper id={product.id} region={region} />
+        </Suspense>
 
           {/* 产品描述 */}
           {product.description && (
@@ -66,7 +66,7 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
             </Text>
           )}
 
-          {/* 产品标签页 */}
+        {/* 产品标签页 */}
           <ProductTabs product={product} shippingReturnsConfig={shippingReturnsConfig} />
         </div>
       </div>

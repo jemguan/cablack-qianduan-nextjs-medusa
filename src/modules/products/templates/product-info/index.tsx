@@ -28,12 +28,12 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
 
         {/* 副标题 */}
         {product.subtitle && (
-          <Text
+        <Text
             className="text-lg text-ui-fg-subtle"
             data-testid="product-subtitle"
-          >
+        >
             {product.subtitle}
-          </Text>
+        </Text>
         )}
       </div>
     </div>

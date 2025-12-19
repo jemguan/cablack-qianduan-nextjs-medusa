@@ -27,83 +27,83 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
 }) => {
   return (
     <ProductPageClientWrapper product={product} initialVariantId={initialVariantId}>
-      <div
-        className="content-container flex flex-col small:flex-row small:items-start gap-6 py-6"
-        data-testid="product-container-three-column"
-      >
-        {/* 左侧：图片区域 */}
-        <div className="w-full small:w-2/5 flex-shrink-0">
+    <div
+      className="content-container flex flex-col small:flex-row small:items-start gap-6 py-6"
+      data-testid="product-container-three-column"
+    >
+      {/* 左侧：图片区域 */}
+      <div className="w-full small:w-2/5 flex-shrink-0">
           <ProductImageCarouselClient
             product={product}
-            productTitle={product.title}
-          />
-        </div>
+          productTitle={product.title}
+        />
+      </div>
 
-        {/* 中间：产品信息区域 */}
-        <div className="w-full small:flex-1 flex flex-col gap-y-4 small:px-6">
-          {/* 产品标题 */}
-          {product.collection && (
-            <LocalizedClientLink
-              href={`/collections/${product.collection.handle}`}
-              className="text-medium text-ui-fg-muted hover:text-ui-fg-subtle"
-            >
-              {product.collection.title}
-            </LocalizedClientLink>
-          )}
-          <Heading
-            level="h1"
-            className="text-3xl leading-10 text-ui-fg-base"
-            data-testid="product-title"
+      {/* 中间：产品信息区域 */}
+      <div className="w-full small:flex-1 flex flex-col gap-y-4 small:px-6">
+        {/* 产品标题 */}
+        {product.collection && (
+          <LocalizedClientLink
+            href={`/collections/${product.collection.handle}`}
+            className="text-medium text-ui-fg-muted hover:text-ui-fg-subtle"
           >
-            {product.title}
-          </Heading>
+            {product.collection.title}
+          </LocalizedClientLink>
+        )}
+        <Heading
+          level="h1"
+          className="text-3xl leading-10 text-ui-fg-base"
+          data-testid="product-title"
+        >
+          {product.title}
+        </Heading>
 
-          {/* 副标题 */}
-          {product.subtitle && (
-            <Text
-              className="text-lg text-ui-fg-subtle"
-              data-testid="product-subtitle"
-            >
-              {product.subtitle}
-            </Text>
-          )}
+        {/* 副标题 */}
+        {product.subtitle && (
+          <Text
+            className="text-lg text-ui-fg-subtle"
+            data-testid="product-subtitle"
+          >
+            {product.subtitle}
+          </Text>
+        )}
 
           {/* 产品标签页 */}
           <div className="mt-4">
-            {/* 产品描述 */}
-            {product.description && (
-              <Text
+        {/* 产品描述 */}
+        {product.description && (
+          <Text
                 className="text-medium text-ui-fg-subtle whitespace-pre-line mb-4"
-                data-testid="product-description"
-              >
-                {product.description}
-              </Text>
-            )}
-            <ProductTabs product={product} shippingReturnsConfig={shippingReturnsConfig} />
-          </div>
-        </div>
-
-        {/* 右侧：价格和操作区域 */}
-        <div className="w-full small:w-80 small:flex-shrink-0 flex flex-col gap-y-6">
-          {/* 价格 */}
-          <div>
-            <ProductPrice product={product} />
-          </div>
-
-          {/* 产品操作区域 */}
-          <Suspense
-            fallback={
-              <ProductActions
-                disabled={true}
-                product={product}
-                region={region}
-              />
-            }
+            data-testid="product-description"
           >
-            <ProductActionsWrapper id={product.id} region={region} />
-          </Suspense>
+            {product.description}
+          </Text>
+        )}
+            <ProductTabs product={product} shippingReturnsConfig={shippingReturnsConfig} />
         </div>
       </div>
+
+      {/* 右侧：价格和操作区域 */}
+        <div className="w-full small:w-80 small:flex-shrink-0 flex flex-col gap-y-6">
+        {/* 价格 */}
+        <div>
+          <ProductPrice product={product} />
+        </div>
+
+        {/* 产品操作区域 */}
+        <Suspense
+          fallback={
+            <ProductActions
+              disabled={true}
+              product={product}
+              region={region}
+            />
+          }
+        >
+          <ProductActionsWrapper id={product.id} region={region} />
+        </Suspense>
+      </div>
+    </div>
     </ProductPageClientWrapper>
   )
 }

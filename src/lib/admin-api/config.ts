@@ -65,9 +65,22 @@ export interface MedusaConfig {
     secondaryColor?: string;
     radius?: number;
   };
-  pageLayouts?: Record<string, string[]>;
+  pageLayouts?: {
+    [pageType: string]: {
+      blocks: Array<{
+        id: string;
+        type: string;
+        enabled: boolean;
+        order: number;
+      }>;
+    };
+  };
   pageConfigs?: Record<string, any>;
-  blockConfigs?: Record<string, any>;
+  blockConfigs?: {
+    [blockType: string]: {
+      [blockId: string]: Record<string, any>;
+    };
+  };
   headerConfig?: {
     logo?: {
       lightLogoUrl?: string;

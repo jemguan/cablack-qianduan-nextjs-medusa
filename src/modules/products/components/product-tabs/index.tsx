@@ -114,16 +114,16 @@ const ProductInfoTab = ({ product }: ProductTabsProps) => {
             <div key={index}>
               <span className="font-semibold">{item.label}</span>
               <p>{item.value}</p>
-            </div>
+          </div>
           ))}
         </div>
         {rightColumn.length > 0 && (
-          <div className="flex flex-col gap-y-4">
+        <div className="flex flex-col gap-y-4">
             {rightColumn.map((item, index) => (
               <div key={index}>
                 <span className="font-semibold">{item.label}</span>
                 <p>{item.value}</p>
-              </div>
+          </div>
             ))}
           </div>
         )}
@@ -185,12 +185,12 @@ const ShippingInfoTab = ({ config }: { config?: ShippingReturnsConfig }) => {
         {items.map((item) => (
           <div key={item.id} className="flex items-start gap-x-2">
             {getIcon(item.icon, item.customIcon)}
-            <div>
+          <div>
               <span className="font-semibold">{item.title}</span>
-              <p className="max-w-sm">
+            <p className="max-w-sm">
                 {item.description}
-              </p>
-            </div>
+            </p>
+          </div>
           </div>
         ))}
       </div>
