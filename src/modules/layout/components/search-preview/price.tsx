@@ -8,9 +8,13 @@ export default function SearchPreviewPrice({ price }: { price: VariantPrice }) {
     return null
   }
 
+  // 检查是否需要显示对比价格（现价低于原价）
+  const showComparePrice = price.price_type === "sale" && 
+    price.original_price_number > price.calculated_price_number
+
   return (
-    <>
-      {price.price_type === "sale" && (
+    <div className="flex items-center gap-x-1.5 flex-wrap">
+      {showComparePrice && (
         <Text
           className="line-through text-ui-fg-muted text-xs"
           data-testid="original-price"
@@ -20,13 +24,13 @@ export default function SearchPreviewPrice({ price }: { price: VariantPrice }) {
       )}
       <Text
         className={clx("text-ui-fg-muted text-xs", {
-          "text-ui-fg-interactive": price.price_type === "sale",
+          "text-ui-fg-interactive": showComparePrice,
         })}
         data-testid="price"
       >
         {price.calculated_price}
       </Text>
-    </>
+    </div>
   )
 }
 

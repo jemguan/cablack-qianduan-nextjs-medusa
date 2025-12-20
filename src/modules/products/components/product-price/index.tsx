@@ -21,14 +21,34 @@ export default function ProductPrice({
     return <div className="block w-32 h-9 bg-gray-100 animate-pulse" />
   }
 
+  // 只有在选择了对应变体时才显示对比价格
+  // 检查是否需要显示对比价格（现价低于原价，且已选择变体）
+  const showComparePrice = variant && 
+    selectedPrice.price_type === "sale" && 
+    selectedPrice.original_price_number > selectedPrice.calculated_price_number
+
+  // 只有在没有选择变体时才显示 "From"
+  // 如果 variant 存在且有 variantPrice，说明已选择变体，不显示 "From"
+  const showFromPrefix = !variant || !variantPrice
+
   return (
     <div className="flex flex-col text-ui-fg-base" suppressHydrationWarning>
+      <div className="flex items-center gap-x-2 flex-wrap">
+        {showComparePrice && (
       <span
-        className={clx("text-xl-semi", {
-          "text-ui-fg-interactive": selectedPrice.price_type === "sale",
+            className="line-through text-ui-fg-muted text-lg"
+            data-testid="original-product-price"
+            data-value={selectedPrice.original_price_number}
+          >
+            {selectedPrice.original_price}
+          </span>
+        )}
+        <span
+          className={clx("text-xl-semi text-ui-fg-base", {
+            "text-ui-fg-interactive": showComparePrice,
         })}
       >
-        {!variant && "From "}
+          {showFromPrefix && "From "}
         <span
           data-testid="product-price"
           data-value={selectedPrice.calculated_price_number}
@@ -36,23 +56,12 @@ export default function ProductPrice({
           {selectedPrice.calculated_price}
         </span>
       </span>
-      {selectedPrice.price_type === "sale" && (
-        <>
-          <p>
-            <span className="text-ui-fg-subtle">Original: </span>
-            <span
-              className="line-through"
-              data-testid="original-product-price"
-              data-value={selectedPrice.original_price_number}
-            >
-              {selectedPrice.original_price}
-            </span>
-          </p>
-          <span className="text-ui-fg-interactive">
+        {showComparePrice && selectedPrice.percentage_diff !== "0" && (
+          <span className="bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-md shadow-md">
             -{selectedPrice.percentage_diff}%
           </span>
-        </>
       )}
+      </div>
     </div>
   )
 }

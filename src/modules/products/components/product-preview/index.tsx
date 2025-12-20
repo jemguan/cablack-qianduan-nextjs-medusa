@@ -37,8 +37,6 @@ const ProductPreview = ({
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false)
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
 
-  const { cheapestPrice } = getProductPrice({ product })
-
   // Initialize options if product has only one variant
   useEffect(() => {
     if (product.variants?.length === 1) {
@@ -57,6 +55,13 @@ const ProductPreview = ({
       return isEqual(variantOptions, options)
     })
   }, [product.variants, options])
+
+  // 获取选中变体的价格，如果没有选中则获取最便宜的价格
+  const selectedVariantPrice = selectedVariant 
+    ? getProductPrice({ product, variantId: selectedVariant.id }).variantPrice
+    : null
+  const cheapestPrice = getProductPrice({ product }).cheapestPrice
+  const displayPrice = selectedVariantPrice || cheapestPrice
 
   const handleOptionChange = (optionId: string, value: string) => {
     setOptions((prev) => ({
@@ -141,9 +146,9 @@ const ProductPreview = ({
     return allImages.length > 0 ? [allImages[0]] : (product.thumbnail ? [{ url: product.thumbnail }] : [])
   }, [product.images, product.thumbnail, product.variants, selectedVariant])
 
-  // Check if product is on sale
-  const isOnSale = cheapestPrice?.price_type === "sale"
-  const discountPercentage = cheapestPrice?.percentage_diff
+  // Check if product is on sale (use selected variant price if available, otherwise cheapest)
+  const isOnSale = displayPrice?.price_type === "sale"
+  const discountPercentage = displayPrice?.percentage_diff
 
   // Check stock status
   const inStock = useMemo(() => {
@@ -213,9 +218,9 @@ const ProductPreview = ({
           })()}
 
           {/* Badges */}
-          <div className="absolute top-3 left-3 flex flex-col gap-2 z-20">
+          <div className="absolute top-0 left-0 flex flex-col gap-0 z-20">
             {isOnSale && discountPercentage && (
-              <span className="bg-primary text-primary-foreground text-xs font-bold px-2.5 py-1 rounded-md shadow-md animate-pulse">
+              <span className="bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-br-md shadow-md">
                 -{discountPercentage}%
               </span>
             )}
@@ -261,7 +266,12 @@ const ProductPreview = ({
 
           {/* Price */}
           <div className="flex items-center gap-x-2">
-            {cheapestPrice && <PreviewPriceClient price={cheapestPrice} />}
+            {displayPrice && (
+              <PreviewPriceClient 
+                price={displayPrice} 
+                selectedVariant={selectedVariant}
+              />
+            )}
           </div>
 
           {/* Variant Selector - Compact Version */}

@@ -7,23 +7,69 @@ export const getPricesForVariant = (variant: any) => {
     return null
   }
 
+  const calculatedAmount = variant.calculated_price.calculated_amount
+  const currencyCode = variant.calculated_price.currency_code
+  
+  // 获取对比价格（从 metadata 中）
+  let compareAtPriceAmount: number | null = null
+  if (variant.metadata?.compare_at_price) {
+    // compare_at_price 存储的是分，需要转换为数字
+    const comparePrice = variant.metadata.compare_at_price
+    compareAtPriceAmount = typeof comparePrice === 'number' 
+      ? comparePrice 
+      : parseInt(comparePrice, 10)
+    
+    // 如果转换失败，设为 null
+    if (isNaN(compareAtPriceAmount)) {
+      compareAtPriceAmount = null
+    }
+  }
+
+  // 确定原价：优先使用 Price List 的原价，如果没有则使用对比价格
+  let originalAmount = variant.calculated_price.original_amount
+  let shouldShowComparePrice = false
+
+  // 如果 Price List 有原价（促销价格），使用 Price List 的原价
+  if (variant.calculated_price.calculated_price.price_list_type === "sale" && 
+      variant.calculated_price.original_amount > calculatedAmount) {
+    originalAmount = variant.calculated_price.original_amount
+    shouldShowComparePrice = true
+  } 
+  // 如果没有 Price List 原价，但有对比价格，且现价低于对比价格，使用对比价格
+  else if (compareAtPriceAmount !== null && compareAtPriceAmount > calculatedAmount) {
+    originalAmount = compareAtPriceAmount
+    shouldShowComparePrice = true
+  }
+
+  // 对比价格在 metadata 中存储为分（cents），但需要转换为与 calculated_amount 相同的单位
+  // 根据用户反馈（50变成5000），说明 calculated_amount 是元，对比价格需要除以100
+  let displayOriginalAmount = originalAmount
+  if (shouldShowComparePrice && compareAtPriceAmount !== null && compareAtPriceAmount === originalAmount) {
+    // 对比价格存储为分，但 calculated_amount 是元，所以需要除以100
+    displayOriginalAmount = originalAmount / 100
+  }
+
   return {
-    calculated_price_number: variant.calculated_price.calculated_amount,
+    calculated_price_number: calculatedAmount,
     calculated_price: convertToLocale({
-      amount: variant.calculated_price.calculated_amount,
-      currency_code: variant.calculated_price.currency_code,
+      amount: calculatedAmount,
+      currency_code: currencyCode,
     }),
-    original_price_number: variant.calculated_price.original_amount,
+    original_price_number: originalAmount,
     original_price: convertToLocale({
-      amount: variant.calculated_price.original_amount,
-      currency_code: variant.calculated_price.currency_code,
+      amount: displayOriginalAmount,
+      currency_code: currencyCode,
     }),
-    currency_code: variant.calculated_price.currency_code,
-    price_type: variant.calculated_price.calculated_price.price_list_type,
-    percentage_diff: getPercentageDiff(
+    currency_code: currencyCode,
+    price_type: shouldShowComparePrice ? "sale" : variant.calculated_price.calculated_price.price_list_type || "default",
+    percentage_diff: shouldShowComparePrice 
+      ? getPercentageDiff(displayOriginalAmount, calculatedAmount)
+      : (variant.calculated_price.calculated_price.price_list_type === "sale"
+          ? getPercentageDiff(
       variant.calculated_price.original_amount,
       variant.calculated_price.calculated_amount
-    ),
+            )
+          : "0"),
   }
 }
 

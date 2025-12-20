@@ -5,7 +5,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import ProductImageCarouselClient from "@modules/products/components/product-image-carousel-client"
 import ProductActions from "@modules/products/components/product-actions"
 import ProductActionsWrapper from "../product-actions-wrapper"
-import ProductPrice from "@modules/products/components/product-price"
+import ConditionalPrice from "@modules/products/components/product-price/conditional-price"
 import ProductTabs from "@modules/products/components/product-tabs"
 import ProductPageClientWrapper from "@modules/products/components/product-page-client-wrapper"
 import { MedusaConfig } from "@lib/admin-api/config"
@@ -85,9 +85,9 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
 
       {/* 右侧：价格和操作区域 */}
         <div className="w-full small:w-80 small:flex-shrink-0 flex flex-col gap-y-6">
-        {/* 价格 */}
+        {/* 价格 - 只在没有变体选择器或未选择变体时显示 */}
         <div>
-          <ProductPrice product={product} />
+          <ConditionalPrice product={product} />
         </div>
 
         {/* 产品操作区域 */}
