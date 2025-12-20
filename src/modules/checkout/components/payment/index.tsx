@@ -153,7 +153,7 @@ const Payment = ({
   }, [activeSession?.provider_id, selectedPaymentMethod])
 
   return (
-    <div className="bg-white">
+    <div className="bg-card">
       <div className="flex flex-row items-center justify-between mb-6">
         <Heading
           level="h2"

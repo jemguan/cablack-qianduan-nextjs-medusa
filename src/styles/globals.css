@@ -160,6 +160,21 @@
     background-color: hsl(var(--background)) !important;
   }
 
+  /* Checkout 页面背景修复 */
+  [data-testid="checkout-layout"] {
+    background-color: hsl(var(--background)) !important;
+  }
+  .dark [data-testid="checkout-layout"] {
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  [data-testid="checkout-container"] {
+    background-color: hsl(var(--background));
+  }
+  .dark [data-testid="checkout-container"] {
+    background-color: hsl(var(--background));
+  }
+
   .text-xsmall-regular {
     @apply text-[10px] leading-4 font-normal;
   }
