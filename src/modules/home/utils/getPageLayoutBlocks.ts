@@ -6,7 +6,7 @@
 import type { MedusaConfig } from '@lib/admin-api/config';
 import type { HttpTypes } from '@medusajs/types';
 import { getPageLayoutBlocks } from '@lib/admin-api/pageLayoutUtils';
-import { handleFeaturedCollectionsBlock } from './blockHandlers';
+import { handleFeaturedCollectionsBlock, handleCollageHeroBlock } from './blockHandlers';
 
 export interface BlockConfig {
   id: string;
@@ -23,12 +23,14 @@ export interface BlockConfig {
  * @param config Medusa 配置
  * @param collections 所有集合数据
  * @param region 区域信息
+ * @param products 产品数据（用于 CollageHero 等需要产品的 blocks）
  * @returns 排序后的 block 配置数组
  */
 export function getHomePageLayoutBlocks(
   config: MedusaConfig | null | undefined,
   collections: HttpTypes.StoreCollection[],
-  region: HttpTypes.StoreRegion
+  region: HttpTypes.StoreRegion,
+  products?: HttpTypes.StoreProduct[]
 ): BlockConfig[] {
   // 从 pageLayouts 获取 blocks
   const blocks = getPageLayoutBlocks(config, 'home');
@@ -41,7 +43,7 @@ export function getHomePageLayoutBlocks(
   const blockConfigs: BlockConfig[] = [];
 
   for (const block of blocks) {
-    const blockConfig = getBlockConfigForBlock(block, config, collections, region);
+    const blockConfig = getBlockConfigForBlock(block, config, collections, region, products);
     if (blockConfig) {
       blockConfigs.push(blockConfig);
     }
@@ -63,11 +65,15 @@ function getBlockConfigForBlock(
   },
   config: MedusaConfig | null | undefined,
   collections: HttpTypes.StoreCollection[],
-  region: HttpTypes.StoreRegion
+  region: HttpTypes.StoreRegion,
+  products?: HttpTypes.StoreProduct[]
 ): BlockConfig | null {
   switch (block.type) {
     case 'featuredCollections':
       return handleFeaturedCollectionsBlock(block, block.config, collections, region);
+
+    case 'collageHero':
+      return handleCollageHeroBlock(block, block.config, products, region);
 
     // 可以在这里添加更多 block 类型的处理
     // case 'hero':

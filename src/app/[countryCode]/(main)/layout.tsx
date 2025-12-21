@@ -8,6 +8,7 @@ import CartMismatchBanner from "@modules/layout/components/cart-mismatch-banner"
 import Footer from "@modules/layout/templates/footer"
 import Nav from "@modules/layout/templates/nav"
 import FreeShippingPriceNudge from "@modules/shipping/components/free-shipping-price-nudge"
+import { ScrollToTop } from "@components/ScrollToTop"
 
 // 禁用页面缓存，确保购物车价格实时更新
 export const dynamic = 'force-dynamic'
@@ -29,6 +30,7 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
 
   return (
     <>
+      <ScrollToTop />
       <Nav />
       {customer && cart && (
         <CartMismatchBanner customer={customer} cart={cart} />
