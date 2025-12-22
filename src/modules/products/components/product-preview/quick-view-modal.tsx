@@ -12,6 +12,7 @@ import { getProductPrice } from "@lib/util/get-product-price"
 import { Text } from "@medusajs/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductImageCarousel from "./product-image-carousel"
+import ProductBrandLink from "../product-brand-link"
 
 type QuickViewModalProps = {
   product: HttpTypes.StoreProduct
@@ -197,14 +198,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                   <div className="flex flex-col gap-6">
                     {/* Product Title */}
                     <div>
-                      {product.collection && (
-                        <LocalizedClientLink
-                          href={`/collections/${product.collection.handle}`}
-                          className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                        >
-                          {product.collection.title}
-                        </LocalizedClientLink>
-                      )}
+                      <ProductBrandLink productId={product.id} />
                       <h2 className="text-2xl font-bold text-foreground mt-1">
                         {product.title}
                       </h2>

@@ -1,13 +1,13 @@
 import React, { Suspense } from "react"
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@medusajs/ui"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductImageCarouselClient from "@modules/products/components/product-image-carousel-client"
 import ProductActions from "@modules/products/components/product-actions"
 import ProductActionsWrapper from "../product-actions-wrapper"
 import ConditionalPrice from "@modules/products/components/product-price/conditional-price"
 import ProductTabs from "@modules/products/components/product-tabs"
 import ProductPageClientWrapper from "@modules/products/components/product-page-client-wrapper"
+import ProductBrandLink from "@modules/products/components/product-brand-link"
 import { MedusaConfig } from "@lib/admin-api/config"
 
 type ThreeColumnLayoutProps = {
@@ -42,14 +42,10 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
       {/* 中间：产品信息区域 */}
       <div className="w-full small:flex-1 flex flex-col gap-y-4 small:px-6">
         {/* 产品标题 */}
-        {product.collection && (
-          <LocalizedClientLink
-            href={`/collections/${product.collection.handle}`}
-            className="text-medium text-ui-fg-muted hover:text-ui-fg-subtle"
-          >
-            {product.collection.title}
-          </LocalizedClientLink>
-        )}
+        <ProductBrandLink 
+          productId={product.id}
+          className="text-medium text-ui-fg-muted hover:text-ui-fg-subtle"
+        />
         <Heading
           level="h1"
           className="text-3xl leading-10 text-ui-fg-base"
