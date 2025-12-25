@@ -44,7 +44,7 @@ const ProductBrandLink = ({ productId, className = "text-sm text-muted-foregroun
 
   return (
     <LocalizedClientLink
-      href={`/brand/${brandIdentifier}`}
+      href={`/brands/${brandIdentifier}`}
       className={`${className} cursor-pointer`}
     >
       {brand.name}

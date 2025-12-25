@@ -1,0 +1,138 @@
+/**
+ * EmblaCarousel 组件样式
+ * 使用 Embla Carousel 官方推荐的 class names
+ */
+
+.embla {
+  width: 100%;
+  position: relative;
+}
+
+.embla__viewport {
+  overflow: hidden;
+  width: 100%;
+}
+
+.embla__container {
+  display: flex;
+  touch-action: pan-y pinch-zoom;
+  margin-left: calc(var(--slide-spacing) * -1);
+  flex-direction: row;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.embla__slide {
+  transform: translate3d(0, 0, 0);
+  flex: 0 0 var(--slide-size);
+  min-width: 0;
+  padding-left: var(--slide-spacing);
+  position: relative;
+}
+
+.embla__slide__inner {
+  display: block;
+  width: 100%;
+  position: relative;
+}
+
+/* 导航按钮样式 */
+.embla__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background-color: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  position: relative;
+  margin: 0 0.5rem;
+}
+
+.embla__button:hover:not(:disabled) {
+  background-color: hsl(var(--accent));
+  border-color: hsl(var(--accent));
+  transform: scale(1.05);
+}
+
+.embla__button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.embla__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.embla__button svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* 导航按钮容器 */
+.embla__navigation {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 桌面端控制栏：导航按钮靠左，分页器靠右 */
+.embla__controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  width: 100%;
+}
+
+/* 分页器样式 */
+.embla__dots {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.embla__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: hsl(var(--muted-foreground));
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.embla__dot:hover {
+  background-color: hsl(var(--foreground));
+  transform: scale(1.2);
+}
+
+.embla__dot--selected {
+  background-color: hsl(var(--foreground));
+  width: 1.5rem;
+  border-radius: 0.25rem;
+}
+
+/* 移动端优化 */
+@media (max-width: 767px) {
+  .embla__button {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  /* 移动端分页器居中 */
+  .embla__dots {
+    justify-content: center;
+  }
+}
+

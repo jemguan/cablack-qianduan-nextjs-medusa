@@ -7,6 +7,7 @@ import { getPageLayoutBlocks } from "@lib/admin-api/pageLayoutUtils"
 import { getHomePageLayoutBlocks } from "@modules/home/utils/getPageLayoutBlocks"
 import FeaturedCollections from "@modules/home/components/featured-collections"
 import { CollageHero } from "@modules/home/components/collage-hero"
+import { BrandShowcase } from "@modules/home/components/brand-showcase"
 import { sdk } from "@lib/config"
 import { getAuthHeaders, getCacheOptions } from "@lib/data/cookies"
 import { getCacheConfig } from "@lib/config/cache"
@@ -102,6 +103,7 @@ export default async function Home(props: {
   const componentMap: Record<string, React.ComponentType<any>> = {
     FeaturedCollections,
     CollageHero,
+    BrandShowcase,
     // 可以在这里添加更多组件映射
   }
 
