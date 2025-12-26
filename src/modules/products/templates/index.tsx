@@ -5,8 +5,9 @@ import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-relat
 import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 import { getMedusaConfig } from "@lib/admin-api/config"
-import TwoColumnLayout from "./layouts/two-column-layout"
-import ThreeColumnLayout from "./layouts/three-column-layout"
+import { getProductPageLayoutBlocks } from "../utils/getProductPageLayoutBlocks"
+import ProductContent from "../components/product-content"
+import { FAQBlock } from "@modules/home/components/faq-block"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
@@ -29,35 +30,43 @@ const ProductTemplate: React.FC<ProductTemplateProps> = async ({
 
   // 获取配置
   const config = await getMedusaConfig()
-  const productPageConfig = config?.productPageConfig
 
-  // 确定布局类型，默认为 two-column
-  const layout = productPageConfig?.layout || 'two-column'
-  const isEnabled = productPageConfig?.enabled !== false
+  // 根据 pageLayouts 配置获取产品页 blocks
+  const pageBlocks = getProductPageLayoutBlocks(
+    config,
+    product,
+    region,
+    images,
+    initialVariantId
+  )
 
-  // 如果禁用，使用默认布局
-  const finalLayout = isEnabled ? layout : 'two-column'
+  // 组件映射
+  const componentMap: Record<string, React.ComponentType<any>> = {
+    ProductContent,
+    FAQBlock,
+    // 可以在这里添加更多组件映射
+  }
 
   return (
     <>
-      {/* 根据配置选择布局 */}
-      {finalLayout === 'three-column' ? (
-        <ThreeColumnLayout
-          product={product}
-          region={region}
-          images={images}
-          initialVariantId={initialVariantId}
-          shippingReturnsConfig={config?.shippingReturnsConfig}
-        />
-      ) : (
-        <TwoColumnLayout
-          product={product}
-          region={region}
-          images={images}
-          initialVariantId={initialVariantId}
-          shippingReturnsConfig={config?.shippingReturnsConfig}
-        />
-      )}
+      {/* 根据配置动态渲染 blocks */}
+      {pageBlocks.map((blockConfig) => {
+        if (!blockConfig.enabled || !blockConfig.componentName) {
+          return null
+        }
+
+        const Component = componentMap[blockConfig.componentName]
+        if (!Component) {
+          console.warn(
+            `[Medusa ProductPage] Unknown component: ${blockConfig.componentName}`
+          )
+          return null
+        }
+
+        return (
+          <Component key={blockConfig.id} {...blockConfig.props} />
+        )
+      })}
 
       {/* 相关产品 */}
       <div

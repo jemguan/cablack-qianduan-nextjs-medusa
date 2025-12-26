@@ -6,7 +6,7 @@
 import type { MedusaConfig } from '@lib/admin-api/config';
 import type { HttpTypes } from '@medusajs/types';
 import { getPageLayoutBlocks } from '@lib/admin-api/pageLayoutUtils';
-import { handleFeaturedCollectionsBlock, handleCollageHeroBlock, handleBrandShowcaseBlock } from './blockHandlers';
+import { handleFeaturedCollectionsBlock, handleCollageHeroBlock, handleBrandShowcaseBlock, handleTextBlockBlock, handleFAQBlock } from './blockHandlers';
 
 export interface BlockConfig {
   id: string;
@@ -77,6 +77,12 @@ function getBlockConfigForBlock(
 
     case 'brandShowcase':
       return handleBrandShowcaseBlock(block, block.config);
+
+    case 'textBlock':
+      return handleTextBlockBlock(block, block.config);
+
+    case 'faq':
+      return handleFAQBlock(block, block.config);
 
     // 可以在这里添加更多 block 类型的处理
     // case 'hero':

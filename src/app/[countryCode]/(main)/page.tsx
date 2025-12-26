@@ -8,6 +8,8 @@ import { getHomePageLayoutBlocks } from "@modules/home/utils/getPageLayoutBlocks
 import FeaturedCollections from "@modules/home/components/featured-collections"
 import { CollageHero } from "@modules/home/components/collage-hero"
 import { BrandShowcase } from "@modules/home/components/brand-showcase"
+import { TextBlock } from "@modules/home/components/text-block"
+import { FAQBlock } from "@modules/home/components/faq-block"
 import { sdk } from "@lib/config"
 import { getAuthHeaders, getCacheOptions } from "@lib/data/cookies"
 import { getCacheConfig } from "@lib/config/cache"
@@ -104,6 +106,8 @@ export default async function Home(props: {
     FeaturedCollections,
     CollageHero,
     BrandShowcase,
+    TextBlock,
+    FAQBlock,
     // 可以在这里添加更多组件映射
   }
 
