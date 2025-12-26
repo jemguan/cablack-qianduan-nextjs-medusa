@@ -208,17 +208,27 @@ export default async function Footer() {
               )}
           </div>
         </div>
-        <div className="flex w-full mb-0 pt-[15px] pb-[15px] justify-between text-ui-fg-muted">
+        <div className="flex w-full mb-0 pt-[15px] pb-[15px] justify-between items-center text-ui-fg-muted">
           {/* Copyright - 左侧 */}
-          {footerConfig?.copyright?.enabled && footerConfig.copyright.text ? (
-            <Text className="txt-compact-small">
-              {footerConfig.copyright.text.replace('{year}', new Date().getFullYear().toString())}
-            </Text>
-          ) : !footerConfig?.copyright?.enabled && !footerConfig?.poweredBy?.enabled ? (
-            <Text className="txt-compact-small">
-              © {new Date().getFullYear()} Medusa Store. All rights reserved.
-            </Text>
-          ) : null}
+          <div className="flex items-center gap-x-4">
+            {footerConfig?.copyright?.enabled && footerConfig.copyright.text ? (
+              <Text className="txt-compact-small">
+                {footerConfig.copyright.text.replace('{year}', new Date().getFullYear().toString())}
+              </Text>
+            ) : !footerConfig?.copyright?.enabled && !footerConfig?.poweredBy?.enabled ? (
+              <Text className="txt-compact-small">
+                © {new Date().getFullYear()} Medusa Store. All rights reserved.
+              </Text>
+            ) : null}
+            
+            {/* Sitemap Link */}
+            <LocalizedClientLink
+              href="/sitemap"
+              className="txt-compact-small hover:text-ui-fg-base transition-colors"
+            >
+              Sitemap
+            </LocalizedClientLink>
+          </div>
           
           {/* PoweredBy - 右侧 */}
           {footerConfig?.poweredBy?.enabled ? (

@@ -5,6 +5,7 @@ import { getCollectionByHandle, listCollections } from "@lib/data/collections"
 import { listRegions } from "@lib/data/regions"
 import { StoreCollection, StoreRegion } from "@medusajs/types"
 import CollectionTemplate from "@modules/collections/templates"
+import Breadcrumb from "@modules/common/components/breadcrumb"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
 type Props = {
@@ -79,12 +80,28 @@ export default async function CollectionPage(props: Props) {
     notFound()
   }
 
+  const breadcrumbItems = [
+    { label: "Home", href: "/" },
+    { label: "Collections", href: "/collections" },
+    { label: collection.title },
+  ]
+
   return (
-    <CollectionTemplate
-      collection={collection}
-      page={page}
-      sortBy={sortBy}
-      countryCode={params.countryCode}
-    />
+    <>
+      {/* Breadcrumb container below header */}
+      <div className="border-b border-ui-border-base bg-background">
+        <div className="content-container py-2">
+          <Breadcrumb items={breadcrumbItems} countryCode={params.countryCode} />
+        </div>
+      </div>
+
+      {/* Collection content */}
+      <CollectionTemplate
+        collection={collection}
+        page={page}
+        sortBy={sortBy}
+        countryCode={params.countryCode}
+      />
+    </>
   )
 }

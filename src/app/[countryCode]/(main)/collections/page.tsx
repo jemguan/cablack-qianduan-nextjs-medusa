@@ -1,12 +1,12 @@
 import { Metadata } from "next"
 
-import { listBrands } from "@lib/data/brands"
-import BrandsListTemplate from "@modules/brands/templates/brands-list"
+import { listCollections } from "@lib/data/collections"
+import CollectionsListTemplate from "@modules/collections/templates/collections-list"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 
 export const metadata: Metadata = {
-  title: "Brands",
-  description: "Explore all of our brands.",
+  title: "Collections",
+  description: "Browse all our collections.",
 }
 
 type Params = {
@@ -15,17 +15,17 @@ type Params = {
   }>
 }
 
-export default async function BrandsPage(props: Params) {
-  const params = await props.params;
+export default async function CollectionsPage(props: Params) {
+  const params = await props.params
 
-  const { brands } = await listBrands({
+  const { collections } = await listCollections({
     limit: "100",
     offset: "0",
   })
 
   const breadcrumbItems = [
     { label: "Home", href: "/" },
-    { label: "Brands" },
+    { label: "Collections" },
   ]
 
   return (
@@ -37,9 +37,9 @@ export default async function BrandsPage(props: Params) {
         </div>
       </div>
 
-      {/* Brands list content */}
-      <BrandsListTemplate
-        brands={brands}
+      {/* Collections list content */}
+      <CollectionsListTemplate
+        collections={collections}
         countryCode={params.countryCode}
       />
     </>

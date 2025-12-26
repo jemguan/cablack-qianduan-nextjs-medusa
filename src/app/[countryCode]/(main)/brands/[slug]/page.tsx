@@ -5,6 +5,7 @@ import { getBrandBySlug } from "@lib/data/brands"
 import { listRegions } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
 import BrandTemplate from "@modules/brands/templates"
+import Breadcrumb from "@modules/common/components/breadcrumb"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
 type Props = {
@@ -59,13 +60,29 @@ export default async function BrandPage(props: Props) {
     notFound()
   }
 
+  const breadcrumbItems = [
+    { label: "Home", href: "/" },
+    { label: "Brands", href: "/brands" },
+    { label: brand.name },
+  ]
+
   return (
-    <BrandTemplate
-      brand={brand}
-      page={page}
-      sortBy={sortBy}
-      countryCode={params.countryCode}
-    />
+    <>
+      {/* Breadcrumb container below header */}
+      <div className="border-b border-ui-border-base bg-background">
+        <div className="content-container py-2">
+          <Breadcrumb items={breadcrumbItems} countryCode={params.countryCode} />
+        </div>
+      </div>
+
+      {/* Brand content */}
+      <BrandTemplate
+        brand={brand}
+        page={page}
+        sortBy={sortBy}
+        countryCode={params.countryCode}
+      />
+    </>
   )
 }
 

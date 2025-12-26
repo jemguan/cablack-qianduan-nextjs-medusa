@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { listProducts } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
 import ProductTemplate from "@modules/products/templates"
+import Breadcrumb from "@modules/common/components/breadcrumb"
 import { HttpTypes } from "@medusajs/types"
 
 type Props = {
@@ -111,7 +112,10 @@ export default async function ProductPage(props: Props) {
 
   const pricedProduct = await listProducts({
     countryCode: params.countryCode,
-    queryParams: { handle: params.handle },
+    queryParams: {
+      handle: params.handle,
+      fields: "*categories,*categories.parent_category,*categories.parent_category.parent_category",
+    },
   }).then(({ response }) => response.products[0])
 
   const images = getImagesForVariant(pricedProduct, selectedVariantId)
@@ -120,13 +124,55 @@ export default async function ProductPage(props: Props) {
     notFound()
   }
 
+  // Build breadcrumb items
+  const breadcrumbItems = [
+    { label: "Home", href: "/" },
+  ]
+
+  // Add category to breadcrumb if product has a category
+  if (pricedProduct.categories && pricedProduct.categories.length > 0) {
+    const category = pricedProduct.categories[0]
+    const categoryHandle = category.handle || category.id
+    
+    // Build category path (handle parent categories)
+    const categoryPath: string[] = []
+    let currentCategory: HttpTypes.StoreProductCategory | null = category
+    
+    while (currentCategory) {
+      if (currentCategory.handle) {
+        categoryPath.unshift(currentCategory.handle)
+      }
+      currentCategory = currentCategory.parent_category || null
+    }
+    
+    if (categoryPath.length > 0) {
+      breadcrumbItems.push({
+        label: category.name || "Category",
+        href: `/categories/${categoryPath.join("/")}`,
+      })
+    }
+  }
+
+  // Add product title (current page)
+  breadcrumbItems.push({ label: pricedProduct.title })
+
   return (
-    <ProductTemplate
-      product={pricedProduct}
-      region={region}
-      countryCode={params.countryCode}
-      images={images}
-      initialVariantId={selectedVariantId}
-    />
+    <>
+      {/* Breadcrumb container below header */}
+      <div className="border-b border-ui-border-base bg-background">
+        <div className="content-container py-2">
+          <Breadcrumb items={breadcrumbItems} countryCode={params.countryCode} />
+        </div>
+      </div>
+
+      {/* Product content */}
+      <ProductTemplate
+        product={pricedProduct}
+        region={region}
+        countryCode={params.countryCode}
+        images={images}
+        initialVariantId={selectedVariantId}
+      />
+    </>
   )
 }
