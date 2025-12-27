@@ -62,7 +62,7 @@ function getImagesForVariant(
   }
 
   const variant = product.variants!.find((v) => v.id === selectedVariantId)
-  if (!variant || !variant.images.length) {
+  if (!variant || !variant.images || !variant.images.length) {
     return product.images
   }
 
@@ -81,7 +81,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
   const product = await listProducts({
     countryCode: params.countryCode,
-    queryParams: { handle },
+    queryParams: { 
+      handle,
+    },
   }).then(({ response }) => response.products[0])
 
   if (!product) {
@@ -114,7 +116,7 @@ export default async function ProductPage(props: Props) {
     countryCode: params.countryCode,
     queryParams: {
       handle: params.handle,
-      fields: "*categories,*categories.parent_category,*categories.parent_category.parent_category",
+      fields: "+*categories,+*categories.parent_category,+*categories.parent_category.parent_category",
     },
   }).then(({ response }) => response.products[0])
 

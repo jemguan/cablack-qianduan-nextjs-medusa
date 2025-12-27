@@ -56,6 +56,20 @@ export const listProducts = async ({
 
   const cacheConfig = getCacheConfig("PRODUCT_LIST")
 
+  // Default fields that should always be included
+  const defaultFields =
+    "*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.inventory_items.inventory_item_id,*variants.inventory_items.required_quantity,*variants.images.id,*variants.images.url,*variants.images.metadata,*variants.options.option_id,*variants.options.value,*options.id,*options.title,*options.values.id,*options.values.value,+metadata,+tags,"
+
+  // If custom fields are provided, merge them with default fields using + prefix
+  const fields = queryParams?.fields
+    ? queryParams.fields.startsWith("+") || queryParams.fields.startsWith("-")
+      ? `${defaultFields}${queryParams.fields}`
+      : `${defaultFields}+${queryParams.fields}`
+    : defaultFields
+
+  // Remove fields from queryParams to avoid duplication
+  const { fields: _, ...restQueryParams } = queryParams || {}
+
   return sdk.client
     .fetch<{ products: HttpTypes.StoreProduct[]; count: number }>(
       `/store/products`,
@@ -65,9 +79,8 @@ export const listProducts = async ({
           limit,
           offset,
           region_id: region?.id,
-          fields:
-            "*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.inventory_items.inventory_item_id,*variants.inventory_items.required_quantity,*variants.images.id,*variants.images.url,*variants.images.metadata,+metadata,+tags,",
-          ...queryParams,
+          fields,
+          ...restQueryParams,
         },
         headers,
         next,

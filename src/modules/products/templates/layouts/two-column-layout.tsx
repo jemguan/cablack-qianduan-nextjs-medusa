@@ -1,10 +1,9 @@
-import React, { Suspense } from "react"
+import React from "react"
 import { HttpTypes } from "@medusajs/types"
 import { Text } from "@medusajs/ui"
 import ProductImageCarouselClient from "@modules/products/components/product-image-carousel-client"
 import ProductInfo from "@modules/products/templates/product-info"
 import ProductActions from "@modules/products/components/product-actions"
-import ProductActionsWrapper from "../product-actions-wrapper"
 import ProductTabs from "@modules/products/components/product-tabs"
 import ProductPageClientWrapper from "@modules/products/components/product-page-client-wrapper"
 import { MedusaConfig } from "@lib/admin-api/config"
@@ -44,17 +43,10 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
         <ProductInfo product={product} />
 
         {/* 产品操作区域 */}
-        <Suspense
-          fallback={
-            <ProductActions
-              disabled={true}
-              product={product}
-              region={region}
-            />
-          }
-        >
-          <ProductActionsWrapper id={product.id} region={region} />
-        </Suspense>
+        <ProductActions
+          product={product}
+          region={region}
+        />
 
           {/* 产品描述 */}
           {product.description && (

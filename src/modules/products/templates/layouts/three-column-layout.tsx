@@ -1,9 +1,8 @@
-import React, { Suspense } from "react"
+import React from "react"
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@medusajs/ui"
 import ProductImageCarouselClient from "@modules/products/components/product-image-carousel-client"
 import ProductActions from "@modules/products/components/product-actions"
-import ProductActionsWrapper from "../product-actions-wrapper"
 import ConditionalPrice from "@modules/products/components/product-price/conditional-price"
 import ProductTabs from "@modules/products/components/product-tabs"
 import ProductPageClientWrapper from "@modules/products/components/product-page-client-wrapper"
@@ -87,17 +86,10 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
         </div>
 
         {/* 产品操作区域 */}
-        <Suspense
-          fallback={
-            <ProductActions
-              disabled={true}
-              product={product}
-              region={region}
-            />
-          }
-        >
-          <ProductActionsWrapper id={product.id} region={region} />
-        </Suspense>
+        <ProductActions
+          product={product}
+          region={region}
+        />
       </div>
     </div>
     </ProductPageClientWrapper>
