@@ -1,13 +1,12 @@
-import React, { Suspense } from "react"
+import React from "react"
 
-import RelatedProducts from "@modules/products/components/related-products"
-import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
 import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 import { getMedusaConfig } from "@lib/admin-api/config"
 import { getProductPageLayoutBlocks } from "../utils/getProductPageLayoutBlocks"
 import ProductContent from "../components/product-content"
 import { FAQBlock } from "@modules/home/components/faq-block"
+import { RecentlyViewedProductsBlock, ProductViewTracker } from "../components/recently-viewed-products"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
@@ -37,18 +36,23 @@ const ProductTemplate: React.FC<ProductTemplateProps> = async ({
     product,
     region,
     images,
-    initialVariantId
+    initialVariantId,
+    countryCode
   )
 
   // 组件映射
   const componentMap: Record<string, React.ComponentType<any>> = {
     ProductContent,
     FAQBlock,
+    RecentlyViewedProductsBlock,
     // 可以在这里添加更多组件映射
   }
 
   return (
     <>
+      {/* 产品浏览追踪 - 自动记录到浏览历史 */}
+      <ProductViewTracker product={product} />
+
       {/* 根据配置动态渲染 blocks */}
       {pageBlocks.map((blockConfig) => {
         if (!blockConfig.enabled || !blockConfig.componentName) {
@@ -67,16 +71,6 @@ const ProductTemplate: React.FC<ProductTemplateProps> = async ({
           <Component key={blockConfig.id} {...blockConfig.props} />
         )
       })}
-
-      {/* 相关产品 */}
-      <div
-        className="content-container my-16 small:my-32"
-        data-testid="related-products-container"
-      >
-        <Suspense fallback={<SkeletonRelatedProducts />}>
-          <RelatedProducts product={product} countryCode={countryCode} />
-        </Suspense>
-      </div>
     </>
   )
 }

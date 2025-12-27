@@ -9,6 +9,7 @@ import { getPageLayoutBlocks } from '@lib/admin-api/pageLayoutUtils';
 import {
   handleProductContentBlock,
   handleFAQBlock,
+  handleRecentlyViewedProductsBlock,
 } from './blockHandlers';
 
 export interface BlockConfig {
@@ -35,7 +36,8 @@ export function getProductPageLayoutBlocks(
   product: HttpTypes.StoreProduct,
   region: HttpTypes.StoreRegion,
   images: HttpTypes.StoreProductImage[],
-  initialVariantId?: string
+  initialVariantId?: string,
+  countryCode?: string
 ): BlockConfig[] {
   // 从 pageLayouts 获取 blocks
   const blocks = getPageLayoutBlocks(config, 'product');
@@ -77,7 +79,8 @@ export function getProductPageLayoutBlocks(
       product,
       region,
       images,
-      initialVariantId
+      initialVariantId,
+      countryCode
     );
     if (blockConfig) {
       blockConfigs.push(blockConfig);
@@ -102,7 +105,8 @@ function getBlockConfigForBlock(
   product: HttpTypes.StoreProduct,
   region: HttpTypes.StoreRegion,
   images: HttpTypes.StoreProductImage[],
-  initialVariantId?: string
+  initialVariantId?: string,
+  countryCode?: string
 ): BlockConfig | null {
   switch (block.type) {
     case 'productContent':
@@ -133,6 +137,20 @@ function getBlockConfigForBlock(
         block.config ||
         {};
       return handleFAQBlock(block, faqBlockConfig, product);
+
+    case 'recentlyViewedProducts':
+      // 从 blockConfigs 获取配置，如果没有则使用 block.config
+      const recentlyViewedBlockConfig =
+        config?.blockConfigs?.['recentlyViewedProducts']?.[block.id] ||
+        block.config ||
+        {};
+      return handleRecentlyViewedProductsBlock(
+        block,
+        recentlyViewedBlockConfig,
+        product,
+        region,
+        countryCode
+      );
 
     default:
       console.warn(`[Medusa ProductPage] Unknown block type: ${block.type}`);

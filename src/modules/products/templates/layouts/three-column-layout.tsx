@@ -1,4 +1,6 @@
-import React from "react"
+"use client"
+
+import React, { useRef } from "react"
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@medusajs/ui"
 import ProductImageCarouselClient from "@modules/products/components/product-image-carousel-client"
@@ -7,6 +9,7 @@ import ConditionalPrice from "@modules/products/components/product-price/conditi
 import ProductTabs from "@modules/products/components/product-tabs"
 import ProductPageClientWrapper from "@modules/products/components/product-page-client-wrapper"
 import ProductBrandLink from "@modules/products/components/product-brand-link"
+import { StickyAddToCart } from "@modules/products/components/sticky-add-to-cart"
 import { MedusaConfig } from "@lib/admin-api/config"
 
 type ThreeColumnLayoutProps = {
@@ -24,6 +27,9 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
   initialVariantId,
   shippingReturnsConfig,
 }) => {
+  const actionsRef = useRef<HTMLDivElement>(null)
+  const mobileActionsRef = useRef<HTMLDivElement>(null)
+
   return (
     <ProductPageClientWrapper product={product} initialVariantId={initialVariantId}>
     <div
@@ -63,6 +69,15 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
           </Text>
         )}
 
+        {/* 移动端：在副标题下显示操作区域（变体选择、数量选择、按钮） */}
+        <div className="small:hidden mt-4" ref={mobileActionsRef}>
+          <ProductActions
+            product={product}
+            region={region}
+            mobileLayout={true}
+          />
+        </div>
+
           {/* 产品标签页 */}
           <div className="mt-4">
         {/* 产品描述 */}
@@ -78,20 +93,30 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
         </div>
       </div>
 
-      {/* 右侧：价格和操作区域 */}
-        <div className="w-full small:w-80 small:flex-shrink-0 flex flex-col gap-y-6">
+      {/* 右侧：价格和操作区域（桌面端） */}
+        <div className="hidden small:flex w-full small:w-80 small:flex-shrink-0 flex-col gap-y-6">
         {/* 价格 - 只在没有变体选择器或未选择变体时显示 */}
         <div>
           <ConditionalPrice product={product} />
         </div>
 
-        {/* 产品操作区域 */}
-        <ProductActions
-          product={product}
-          region={region}
-        />
+        {/* 产品操作区域 - 桌面端也使用同一个 ref */}
+        <div ref={actionsRef}>
+          <ProductActions
+            product={product}
+            region={region}
+          />
+        </div>
       </div>
     </div>
+
+      {/* 粘性购物栏 */}
+      <StickyAddToCart
+        product={product}
+        region={region}
+        triggerRef={actionsRef}
+        mobileTriggerRef={mobileActionsRef}
+      />
     </ProductPageClientWrapper>
   )
 }

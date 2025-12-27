@@ -52,9 +52,6 @@ export default async function RelatedProducts({
         <span className="text-base-regular text-gray-600 mb-6">
           Related products
         </span>
-        <p className="text-2xl-regular text-ui-fg-base max-w-lg">
-          You might also want to check out these products.
-        </p>
       </div>
 
       <ul className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8">

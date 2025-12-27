@@ -10,13 +10,16 @@ import { useParams, usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { isEqual } from "lodash"
 import ProductPrice from "../product-price"
-import MobileActions from "./mobile-actions"
+// import MobileActions from "./mobile-actions" // 已禁用，使用 StickyAddToCart 替代
 import { useVariantSelection } from "@modules/products/contexts/variant-selection-context"
+import { ProductQuantitySelector } from "../quantity-selector"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
   region: HttpTypes.StoreRegion
   disabled?: boolean
+  /** 移动端布局模式：隐藏价格，只显示变体选择、数量选择和按钮 */
+  mobileLayout?: boolean
 }
 
 const optionsAsKeymap = (
@@ -31,12 +34,14 @@ const optionsAsKeymap = (
 export default function ProductActions({
   product,
   disabled,
+  mobileLayout = false,
 }: ProductActionsProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
   const { options, selectedVariant, setOptionValue, setOptions } = useVariantSelection()
   const [isAdding, setIsAdding] = useState(false)
+  const [quantity, setQuantity] = useState(1)
   const countryCode = useParams().countryCode as string
 
   //check if the selected options produce a valid variant
@@ -96,6 +101,19 @@ export default function ProductActions({
 
   const inView = useIntersection(actionsRef, "0px")
 
+  // 计算最大可选数量（基于库存）
+  const maxQuantity = useMemo(() => {
+    if (!selectedVariant) return 99
+    if (!selectedVariant.manage_inventory) return 99
+    if (selectedVariant.allow_backorder) return 99
+    return Math.min(selectedVariant.inventory_quantity || 99, 99)
+  }, [selectedVariant])
+
+  // 当变体变化时，重置数量为1
+  useEffect(() => {
+    setQuantity(1)
+  }, [selectedVariant?.id])
+
   // add the selected variant to the cart
   const handleAddToCart = async () => {
     if (!selectedVariant?.id) {
@@ -107,7 +125,7 @@ export default function ProductActions({
     try {
       await addToCart({
         variantId: selectedVariant.id,
-        quantity: 1,
+        quantity,
         countryCode,
       })
     } catch (error) {
@@ -120,33 +138,47 @@ export default function ProductActions({
 
   return (
     <>
-      <div className="flex flex-col gap-y-2" ref={actionsRef}>
-        <div>
-          {(product.variants?.length ?? 0) > 1 && (
-            <div className="flex flex-col gap-y-4">
-              {(product.options || []).map((option) => {
-                return (
-                  <div key={option.id}>
-                    <OptionSelect
-                      option={option}
-                      current={options[option.id]}
-                      updateOption={setOptionValue}
-                      title={option.title ?? ""}
-                      data-testid="product-options"
-                      disabled={!!disabled || isAdding}
-                      product={product}
-                      options={options}
-                    />
-                  </div>
-                )
-              })}
-              <Divider />
-            </div>
-          )}
-        </div>
+      <div className="flex flex-col gap-y-2" ref={mobileLayout ? undefined : actionsRef}>
+        {/* 变体选择器 */}
+        {(product.variants?.length ?? 0) > 1 && (
+          <div className="flex flex-col gap-y-4">
+            {(product.options || []).map((option) => {
+              return (
+                <div key={option.id}>
+                  <OptionSelect
+                    option={option}
+                    current={options[option.id]}
+                    updateOption={setOptionValue}
+                    title={option.title ?? ""}
+                    data-testid="product-options"
+                    disabled={!!disabled || isAdding}
+                    product={product}
+                    options={options}
+                  />
+                </div>
+              )
+            })}
+            {!mobileLayout && <Divider />}
+          </div>
+        )}
 
-        <ProductPrice product={product} variant={selectedVariant} />
+        {/* 价格 - 移动端布局时隐藏 */}
+        {!mobileLayout && (
+          <ProductPrice product={product} variant={selectedVariant} />
+        )}
 
+        {/* 数量选择器 */}
+        <ProductQuantitySelector
+          quantity={quantity}
+          onQuantityChange={setQuantity}
+          minQuantity={1}
+          maxQuantity={maxQuantity}
+          showLabel={true}
+          size="md"
+          disabled={!!disabled || isAdding || !selectedVariant || !isValidVariant}
+        />
+
+        {/* 加入购物车按钮 */}
         <Button
           onClick={handleAddToCart}
           disabled={
@@ -167,7 +199,8 @@ export default function ProductActions({
             ? "Out of stock"
             : "Add to cart"}
         </Button>
-        <MobileActions
+        {/* MobileActions 已禁用，因为 StickyAddToCart 提供了更好的移动端体验 */}
+        {/* <MobileActions
           product={product}
           variant={selectedVariant}
           options={options}
@@ -177,7 +210,7 @@ export default function ProductActions({
           isAdding={isAdding}
           show={!inView}
           optionsDisabled={!!disabled || isAdding}
-        />
+        /> */}
       </div>
     </>
   )

@@ -1,4 +1,6 @@
-import React from "react"
+"use client"
+
+import React, { useRef } from "react"
 import { HttpTypes } from "@medusajs/types"
 import { Text } from "@medusajs/ui"
 import ProductImageCarouselClient from "@modules/products/components/product-image-carousel-client"
@@ -6,6 +8,7 @@ import ProductInfo from "@modules/products/templates/product-info"
 import ProductActions from "@modules/products/components/product-actions"
 import ProductTabs from "@modules/products/components/product-tabs"
 import ProductPageClientWrapper from "@modules/products/components/product-page-client-wrapper"
+import { StickyAddToCart } from "@modules/products/components/sticky-add-to-cart"
 import { MedusaConfig } from "@lib/admin-api/config"
 
 type TwoColumnLayoutProps = {
@@ -23,6 +26,9 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
   initialVariantId,
   shippingReturnsConfig,
 }) => {
+  const actionsRef = useRef<HTMLDivElement>(null)
+  const mobileActionsRef = useRef<HTMLDivElement>(null)
+
   return (
     <ProductPageClientWrapper product={product} initialVariantId={initialVariantId}>
     <div
@@ -41,12 +47,23 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
         <div className="w-full small:w-1/2 flex flex-col gap-y-6 small:self-start">
         {/* 产品基本信息 */}
         <ProductInfo product={product} />
+        
+        {/* 移动端：在副标题下显示操作区域（变体选择、数量选择、按钮） */}
+        <div className="small:hidden mt-4" ref={mobileActionsRef}>
+          <ProductActions
+            product={product}
+            region={region}
+            mobileLayout={true}
+          />
+        </div>
 
-        {/* 产品操作区域 */}
-        <ProductActions
-          product={product}
-          region={region}
-        />
+        {/* 桌面端：正常位置显示操作区域 */}
+        <div className="hidden small:block" ref={actionsRef}>
+          <ProductActions
+            product={product}
+            region={region}
+          />
+        </div>
 
           {/* 产品描述 */}
           {product.description && (
@@ -62,6 +79,14 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
           <ProductTabs product={product} shippingReturnsConfig={shippingReturnsConfig} />
         </div>
       </div>
+
+      {/* 粘性购物栏 */}
+      <StickyAddToCart
+        product={product}
+        region={region}
+        triggerRef={actionsRef}
+        mobileTriggerRef={mobileActionsRef}
+      />
     </ProductPageClientWrapper>
   )
 }

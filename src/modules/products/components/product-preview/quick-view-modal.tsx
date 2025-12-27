@@ -9,10 +9,13 @@ import VariantSelector from "./variant-selector"
 import QuickAddButton from "./quick-add-button"
 import ProductPrice from "../product-price"
 import { getProductPrice } from "@lib/util/get-product-price"
-import { Text } from "@medusajs/ui"
+import { Text, Button } from "@medusajs/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductImageCarousel from "./product-image-carousel"
 import ProductBrandLink from "../product-brand-link"
+import { ProductQuantitySelector } from "../quantity-selector"
+import { addToCart } from "@lib/data/cart"
+import { useParams, useRouter } from "next/navigation"
 
 type QuickViewModalProps = {
   product: HttpTypes.StoreProduct
@@ -37,6 +40,11 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   onClose,
 }) => {
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
+  const [quantity, setQuantity] = useState(1)
+  const [isAdding, setIsAdding] = useState(false)
+  const router = useRouter()
+  const params = useParams()
+  const countryCode = params?.countryCode as string
 
   // Initialize options if product has only one variant
   useEffect(() => {
@@ -62,6 +70,60 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
       ...prev,
       [optionId]: value,
     }))
+  }
+
+  // 当变体变化时，重置数量为1
+  useEffect(() => {
+    setQuantity(1)
+  }, [selectedVariant?.id])
+
+  // 计算最大可选数量（基于库存）
+  const maxQuantity = useMemo(() => {
+    if (!selectedVariant) return 99
+    if (!selectedVariant.manage_inventory) return 99
+    if (selectedVariant.allow_backorder) return 99
+    return Math.min(selectedVariant.inventory_quantity || 99, 99)
+  }, [selectedVariant])
+
+  // 检查变体是否有库存
+  const inStock = useMemo(() => {
+    if (!selectedVariant) return false
+    if (!selectedVariant.manage_inventory) return true
+    if (selectedVariant.allow_backorder) return true
+    return (selectedVariant.inventory_quantity || 0) > 0
+  }, [selectedVariant])
+
+  // 检查选中的变体是否有效
+  const isValidVariant = useMemo(() => {
+    if (!product.variants || product.variants.length === 0) return false
+    return product.variants.some((v) => {
+      const variantOptions = optionsAsKeymap(v.options)
+      return isEqual(variantOptions, options)
+    })
+  }, [product.variants, options])
+
+  // 处理加入购物车
+  const handleAddToCart = async () => {
+    if (!selectedVariant?.id || !inStock || !isValidVariant) {
+      return
+    }
+
+    setIsAdding(true)
+
+    try {
+      await addToCart({
+        variantId: selectedVariant.id,
+        quantity,
+        countryCode,
+      })
+
+      router.refresh()
+      // 可以在这里添加成功提示或关闭模态框
+    } catch (error) {
+      console.error("Failed to add to cart:", error)
+    } finally {
+      setIsAdding(false)
+    }
   }
 
   // Get images for selected variant (same logic as product preview card)
@@ -229,13 +291,41 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                       </div>
                     )}
 
+                    {/* Quantity Selector */}
+                    {selectedVariant && isValidVariant && (
+                      <div>
+                        <ProductQuantitySelector
+                          quantity={quantity}
+                          onQuantityChange={setQuantity}
+                          minQuantity={1}
+                          maxQuantity={maxQuantity}
+                          showLabel={true}
+                          size="md"
+                          disabled={isAdding || !inStock}
+                        />
+                      </div>
+                    )}
+
                     {/* Add to Cart Button */}
                     <div>
-                      <QuickAddButton
-                        product={product}
-                        selectedVariant={selectedVariant || undefined}
-                        options={options}
-                      />
+                      <Button
+                        onClick={handleAddToCart}
+                        disabled={
+                          !inStock ||
+                          !selectedVariant ||
+                          isAdding ||
+                          !isValidVariant
+                        }
+                        variant="primary"
+                        className="w-full h-10"
+                        isLoading={isAdding}
+                      >
+                        {!selectedVariant || !isValidVariant
+                          ? "Select variant"
+                          : !inStock
+                          ? "Out of stock"
+                          : "Add to cart"}
+                      </Button>
                     </div>
 
                     {/* View Full Details Link */}
