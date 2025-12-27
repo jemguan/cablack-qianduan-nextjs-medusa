@@ -6,7 +6,8 @@
 import type { MedusaConfig } from '@lib/admin-api/config';
 import type { HttpTypes } from '@medusajs/types';
 import { getPageLayoutBlocks } from '@lib/admin-api/pageLayoutUtils';
-import { handleFeaturedCollectionsBlock, handleCollageHeroBlock, handleBrandShowcaseBlock, handleTextBlockBlock, handleFAQBlock } from './blockHandlers';
+import { handleFeaturedCollectionsBlock, handleCollageHeroBlock, handleBrandShowcaseBlock, handleTextBlockBlock, handleFAQBlock, handleFeaturedBlogBlock, handleFeaturedProductBlock } from './blockHandlers';
+import type { BlogPost } from '@lib/data/blogs';
 
 export interface BlockConfig {
   id: string;
@@ -24,14 +25,16 @@ export interface BlockConfig {
  * @param collections 所有集合数据
  * @param region 区域信息
  * @param products 产品数据（用于 CollageHero 等需要产品的 blocks）
+ * @param articles 博客文章数据（用于 FeaturedBlog 等需要文章的 blocks）
  * @returns 排序后的 block 配置数组
  */
-export function getHomePageLayoutBlocks(
+export async function getHomePageLayoutBlocks(
   config: MedusaConfig | null | undefined,
   collections: HttpTypes.StoreCollection[],
   region: HttpTypes.StoreRegion,
-  products?: HttpTypes.StoreProduct[]
-): BlockConfig[] {
+  products?: HttpTypes.StoreProduct[],
+  articles?: BlogPost[]
+): Promise<BlockConfig[]> {
   // 从 pageLayouts 获取 blocks
   const blocks = getPageLayoutBlocks(config, 'home');
 
@@ -43,7 +46,7 @@ export function getHomePageLayoutBlocks(
   const blockConfigs: BlockConfig[] = [];
 
   for (const block of blocks) {
-    const blockConfig = getBlockConfigForBlock(block, config, collections, region, products);
+    const blockConfig = await getBlockConfigForBlock(block, config, collections, region, products, articles);
     if (blockConfig) {
       blockConfigs.push(blockConfig);
     }
@@ -55,7 +58,7 @@ export function getHomePageLayoutBlocks(
 /**
  * 根据 block 类型生成对应的配置
  */
-function getBlockConfigForBlock(
+async function getBlockConfigForBlock(
   block: {
     id: string;
     type: string;
@@ -66,8 +69,9 @@ function getBlockConfigForBlock(
   config: MedusaConfig | null | undefined,
   collections: HttpTypes.StoreCollection[],
   region: HttpTypes.StoreRegion,
-  products?: HttpTypes.StoreProduct[]
-): BlockConfig | null {
+  products?: HttpTypes.StoreProduct[],
+  articles?: BlogPost[]
+): Promise<BlockConfig | null> {
   switch (block.type) {
     case 'featuredCollections':
       return handleFeaturedCollectionsBlock(block, block.config, collections, region);
@@ -83,6 +87,12 @@ function getBlockConfigForBlock(
 
     case 'faq':
       return handleFAQBlock(block, block.config);
+
+    case 'featuredBlog':
+      return handleFeaturedBlogBlock(block, block.config, articles);
+
+    case 'featuredProduct':
+      return handleFeaturedProductBlock(block, block.config, region);
 
     // 可以在这里添加更多 block 类型的处理
     // case 'hero':

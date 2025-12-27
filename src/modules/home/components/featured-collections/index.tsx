@@ -4,10 +4,8 @@
  */
 
 import { HttpTypes } from '@medusajs/types';
-import { Text } from '@medusajs/ui';
-import InteractiveLink from '@modules/common/components/interactive-link';
-import ProductPreview from '@modules/products/components/product-preview';
 import { listProducts } from '@lib/data/products';
+import { FeaturedCollectionsClient } from './FeaturedCollectionsClient';
 
 interface FeaturedCollectionsProps {
   collection: HttpTypes.StoreCollection; // 单个集合
@@ -19,7 +17,34 @@ interface FeaturedCollectionsProps {
   titleAlign?: 'left' | 'center' | 'right';
   maxCount?: number; // 最大显示产品数
   desktopCols?: number; // 桌面端每行显示数量
+  desktopMaxCount?: number; // 桌面端最大显示数量
+  desktopEnableCarousel?: boolean; // 桌面端是否启用轮播
+  desktopCarouselConfig?: {
+    loop?: boolean;
+    autoplay?: boolean;
+    autoplayDelay?: number;
+    spacing?: number;
+    showNavigation?: boolean;
+    showPagination?: boolean;
+    align?: 'start' | 'center' | 'end';
+    draggable?: boolean;
+  };
+  mobileLayout?: 'grid' | 'carousel'; // 移动端布局模式
   mobileCols?: number; // 移动端每行显示数量
+  mobileCarouselConfig?: {
+    slidesPerView?: number;
+    spaceBetween?: number;
+    showNavigation?: boolean;
+    showPagination?: boolean;
+    loop?: boolean;
+    autoplay?: boolean;
+    autoplayDelay?: number;
+    align?: 'start' | 'center' | 'end';
+    draggable?: boolean;
+  };
+  showViewAll?: boolean; // 是否显示查看全部按钮
+  viewAllUrl?: string; // 查看全部链接
+  viewAllText?: string; // 查看全部按钮文字
 }
 
 export default async function FeaturedCollections({
@@ -32,7 +57,15 @@ export default async function FeaturedCollections({
   titleAlign = 'left',
   maxCount = 6,
   desktopCols = 3,
+  desktopMaxCount,
+  desktopEnableCarousel = false,
+  desktopCarouselConfig,
+  mobileLayout = 'carousel',
   mobileCols = 2,
+  mobileCarouselConfig,
+  showViewAll = false,
+  viewAllUrl,
+  viewAllText = 'View All',
 }: FeaturedCollectionsProps) {
   if (!collection) {
     return null;
@@ -53,58 +86,32 @@ export default async function FeaturedCollections({
     return null;
   }
 
-  // 限制显示的产品数量
-  const displayProducts = pricedProducts.slice(0, maxCount);
-
-  const titleAlignClass = {
-    left: 'text-left',
-    center: 'text-center',
-    right: 'text-right',
-  }[titleAlign];
+  // 如果没有配置 viewAllUrl，使用集合的链接
+  const finalViewAllUrl = viewAllUrl || `/collections/${collection.handle}`;
 
   return (
     <div className="content-container py-12 small:py-24">
-      {(showTitle && title) || (showSubtitle && subtitle) ? (
-        <div className={`mb-8 ${titleAlignClass}`}>
-          {showTitle && title && (
-            <Text className="txt-xlarge mb-2">{title}</Text>
-          )}
-          {showSubtitle && subtitle && (
-            <Text className="text-medium text-ui-fg-subtle">{subtitle}</Text>
-          )}
-        </div>
-      ) : null}
-      
-      <div className="flex justify-between mb-8">
-        <Text className="txt-xlarge">{collection.title}</Text>
-        <InteractiveLink href={`/collections/${collection.handle}`}>
-          View all
-        </InteractiveLink>
-      </div>
-      
-      <>
-        <style dangerouslySetInnerHTML={{
-          __html: `
-            .featured-collections-grid {
-              --mobile-cols: ${mobileCols};
-              --desktop-cols: ${desktopCols};
-              grid-template-columns: repeat(var(--mobile-cols), minmax(0, 1fr));
-            }
-            @media (min-width: 640px) {
-              .featured-collections-grid {
-                grid-template-columns: repeat(var(--desktop-cols), minmax(0, 1fr));
-              }
-            }
-          `
-        }} />
-        <ul className="featured-collections-grid grid gap-x-6 gap-y-24 small:gap-y-36">
-          {displayProducts.map((product) => (
-            <li key={product.id}>
-              <ProductPreview product={product} region={region} isFeatured />
-            </li>
-          ))}
-        </ul>
-      </>
+      <FeaturedCollectionsClient
+        collection={collection}
+        region={region}
+        products={pricedProducts}
+        title={title}
+        subtitle={subtitle}
+        showTitle={showTitle}
+        showSubtitle={showSubtitle}
+        titleAlign={titleAlign}
+        maxCount={maxCount}
+        desktopCols={desktopCols}
+        desktopMaxCount={desktopMaxCount}
+        desktopEnableCarousel={desktopEnableCarousel}
+        desktopCarouselConfig={desktopCarouselConfig}
+        mobileLayout={mobileLayout}
+        mobileCols={mobileCols}
+        mobileCarouselConfig={mobileCarouselConfig}
+        showViewAll={showViewAll}
+        viewAllUrl={finalViewAllUrl}
+        viewAllText={viewAllText}
+      />
     </div>
   );
 }

@@ -10,6 +10,9 @@ import { CollageHero } from "@modules/home/components/collage-hero"
 import { BrandShowcase } from "@modules/home/components/brand-showcase"
 import { TextBlock } from "@modules/home/components/text-block"
 import { FAQBlock } from "@modules/home/components/faq-block"
+import { FeaturedBlog } from "@modules/home/components/featured-blog"
+import { FeaturedProduct } from "@modules/home/components/featured-product"
+import { listBlogs } from "@lib/data/blogs"
 import { sdk } from "@lib/config"
 import { getAuthHeaders, getCacheOptions } from "@lib/data/cookies"
 import { getCacheConfig } from "@lib/config/cache"
@@ -98,8 +101,17 @@ export default async function Home(props: {
     }
   }
 
+  // 获取博客数据（用于 FeaturedBlog blocks）
+  let blogArticles: any[] = []
+  try {
+    const { posts } = await listBlogs({ limit: "100", offset: "0" })
+    blogArticles = posts || []
+  } catch (error) {
+    console.error('[Medusa HomePage] Error fetching blogs:', error)
+  }
+
   // 根据 pageLayouts 配置获取首页 blocks
-  const pageBlocks = getHomePageLayoutBlocks(config, collections, region, collageHeroProducts)
+  const pageBlocks = await getHomePageLayoutBlocks(config, collections, region, collageHeroProducts, blogArticles)
 
   // 组件映射
   const componentMap: Record<string, React.ComponentType<any>> = {
@@ -108,6 +120,8 @@ export default async function Home(props: {
     BrandShowcase,
     TextBlock,
     FAQBlock,
+    FeaturedBlog,
+    FeaturedProduct,
     // 可以在这里添加更多组件映射
   }
 
@@ -129,6 +143,7 @@ export default async function Home(props: {
           <Component
             key={blockConfig.id}
             {...blockConfig.props}
+            countryCode={countryCode}
           />
         )
       })}

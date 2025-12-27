@@ -9,6 +9,10 @@ import type { CollageHeroData } from '../components/collage-hero/types';
 import type { BrandShowcaseData } from '../components/brand-showcase/types';
 import type { TextBlockData } from '../components/text-block/types';
 import type { FAQData } from '../components/faq-block/types';
+import type { FeaturedBlogData } from '../components/featured-blog/types';
+import type { FeaturedProductData } from '../components/featured-product/types';
+import type { BlogPost } from '@lib/data/blogs';
+import { listProducts } from '@lib/data/products';
 
 /**
  * 处理 FeaturedCollections Block
@@ -50,7 +54,34 @@ export function handleFeaturedCollectionsBlock(
   const titleAlign = blockConfig.titleAlign || 'left';
   const maxCount = blockConfig.maxCount || 6; // 默认显示 6 个产品
   const desktopCols = blockConfig.desktopCols || 3; // 默认桌面端 3 列
+  const desktopMaxCount = blockConfig.desktopMaxCount;
+  const desktopEnableCarousel = blockConfig.desktopEnableCarousel || false;
+  const desktopCarouselConfig = blockConfig.desktopCarouselConfig || {
+    loop: blockConfig.desktopCarouselLoop || false,
+    autoplay: blockConfig.desktopCarouselAutoplay || false,
+    autoplayDelay: blockConfig.desktopCarouselAutoplayDelay || 3000,
+    spacing: blockConfig.desktopCarouselSpacing || 24,
+    showNavigation: blockConfig.desktopCarouselShowNavigation !== false,
+    showPagination: blockConfig.desktopCarouselShowPagination !== false,
+    align: blockConfig.desktopCarouselAlign || 'start',
+    draggable: blockConfig.desktopCarouselDraggable !== false,
+  };
+  const mobileLayout = blockConfig.mobileLayout || 'carousel';
   const mobileCols = blockConfig.mobileCols || 2; // 默认移动端 2 列
+  const mobileCarouselConfig = blockConfig.mobileCarouselConfig || {
+    slidesPerView: blockConfig.mobileCarouselSlidesPerView || 1.5,
+    spaceBetween: blockConfig.mobileCarouselSpacing || 16,
+    showNavigation: blockConfig.mobileCarouselShowNavigation || false,
+    showPagination: blockConfig.mobileCarouselShowPagination !== false,
+    loop: blockConfig.mobileCarouselLoop || false,
+    autoplay: blockConfig.mobileCarouselAutoplay || false,
+    autoplayDelay: blockConfig.mobileCarouselAutoplayDelay || 3000,
+    align: blockConfig.mobileCarouselAlign || 'start',
+    draggable: blockConfig.mobileCarouselDraggable !== false,
+  };
+  const showViewAll = blockConfig.showViewAll || false;
+  const viewAllUrl = blockConfig.viewAllUrl;
+  const viewAllText = blockConfig.viewAllText || 'View All';
 
   return {
     id: `featured-collections-${block.id}`,
@@ -69,7 +100,15 @@ export function handleFeaturedCollectionsBlock(
       titleAlign,
       maxCount, // 传递 maxCount 用于限制产品数量
       desktopCols, // 传递桌面端列数
+      desktopMaxCount, // 传递桌面端最大显示数量
+      desktopEnableCarousel, // 传递桌面端是否启用轮播
+      desktopCarouselConfig, // 传递桌面端轮播配置
+      mobileLayout, // 传递移动端布局模式
       mobileCols, // 传递移动端列数
+      mobileCarouselConfig, // 传递移动端轮播配置
+      showViewAll, // 传递是否显示查看全部按钮
+      viewAllUrl, // 传递查看全部链接
+      viewAllText, // 传递查看全部按钮文字
     },
   };
 }
@@ -395,6 +434,156 @@ export function handleFAQBlock(
     componentName: 'FAQBlock',
     props: {
       data: faqData,
+    },
+  };
+}
+
+/**
+ * 处理 FeaturedBlog Block
+ */
+export function handleFeaturedBlogBlock(
+  block: {
+    id: string;
+    type: string;
+    enabled: boolean;
+    order: number;
+    config: Record<string, any>;
+  },
+  blockConfig: Record<string, any>,
+  articles?: BlogPost[]
+): BlockConfig | null {
+  // 构建 FeaturedBlogData
+  const featuredBlogData: FeaturedBlogData = {
+    articles: articles || [],
+    articleIds: blockConfig.articleIds || [],
+    maxCount: blockConfig.maxCount || 6,
+    showViewAll: blockConfig.showViewAll !== false,
+    viewAllUrl: blockConfig.viewAllUrl || '/blogs',
+    viewAllText: blockConfig.viewAllText || 'View All Articles',
+    title: blockConfig.title || '',
+    subtitle: blockConfig.subtitle || '',
+    showTitle: blockConfig.showTitle !== false,
+    showSubtitle: blockConfig.showSubtitle !== false,
+    titleAlign: blockConfig.titleAlign || 'left',
+    // 桌面端配置
+    desktopCols: blockConfig.desktopCols || 3,
+    desktopMaxCount: blockConfig.desktopMaxCount,
+    desktopEnableCarousel: blockConfig.desktopEnableCarousel || false,
+    desktopCarouselConfig: {
+      loop: blockConfig.desktopCarouselConfig?.loop || false,
+      autoplay: blockConfig.desktopCarouselConfig?.autoplay || false,
+      autoplayDelay: blockConfig.desktopCarouselConfig?.autoplayDelay || 3000,
+      spacing: blockConfig.desktopCarouselConfig?.spacing || 24,
+      showNavigation: blockConfig.desktopCarouselConfig?.showNavigation !== false,
+      showPagination: blockConfig.desktopCarouselConfig?.showPagination !== false,
+      align: blockConfig.desktopCarouselConfig?.align || 'start',
+      draggable: blockConfig.desktopCarouselConfig?.draggable !== false,
+    },
+    // 移动端配置
+    mobileLayout: blockConfig.mobileLayout || 'carousel',
+    mobileCols: blockConfig.mobileCols || 2,
+    mobileCarouselConfig: {
+      slidesPerView: blockConfig.mobileCarouselConfig?.slidesPerView || 1.5,
+      spaceBetween: blockConfig.mobileCarouselConfig?.spaceBetween || 16,
+      showNavigation: blockConfig.mobileCarouselConfig?.showNavigation || false,
+      showPagination: blockConfig.mobileCarouselConfig?.showPagination !== false,
+      loop: blockConfig.mobileCarouselConfig?.loop || false,
+      autoplay: blockConfig.mobileCarouselConfig?.autoplay || false,
+      autoplayDelay: blockConfig.mobileCarouselConfig?.autoplayDelay || 3000,
+      align: blockConfig.mobileCarouselConfig?.align || 'start',
+      draggable: blockConfig.mobileCarouselConfig?.draggable !== false,
+    },
+    enableAnimation: blockConfig.enableAnimation !== false,
+  };
+
+  return {
+    id: `featured-blog-${block.id}`,
+    type: block.type,
+    enabled: block.enabled,
+    order: block.order,
+    config: blockConfig,
+    componentName: 'FeaturedBlog',
+    props: {
+      containerData: featuredBlogData,
+    },
+  };
+}
+
+/**
+ * 处理 FeaturedProduct Block
+ */
+export async function handleFeaturedProductBlock(
+  block: {
+    id: string;
+    type: string;
+    enabled: boolean;
+    order: number;
+    config: Record<string, any>;
+  },
+  blockConfig: Record<string, any>,
+  region: HttpTypes.StoreRegion
+): Promise<BlockConfig | null> {
+  const productId = blockConfig.productId;
+
+  // 如果没有配置产品 ID，返回 null（不显示）
+  if (!productId) {
+    return null;
+  }
+
+  // 在服务器端获取产品数据
+  let product: HttpTypes.StoreProduct | null = null;
+  try {
+    const { response } = await listProducts({
+      regionId: region.id,
+      queryParams: {
+        id: productId,
+        fields:
+          '*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.images.id,*variants.images.url,*variants.images.metadata,+metadata,+tags,',
+      },
+    });
+
+    product = response.products[0] || null;
+  } catch (error) {
+    console.error('[FeaturedProduct] Error fetching product:', error);
+    product = null;
+  }
+
+  // 如果产品不存在，返回 null（不显示 block）
+  if (!product) {
+    return null;
+  }
+
+  // 构建 FeaturedProductData
+  const featuredProductData: FeaturedProductData = {
+    enabled: blockConfig.enabled !== false,
+    productId,
+    product,
+    title: blockConfig.title || '',
+    subtitle: blockConfig.subtitle || '',
+    showTitle: blockConfig.showTitle !== false,
+    showSubtitle: blockConfig.showSubtitle !== false,
+    titleAlign: blockConfig.titleAlign || 'left',
+    layout: blockConfig.layout || 'imageLeft',
+    showDescription: blockConfig.showDescription !== false,
+    showAllVariants: blockConfig.showAllVariants || false,
+    showAllImages: blockConfig.showAllImages || false,
+    showViewDetails: blockConfig.showViewDetails !== false,
+    viewDetailsText: blockConfig.viewDetailsText || '查看详情',
+    variantsMaxRows: blockConfig.variantsMaxRows || 2,
+    variantsExpandText: blockConfig.variantsExpandText || 'Show More',
+    variantsCollapseText: blockConfig.variantsCollapseText || 'Show Less',
+  };
+
+  return {
+    id: `featured-product-${block.id}`,
+    type: block.type,
+    enabled: block.enabled,
+    order: block.order,
+    config: blockConfig,
+    componentName: 'FeaturedProduct',
+    props: {
+      containerData: featuredProductData,
+      region,
     },
   };
 }
