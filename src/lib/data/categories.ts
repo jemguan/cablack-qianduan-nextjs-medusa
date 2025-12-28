@@ -4,12 +4,19 @@ import { HttpTypes } from "@medusajs/types"
 import { getCacheOptions } from "./cookies"
 
 export const listCategories = async (query?: Record<string, any>) => {
+  // 获取缓存标签
+  const cacheOptions = await getCacheOptions("categories")
+  
+  // 获取缓存策略
+  const cacheConfig = getCacheConfig("CATEGORY")
+
+  // 合并 tags 和 revalidate 到 next 对象
   const next = {
-    ...(await getCacheOptions("categories")),
+    ...cacheOptions,
+    ...(cacheConfig && 'next' in cacheConfig ? cacheConfig.next : {}),
   }
 
   const limit = query?.limit || 100
-  const cacheConfig = getCacheConfig("CATEGORY")
 
   return sdk.client
     .fetch<{ product_categories: HttpTypes.StoreProductCategory[] }>(
@@ -22,7 +29,6 @@ export const listCategories = async (query?: Record<string, any>) => {
           ...query,
         },
         next,
-        ...cacheConfig,
       }
     )
     .then(({ product_categories }) => product_categories)
@@ -31,11 +37,17 @@ export const listCategories = async (query?: Record<string, any>) => {
 export const getCategoryByHandle = async (categoryHandle: string[]) => {
   const handle = `${categoryHandle.join("/")}`
 
-  const next = {
-    ...(await getCacheOptions("categories")),
-  }
-
+  // 获取缓存标签
+  const cacheOptions = await getCacheOptions("categories")
+  
+  // 获取缓存策略
   const cacheConfig = getCacheConfig("CATEGORY")
+
+  // 合并 tags 和 revalidate 到 next 对象
+  const next = {
+    ...cacheOptions,
+    ...(cacheConfig && 'next' in cacheConfig ? cacheConfig.next : {}),
+  }
 
   return sdk.client
     .fetch<HttpTypes.StoreProductCategoryListResponse>(
@@ -46,7 +58,6 @@ export const getCategoryByHandle = async (categoryHandle: string[]) => {
           handle,
         },
         next,
-        ...cacheConfig,
       }
     )
     .then(({ product_categories }) => product_categories[0])

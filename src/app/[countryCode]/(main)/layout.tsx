@@ -10,8 +10,9 @@ import Nav from "@modules/layout/templates/nav"
 import FreeShippingPriceNudge from "@modules/shipping/components/free-shipping-price-nudge"
 import { ScrollToTop } from "@components/ScrollToTop"
 
-// 禁用页面缓存，确保购物车价格实时更新
-export const dynamic = 'force-dynamic'
+// 页面级别缓存设置（5分钟）
+// 注意：购物车页面和结账页面有各自的 force-dynamic 设置，不受此影响
+export const revalidate = 300
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),

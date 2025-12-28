@@ -24,6 +24,9 @@ export const metadata: Metadata = {
     "A performant frontend ecommerce starter template with Next.js 15 and Medusa.",
 }
 
+// 首页缓存 5 分钟，确保 FeaturedBlog 等组件定期更新
+export const revalidate = 300
+
 export default async function Home(props: {
   params: Promise<{ countryCode: string }>
 }) {

@@ -10,11 +10,17 @@ export const listCartShippingMethods = async (cartId: string) => {
     ...(await getAuthHeaders()),
   }
 
-  const next = {
-    ...(await getCacheOptions("fulfillment")),
-  }
-
+  // 获取缓存标签
+  const cacheOptions = await getCacheOptions("fulfillment")
+  
+  // 获取缓存策略
   const cacheConfig = getCacheConfig("FULFILLMENT")
+
+  // 合并 tags 和 revalidate 到 next 对象
+  const next = {
+    ...cacheOptions,
+    ...(cacheConfig && 'next' in cacheConfig ? cacheConfig.next : {}),
+  }
 
   return sdk.client
     .fetch<HttpTypes.StoreShippingOptionListResponse>(
@@ -26,7 +32,6 @@ export const listCartShippingMethods = async (cartId: string) => {
         },
         headers,
         next,
-        ...cacheConfig,
       }
     )
     .then(({ shipping_options }) => shipping_options)

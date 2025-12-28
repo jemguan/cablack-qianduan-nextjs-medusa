@@ -21,14 +21,20 @@ export type BlogPost = {
 export const listBlogs = async (
   queryParams: Record<string, string> = {}
 ): Promise<{ posts: BlogPost[]; count: number; limit: number; offset: number }> => {
+  // 获取缓存标签（用于 revalidateTag）
+  const cacheOptions = await getCacheOptions("blogs")
+  
+  // 获取缓存策略（包含 revalidate 时间）
+  const cacheConfig = getCacheConfig("BLOG")
+
+  // 合并 tags 和 revalidate 到 next 对象
   const next = {
-    ...(await getCacheOptions("blogs")),
+    ...cacheOptions,
+    ...(cacheConfig && 'next' in cacheConfig ? cacheConfig.next : {}),
   }
 
   queryParams.limit = queryParams.limit || "20"
   queryParams.offset = queryParams.offset || "0"
-
-  const cacheConfig = getCacheConfig("BLOG") // 使用 Blog 专用缓存策略
 
   try {
     const response = await sdk.client.fetch<{
@@ -41,7 +47,6 @@ export const listBlogs = async (
       {
         query: queryParams,
         next,
-        ...cacheConfig,
       }
     )
     return response
@@ -59,18 +64,23 @@ export const listBlogs = async (
 export const getBlogByUrl = async (
   url: string
 ): Promise<BlogPost | null> => {
-  const next = {
-    ...(await getCacheOptions("blogs")),
-  }
+  // 获取缓存标签（用于 revalidateTag）
+  const cacheOptions = await getCacheOptions("blogs")
+  
+  // 获取缓存策略（包含 revalidate 时间）
+  const cacheConfig = getCacheConfig("BLOG")
 
-  const cacheConfig = getCacheConfig("BLOG") // 使用 Blog 专用缓存策略
+  // 合并 tags 和 revalidate 到 next 对象
+  const next = {
+    ...cacheOptions,
+    ...(cacheConfig && 'next' in cacheConfig ? cacheConfig.next : {}),
+  }
 
   try {
     const response = await sdk.client.fetch<{ post: BlogPost }>(
       `/store/blogs/${encodeURIComponent(url)}`,
       {
         next,
-        ...cacheConfig,
       }
     )
     return response.post
@@ -79,4 +89,3 @@ export const getBlogByUrl = async (
     return null
   }
 }
-

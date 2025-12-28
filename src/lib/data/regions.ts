@@ -7,34 +7,44 @@ import { HttpTypes } from "@medusajs/types"
 import { getCacheOptions } from "./cookies"
 
 export const listRegions = async () => {
-  const next = {
-    ...(await getCacheOptions("regions")),
-  }
-
+  // 获取缓存标签
+  const cacheOptions = await getCacheOptions("regions")
+  
+  // 获取缓存策略
   const cacheConfig = getCacheConfig("REGION")
+
+  // 合并 tags 和 revalidate 到 next 对象
+  const next = {
+    ...cacheOptions,
+    ...(cacheConfig && 'next' in cacheConfig ? cacheConfig.next : {}),
+  }
 
   return sdk.client
     .fetch<{ regions: HttpTypes.StoreRegion[] }>(`/store/regions`, {
       method: "GET",
       next,
-      ...cacheConfig,
     })
     .then(({ regions }) => regions)
     .catch(medusaError)
 }
 
 export const retrieveRegion = async (id: string) => {
-  const next = {
-    ...(await getCacheOptions(["regions", id].join("-"))),
-  }
-
+  // 获取缓存标签
+  const cacheOptions = await getCacheOptions(["regions", id].join("-"))
+  
+  // 获取缓存策略
   const cacheConfig = getCacheConfig("REGION")
+
+  // 合并 tags 和 revalidate 到 next 对象
+  const next = {
+    ...cacheOptions,
+    ...(cacheConfig && 'next' in cacheConfig ? cacheConfig.next : {}),
+  }
 
   return sdk.client
     .fetch<{ region: HttpTypes.StoreRegion }>(`/store/regions/${id}`, {
       method: "GET",
       next,
-      ...cacheConfig,
     })
     .then(({ region }) => region)
     .catch(medusaError)
