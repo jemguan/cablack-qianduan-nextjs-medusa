@@ -28,7 +28,7 @@ export const listBlogs = async (
   queryParams.limit = queryParams.limit || "20"
   queryParams.offset = queryParams.offset || "0"
 
-  const cacheConfig = getCacheConfig("CATEGORY") // 使用类似的缓存策略
+  const cacheConfig = getCacheConfig("BLOG") // 使用 Blog 专用缓存策略
 
   try {
     const response = await sdk.client.fetch<{
@@ -63,7 +63,7 @@ export const getBlogByUrl = async (
     ...(await getCacheOptions("blogs")),
   }
 
-  const cacheConfig = getCacheConfig("CATEGORY")
+  const cacheConfig = getCacheConfig("BLOG") // 使用 Blog 专用缓存策略
 
   try {
     const response = await sdk.client.fetch<{ post: BlogPost }>(

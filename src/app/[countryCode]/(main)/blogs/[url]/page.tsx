@@ -5,6 +5,9 @@ import { getBlogByUrl } from "@lib/data/blogs"
 import BlogDetailTemplate from "@modules/blogs/templates/blog-detail"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 
+// 设置页面级别的 revalidate 为 5 分钟（300 秒），确保缓存及时更新
+export const revalidate = 300
+
 type Props = {
   params: Promise<{ url: string; countryCode: string }>
 }

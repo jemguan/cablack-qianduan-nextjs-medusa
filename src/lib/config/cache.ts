@@ -17,6 +17,7 @@ export const CACHE_STRATEGIES = {
   CATEGORY: isDevelopment ? DEV_CACHE_CONFIG : { cache: "force-cache" as const, revalidate: 7200 },
   COLLECTION: isDevelopment ? DEV_CACHE_CONFIG : { cache: "force-cache" as const, revalidate: 7200 },
   REGION: isDevelopment ? DEV_CACHE_CONFIG : { cache: "force-cache" as const, revalidate: 3600 },
+  BLOG: isDevelopment ? DEV_CACHE_CONFIG : { cache: "force-cache" as const, revalidate: 300 }, // Blog 缓存 5 分钟，确保内容及时更新
   
   // 半动态数据
   VARIANT: DEV_CACHE_CONFIG, // 包含价格和库存，需要实时
