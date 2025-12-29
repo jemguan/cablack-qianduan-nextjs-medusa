@@ -1,9 +1,12 @@
+"use client"
+
 import ItemsTemplate from "./items"
 import Summary from "./summary"
 import EmptyCartMessage from "../components/empty-cart-message"
 import SignInPrompt from "../components/sign-in-prompt"
 import Divider from "@modules/common/components/divider"
 import { HttpTypes } from "@medusajs/types"
+import { useBundlePromotionSync } from "../hooks/useBundlePromotionSync"
 
 const CartTemplate = ({
   cart,
@@ -12,6 +15,8 @@ const CartTemplate = ({
   cart: HttpTypes.StoreCart | null
   customer: HttpTypes.StoreCustomer | null
 }) => {
+  // 监听购物车变化，同步捆绑包折扣
+  useBundlePromotionSync(cart)
   return (
     <div className="py-6 small:py-12 bg-background min-h-screen">
       <div className="content-container px-4 small:px-0" data-testid="cart-container">

@@ -2,8 +2,9 @@
 
 import { Badge, Heading, Input, Label, Text } from "@medusajs/ui"
 import React from "react"
+import { useRouter } from "next/navigation"
 
-import { applyPromotions } from "@lib/data/cart"
+import { applyPromotions, removePromotion } from "@lib/data/cart"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 import Trash from "@modules/common/icons/trash"
@@ -17,18 +18,21 @@ type DiscountCodeProps = {
 }
 
 const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
+  const router = useRouter()
   const [isOpen, setIsOpen] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState("")
 
   const { promotions = [] } = cart
   const removePromotionCode = async (code: string) => {
-    const validPromotions = promotions.filter(
-      (promotion) => promotion.code !== code
-    )
-
-    await applyPromotions(
-      validPromotions.filter((p) => p.code !== undefined).map((p) => p.code!)
-    )
+    try {
+      // 使用专门的 removePromotion 函数来删除 promotion
+      await removePromotion(code)
+      // 刷新页面以更新购物车数据
+      router.refresh()
+    } catch (error) {
+      console.error("Error removing promotion:", error)
+      setErrorMessage(error instanceof Error ? error.message : "Failed to remove promotion")
+    }
   }
 
   const addPromotionCode = async (formData: FormData) => {
@@ -38,14 +42,34 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
     if (!code) {
       return
     }
+    
+    // 去除前后空格并转换为字符串
+    const trimmedCode = code.toString().trim()
+    if (!trimmedCode) {
+      setErrorMessage("Please enter a valid promotion code")
+      return
+    }
+    
     const input = document.getElementById("promotion-input") as HTMLInputElement
     const codes = promotions
       .filter((p) => p.code !== undefined)
       .map((p) => p.code!)
-    codes.push(code.toString())
+    
+    // 检查是否已经存在该 code
+    if (codes.includes(trimmedCode)) {
+      setErrorMessage("This promotion code is already applied")
+      if (input) {
+        input.value = ""
+      }
+      return
+    }
+    
+    codes.push(trimmedCode)
 
     try {
       await applyPromotions(codes)
+      // 刷新页面以更新购物车数据
+      router.refresh()
     } catch (e: any) {
       setErrorMessage(e.message)
     }
@@ -142,24 +166,23 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
                         </span>
                       </span>
                     </Text>
-                    {!promotion.is_automatic && (
-                      <button
-                        className="flex items-center text-muted-foreground hover:text-destructive transition-colors p-1"
-                        onClick={() => {
-                          if (!promotion.code) {
-                            return
-                          }
+                    {/* 允许删除所有 promotion，包括自动应用的（如 bundle promotion） */}
+                    <button
+                      className="flex items-center text-muted-foreground hover:text-destructive transition-colors p-1"
+                      onClick={() => {
+                        if (!promotion.code) {
+                          return
+                        }
 
-                          removePromotionCode(promotion.code)
-                        }}
-                        data-testid="remove-discount-button"
-                      >
-                        <Trash size={14} />
-                        <span className="sr-only">
-                          Remove discount code from order
-                        </span>
-                      </button>
-                    )}
+                        removePromotionCode(promotion.code)
+                      }}
+                      data-testid="remove-discount-button"
+                    >
+                      <Trash size={14} />
+                      <span className="sr-only">
+                        Remove discount code from order
+                      </span>
+                    </button>
                   </div>
                 )
               })}

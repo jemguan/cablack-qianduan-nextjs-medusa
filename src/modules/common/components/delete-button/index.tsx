@@ -1,14 +1,17 @@
-import { deleteLineItem } from "@lib/data/cart"
+import { deleteLineItem, syncBundlePromotions } from "@lib/data/cart"
 import { Spinner, Trash } from "@medusajs/icons"
 import { clx } from "@medusajs/ui"
 import { useState } from "react"
+import type { HttpTypes } from "@medusajs/types"
 
 const DeleteButton = ({
   id,
+  item,
   children,
   className,
 }: {
   id: string
+  item?: HttpTypes.StoreCartLineItem
   children?: React.ReactNode
   className?: string
 }) => {
@@ -16,9 +19,16 @@ const DeleteButton = ({
 
   const handleDelete = async (id: string) => {
     setIsDeleting(true)
-    await deleteLineItem(id).catch((err) => {
+    try {
+      await deleteLineItem(id)
+      
+      // 如果删除的是捆绑包产品，同步折扣
+      if (item?.metadata?.bundle_id) {
+        await syncBundlePromotions()
+      }
+    } catch (err) {
       setIsDeleting(false)
-    })
+    }
   }
 
   return (

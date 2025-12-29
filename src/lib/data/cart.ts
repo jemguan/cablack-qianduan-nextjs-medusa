@@ -23,7 +23,7 @@ import { getRegion } from "./regions"
  */
 export async function retrieveCart(cartId?: string, fields?: string) {
   const id = cartId || (await getCartId())
-  fields ??= "*items, *region, *items.product, *items.variant, *items.variant.images, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
+  fields ??= "*items, *region, *items.product, *items.variant, *items.variant.images, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, +discount_total, +discount_subtotal, +item_subtotal, +item_total, +subtotal, +total, +tax_total, +shipping_subtotal, +shipping_total"
 
   if (!id) {
     return null
@@ -118,10 +118,12 @@ export async function addToCart({
   variantId,
   quantity,
   countryCode,
+  metadata,
 }: {
   variantId: string
   quantity: number
   countryCode: string
+  metadata?: Record<string, any>
 }) {
   if (!variantId) {
     throw new Error("Missing variant ID when adding to cart")
@@ -143,6 +145,7 @@ export async function addToCart({
       {
         variant_id: variantId,
         quantity,
+        metadata,
       },
       {},
       headers
@@ -297,12 +300,69 @@ export async function applyPromotions(codes: string[]) {
     throw new Error("No existing cart found")
   }
 
+  if (!codes || codes.length === 0) {
+    console.log("No promotion codes to apply")
+    return
+  }
+
   const headers = {
     ...(await getAuthHeaders()),
   }
 
+  // 使用专门的 promotions 端点
+  // SDK 会自动处理 JSON 序列化，不需要手动 JSON.stringify
+  return sdk.client
+    .fetch(`/store/carts/${cartId}/promotions`, {
+      method: "POST",
+      headers,
+      body: {
+        promo_codes: codes,
+      },
+    })
+    .then(async (response: any) => {
+      const cartCacheTag = await getCacheTag("carts")
+      revalidateTag(cartCacheTag)
+
+      const fulfillmentCacheTag = await getCacheTag("fulfillment")
+      revalidateTag(fulfillmentCacheTag)
+    })
+    .catch((error) => {
+      console.error("Error applying promotions:", error)
+      medusaError(error)
+    })
+}
+
+/**
+ * 移除指定的 Promotion
+ * @param code Promotion 代码
+ */
+export async function removePromotion(code: string) {
+  const cartId = await getCartId()
+
+  if (!cartId) {
+    throw new Error("No existing cart found")
+  }
+
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  // 获取当前购物车的所有 Promotion
+  const cart = await retrieveCart(cartId)
+  if (!cart) {
+    throw new Error("Cart not found")
+  }
+
+  // 过滤掉要移除的 Promotion
+  const remainingCodes =
+    cart.promotions
+      ?.filter((promo) => promo.code !== code)
+      .map((promo) => promo.code!)
+      .filter((code): code is string => code !== undefined) || []
+
+  // 更新购物车的 Promotion 列表
   return sdk.store.cart
-    .update(cartId, { promo_codes: codes }, {}, headers)
+    .update(cartId, { promo_codes: remainingCodes }, {}, headers)
     .then(async () => {
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
@@ -311,6 +371,104 @@ export async function applyPromotions(codes: string[]) {
       revalidateTag(fulfillmentCacheTag)
     })
     .catch(medusaError)
+}
+
+/**
+ * 为 Bundle 创建单次使用的 Promotion
+ * @param bundleId Bundle ID
+ * @returns Promotion code 和 ID
+ */
+export async function createBundlePromotion(bundleId: string): Promise<{
+  promotion_id: string
+  promotion_code: string
+} | null> {
+  try {
+    const cartId = await getCartId()
+    if (!cartId) {
+      throw new Error("No cart ID found")
+    }
+
+    const headers = {
+      ...(await getAuthHeaders()),
+    }
+
+    console.log("Creating single-use promotion for bundle:", bundleId)
+
+    // 调用后端 API 创建单次使用的 Promotion
+    // SDK 会自动处理 JSON 序列化，不需要手动 JSON.stringify
+    const response = await sdk.client.fetch<{
+      promotion_id: string
+      promotion_code: string
+    }>(`/store/bundles/${bundleId}/create-promotion`, {
+      method: "POST",
+      headers,
+      body: {
+        cart_id: cartId,
+      },
+    })
+
+    console.log("Created promotion:", response)
+
+    // 注意：不在这里应用 Promotion，因为此时购物车中还没有产品
+    // Promotion 将在所有产品添加到购物车后应用
+
+    const cartCacheTag = await getCacheTag("carts")
+    revalidateTag(cartCacheTag)
+
+    return response
+  } catch (error) {
+    console.error("Error creating bundle promotion:", error)
+    throw error
+  }
+}
+
+/**
+ * 同步捆绑包折扣
+ * 检查购物车中的产品是否属于捆绑包，并自动应用/移除对应的 Promotion
+ */
+export async function syncBundlePromotions() {
+  try {
+    const cartId = await getCartId()
+    if (!cartId) {
+      console.log("No cart ID found for syncing bundle promotions")
+      return
+    }
+
+    const headers = {
+      ...(await getAuthHeaders()),
+    }
+
+    console.log("Syncing bundle promotions for cart:", cartId)
+
+    // 调用后端 API 获取需要应用/移除的 Promotion
+    const response = await sdk.client.fetch<{
+      promotionsToApply: string[]
+      promotionsToRemove: string[]
+      updatedPromotionCodes: string[]
+    }>(`/store/carts/${cartId}/sync-bundle-promotions`, {
+      method: "POST",
+      headers,
+    })
+
+    console.log("Sync bundle promotions response:", response)
+
+    // 应用更新后的 Promotion codes
+    if (response.updatedPromotionCodes && response.updatedPromotionCodes.length > 0) {
+      console.log("Applying promotion codes:", response.updatedPromotionCodes)
+      await applyPromotions(response.updatedPromotionCodes)
+    } else {
+      console.log("No promotion codes to apply")
+    }
+
+    const cartCacheTag = await getCacheTag("carts")
+    revalidateTag(cartCacheTag)
+
+    const fulfillmentCacheTag = await getCacheTag("fulfillment")
+    revalidateTag(fulfillmentCacheTag)
+  } catch (error) {
+    console.error("Error syncing bundle promotions:", error)
+    // 不抛出错误，只记录日志
+  }
 }
 
 export async function applyGiftCard(code: string) {

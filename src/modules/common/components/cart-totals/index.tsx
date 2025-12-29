@@ -12,6 +12,7 @@ type CartTotalsProps = {
     item_subtotal?: number | null
     shipping_subtotal?: number | null
     discount_subtotal?: number | null
+    discount_total?: number | null
   }
 }
 
@@ -23,7 +24,11 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
     item_subtotal,
     shipping_subtotal,
     discount_subtotal,
+    discount_total,
   } = totals
+
+  // 使用 discount_total（如果存在），否则使用 discount_subtotal
+  const discountAmount = discount_total ?? discount_subtotal ?? 0
 
   return (
     <div>
@@ -40,17 +45,17 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
             {convertToLocale({ amount: shipping_subtotal ?? 0, currency_code })}
           </span>
         </div>
-        {!!discount_subtotal && (
+        {!!discountAmount && (
           <div className="flex items-center justify-between">
             <span>Discount</span>
             <span
               className="text-primary font-semibold"
               data-testid="cart-discount"
-              data-value={discount_subtotal || 0}
+              data-value={discountAmount || 0}
             >
               -{" "}
               {convertToLocale({
-                amount: discount_subtotal ?? 0,
+                amount: discountAmount ?? 0,
                 currency_code,
               })}
             </span>

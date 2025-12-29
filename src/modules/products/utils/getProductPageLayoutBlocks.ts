@@ -10,6 +10,7 @@ import {
   handleProductContentBlock,
   handleFAQBlock,
   handleRecentlyViewedProductsBlock,
+  handleBundleSaleBlock,
 } from './blockHandlers';
 
 export interface BlockConfig {
@@ -150,6 +151,19 @@ function getBlockConfigForBlock(
         product,
         region,
         countryCode
+      );
+
+    case 'bundleSale':
+      // 从 blockConfigs 获取配置，如果没有则使用 block.config
+      const bundleSaleBlockConfig =
+        config?.blockConfigs?.['bundleSale']?.[block.id] ||
+        block.config ||
+        {};
+      return handleBundleSaleBlock(
+        block,
+        bundleSaleBlockConfig,
+        product,
+        region
       );
 
     default:

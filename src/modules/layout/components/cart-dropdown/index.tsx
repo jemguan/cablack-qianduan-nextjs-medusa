@@ -36,7 +36,10 @@ const CartDropdown = ({
       return acc + item.quantity
     }, 0) || 0
 
-  const subtotal = cartState?.subtotal ?? 0
+  // 计算折扣后的 subtotal：使用 item_subtotal（如果存在），否则使用 subtotal - discount_total
+  const itemSubtotal = cartState?.item_subtotal ?? cartState?.subtotal ?? 0
+  const discountTotal = cartState?.discount_total ?? 0
+  const subtotal = itemSubtotal - discountTotal
   const itemRef = useRef<number>(totalItems || 0)
 
   const timedOpen = () => {
@@ -181,6 +184,7 @@ const CartDropdown = ({
                           <div className="flex items-center justify-between mt-1.5">
                             <DeleteButton
                               id={item.id}
+                              item={item}
                               className="text-[10px] text-muted-foreground hover:text-destructive transition-colors"
                               data-testid="cart-item-remove-button"
                             >

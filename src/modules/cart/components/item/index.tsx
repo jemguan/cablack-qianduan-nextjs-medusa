@@ -112,7 +112,8 @@ const Item = ({ item, type = "full", currencyCode, isMobile = false }: ItemProps
                 {updating && <Spinner className="w-4 h-4 text-primary animate-spin ml-1" />}
               </div>
               <DeleteButton 
-                id={item.id} 
+                id={item.id}
+                item={item}
                 data-testid="product-delete-button" 
                 className="text-muted-foreground hover:text-destructive transition-colors shrink-0 p-2" 
               />
@@ -159,7 +160,7 @@ const Item = ({ item, type = "full", currencyCode, isMobile = false }: ItemProps
       {type === "full" && (
         <Table.Cell className="px-4">
           <div className="flex gap-2 items-center flex-wrap">
-            <DeleteButton id={item.id} data-testid="product-delete-button" className="text-muted-foreground hover:text-destructive transition-colors shrink-0" />
+            <DeleteButton id={item.id} item={item} data-testid="product-delete-button" className="text-muted-foreground hover:text-destructive transition-colors shrink-0" />
             <CartItemSelect
               value={item.quantity}
               onChange={(value) => changeQuantity(parseInt(value.target.value))}

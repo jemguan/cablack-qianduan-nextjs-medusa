@@ -26,6 +26,7 @@ export const CACHE_STRATEGIES = {
   VARIANT: DEV_CACHE_CONFIG, // 包含价格和库存，需要实时
   FULFILLMENT: isDevelopment ? DEV_CACHE_CONFIG : { next: { revalidate: 600 } },
   PAYMENT_PROVIDER: isDevelopment ? DEV_CACHE_CONFIG : { next: { revalidate: 3600 } }, // 支付选项相对稳定，1小时缓存
+  BUNDLE: DEV_CACHE_CONFIG, // 包含价格和库存，需要实时
 } as const
 
 // 辅助函数：根据环境返回缓存配置
