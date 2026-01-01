@@ -169,26 +169,39 @@ function MobileBundleCard({
   // 隐藏的产品数量
   const hiddenCount = totalProductCount - PRODUCTS_PER_ROW
 
-  // 计算主产品价格
-  const mainPriceInfo = getProductPrice({ product: currentProduct })
-  const mainPrice = mainPriceInfo.cheapestPrice?.calculated_price_number || 0
+  // 计算价格 - 使用选中的变体价格，如果没有选中则使用最便宜的价格
+  // 使用 useMemo 确保当 selectedVariants 变化时价格会重新计算
+  const { mainPrice, addonPrice, totalPrice, priceInfo } = useMemo(() => {
+    // 计算主产品价格
+    const mainVariantId = selectedVariants[currentProduct.id] || currentProduct.variants?.[0]?.id
+    const mainPriceInfo = getProductPrice({ 
+      product: currentProduct, 
+      variantId: mainVariantId 
+    })
+    const mainPrice = mainPriceInfo.variantPrice?.calculated_price_number || 
+                      mainPriceInfo.cheapestPrice?.calculated_price_number || 0
 
-  // 计算副产品总价
-  const addonPrice = displayAddonProducts.reduce((sum, product) => {
-    const priceInfo = getProductPrice({ product })
-    const price = priceInfo.cheapestPrice?.calculated_price_number || 0
-    const quantity = quantityMap[product.id] || 1
-    return sum + price * quantity
-  }, 0)
+    // 计算副产品总价
+    const addonPrice = displayAddonProducts.reduce((sum, product) => {
+      const variantId = selectedVariants[product.id] || product.variants?.[0]?.id
+      const priceInfo = getProductPrice({ product, variantId })
+      const price = priceInfo.variantPrice?.calculated_price_number || 
+                    priceInfo.cheapestPrice?.calculated_price_number || 0
+      const quantity = quantityMap[product.id] || 1
+      return sum + price * quantity
+    }, 0)
 
-  const totalPrice = mainPrice + addonPrice
+    const totalPrice = mainPrice + addonPrice
 
-  // 计算折扣后价格
-  const priceInfo = calculateBundlePrice(
-    totalPrice,
-    bundle.discount_type,
-    bundle.discount_value
-  )
+    // 计算折扣后价格
+    const priceInfo = calculateBundlePrice(
+      totalPrice,
+      bundle.discount_type,
+      bundle.discount_value
+    )
+
+    return { mainPrice, addonPrice, totalPrice, priceInfo }
+  }, [selectedVariants, currentProduct, displayAddonProducts, quantityMap, bundle.discount_type, bundle.discount_value])
 
   // 生成折扣文本
   const getDiscountText = () => {
