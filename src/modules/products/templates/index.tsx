@@ -8,6 +8,7 @@ import ProductContent from "../components/product-content"
 import { FAQBlock } from "@modules/home/components/faq-block"
 import { RecentlyViewedProductsBlock, ProductViewTracker } from "../components/recently-viewed-products"
 import { BundleSaleBlock } from "../components/bundle-sale/BundleSaleBlock"
+import { ReviewsBlock } from "../components/reviews/ReviewsBlock"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
@@ -47,6 +48,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = async ({
     FAQBlock,
     RecentlyViewedProductsBlock,
     BundleSaleBlock,
+    ReviewsBlock,
     // 可以在这里添加更多组件映射
   }
 

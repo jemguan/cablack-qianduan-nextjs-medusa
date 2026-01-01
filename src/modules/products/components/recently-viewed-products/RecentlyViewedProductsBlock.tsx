@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useIntersection } from '@lib/hooks/use-in-view';
 import { useResponsiveRender } from '@lib/hooks/useResponsiveRender';
 import { validateProductLimit } from './utils';
@@ -48,6 +48,7 @@ export function RecentlyViewedProductsBlock({
   // 视口检测 - 性能优化：只有在视口内才加载组件
   const ref = useRef<HTMLDivElement>(null);
   const isVisible = useIntersection(ref, PERFORMANCE_CONFIG.rootMargin);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   const { isDesktop, isHydrated } = useResponsiveRender();
 
@@ -62,8 +63,21 @@ export function RecentlyViewedProductsBlock({
     region.id,
   );
 
-  // 如果没有浏览历史或正在加载，不显示组件
-  if (!isVisible || loading || !products.length) {
+  // 跟踪是否已经加载过产品
+  useEffect(() => {
+    if (products.length > 0) {
+      setHasLoadedOnce(true);
+    }
+  }, [products.length]);
+
+  // 如果从未加载过产品且不在视口内，不显示组件（性能优化）
+  // 如果已经加载过产品，即使不在视口内也保持显示（避免闪烁）
+  if (!hasLoadedOnce && (!isVisible || loading)) {
+    return <div ref={ref} />;
+  }
+
+  // 如果确实没有产品（已加载完成且产品列表为空），不显示组件
+  if (!loading && products.length === 0) {
     return <div ref={ref} />;
   }
 

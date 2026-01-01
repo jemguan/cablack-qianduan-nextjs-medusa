@@ -192,6 +192,7 @@ export interface MedusaConfig {
       description: string;
     }>;
   };
+  reviewsEnabled?: boolean; // 是否启用评论功能
 }
 
 export interface MedusaCategory {

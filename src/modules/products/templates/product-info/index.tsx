@@ -1,6 +1,7 @@
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@medusajs/ui"
 import ProductBrandLink from "@modules/products/components/product-brand-link"
+import ProductRating from "@modules/products/components/reviews/ProductRating"
 
 type ProductInfoProps = {
   product: HttpTypes.StoreProduct
@@ -31,6 +32,9 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
             {product.subtitle}
         </Text>
         )}
+
+        {/* Product Rating */}
+        <ProductRating productId={product.id} size="md" showCount={true} />
       </div>
     </div>
   )

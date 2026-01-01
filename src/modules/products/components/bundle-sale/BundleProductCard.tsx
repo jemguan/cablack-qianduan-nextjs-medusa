@@ -10,6 +10,7 @@ import { isEqual } from "lodash"
 import Image from "next/image"
 import { getImageUrl } from "@lib/util/image"
 import { ChevronDownMini } from "@medusajs/icons"
+import ProductRating from "../reviews/ProductRating"
 
 const optionsAsKeymap = (
   variantOptions: HttpTypes.StoreProductVariant["options"]
@@ -250,6 +251,9 @@ const BundleProductCard = ({
             {product.title}
           </Text>
         </LocalizedClientLink>
+
+        {/* Product Rating */}
+        <ProductRating productId={product.id} size="sm" showCount={true} />
 
         {/* Price */}
         <div className="flex items-center gap-x-2">

@@ -4,6 +4,7 @@ import { listProducts } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
 import ProductTemplate from "@modules/products/templates"
 import Breadcrumb from "@modules/common/components/breadcrumb"
+import { ReviewStatsProvider } from "@modules/products/components/reviews/ReviewStatsContext"
 import { HttpTypes } from "@medusajs/types"
 
 type Props = {
@@ -159,7 +160,7 @@ export default async function ProductPage(props: Props) {
   breadcrumbItems.push({ label: pricedProduct.title })
 
   return (
-    <>
+    <ReviewStatsProvider>
       {/* Breadcrumb container below header */}
       <div className="border-b border-ui-border-base bg-background">
         <div className="content-container py-2">
@@ -175,6 +176,6 @@ export default async function ProductPage(props: Props) {
         images={images}
         initialVariantId={selectedVariantId}
       />
-    </>
+    </ReviewStatsProvider>
   )
 }

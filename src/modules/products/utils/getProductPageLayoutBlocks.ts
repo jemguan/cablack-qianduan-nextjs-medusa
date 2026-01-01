@@ -11,6 +11,7 @@ import {
   handleFAQBlock,
   handleRecentlyViewedProductsBlock,
   handleBundleSaleBlock,
+  handleReviewsBlock,
 } from './blockHandlers';
 
 export interface BlockConfig {
@@ -85,6 +86,7 @@ export function getProductPageLayoutBlocks(
     );
     if (blockConfig) {
       blockConfigs.push(blockConfig);
+      
     }
   }
 
@@ -119,6 +121,7 @@ function getBlockConfigForBlock(
       const shippingReturnsConfig =
         blockConfig.shippingReturnsConfig ||
         config?.shippingReturnsConfig;
+      
       return handleProductContentBlock(
         block,
         {
@@ -162,6 +165,19 @@ function getBlockConfigForBlock(
       return handleBundleSaleBlock(
         block,
         bundleSaleBlockConfig,
+        product,
+        region
+      );
+
+    case 'reviews':
+      // 从 blockConfigs 获取配置，如果没有则使用 block.config
+      const reviewsBlockConfig =
+        config?.blockConfigs?.['reviews']?.[block.id] ||
+        block.config ||
+        {};
+      return handleReviewsBlock(
+        block,
+        reviewsBlockConfig,
         product,
         region
       );

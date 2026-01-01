@@ -11,6 +11,7 @@ import ProductPageClientWrapper from "@modules/products/components/product-page-
 import ProductBrandLink from "@modules/products/components/product-brand-link"
 import { StickyAddToCart } from "@modules/products/components/sticky-add-to-cart"
 import { MedusaConfig } from "@lib/admin-api/config"
+import ProductRating from "@modules/products/components/reviews/ProductRating"
 
 type ThreeColumnLayoutProps = {
   product: HttpTypes.StoreProduct
@@ -68,6 +69,9 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
             {product.subtitle}
           </Text>
         )}
+
+        {/* Product Rating */}
+        <ProductRating productId={product.id} size="md" showCount={true} />
 
         {/* 移动端：在副标题下显示操作区域（变体选择、数量选择、按钮） */}
         <div className="small:hidden mt-4" ref={mobileActionsRef}>

@@ -13,6 +13,7 @@ import { isEqual } from "lodash"
 import Eye from "@modules/common/icons/eye"
 import Image from "next/image"
 import { getImageUrl } from "@lib/util/image"
+import ProductRating from "../reviews/ProductRating"
 
 const optionsAsKeymap = (
   variantOptions: HttpTypes.StoreProductVariant["options"]
@@ -263,6 +264,9 @@ const ProductPreview = ({
               {product.subtitle}
             </Text>
           )}
+
+          {/* Product Rating */}
+          <ProductRating productId={product.id} size="sm" showCount={true} />
 
           {/* Price */}
           <div className="flex items-center gap-x-2">
