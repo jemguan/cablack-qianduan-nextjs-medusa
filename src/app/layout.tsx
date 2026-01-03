@@ -8,10 +8,29 @@ export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
 }
 
+// 获取 Medusa 后端 URL（服务端）
+function getMedusaBackendUrl(): string {
+  return process.env.MEDUSA_BACKEND_URL || 
+         process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || 
+         "http://localhost:9000"
+}
+
 export default function RootLayout(props: { children: React.ReactNode }) {
+  const medusaBackendUrl = getMedusaBackendUrl()
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* 注入 Medusa 后端 URL 到 window 对象 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                window.__MEDUSA_BACKEND_URL__ = ${JSON.stringify(medusaBackendUrl)};
+              })();
+            `,
+          }}
+        />
         {/* 主题初始化脚本 - 防止主题闪烁 */}
         <script
           dangerouslySetInnerHTML={{
