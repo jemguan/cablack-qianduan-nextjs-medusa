@@ -9,7 +9,7 @@ import { DesktopFeaturedCollections } from './DesktopFeaturedCollections';
 import { MobileFeaturedCollections } from './MobileFeaturedCollections';
 
 interface FeaturedCollectionsClientProps {
-  collection: HttpTypes.StoreCollection;
+  category: HttpTypes.StoreProductCategory;
   region: HttpTypes.StoreRegion;
   products: HttpTypes.StoreProduct[];
   title?: string;

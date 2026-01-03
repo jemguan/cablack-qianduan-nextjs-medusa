@@ -18,7 +18,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
             __html: `
               (function() {
                 try {
-                  var theme = localStorage.getItem('theme-preference') || 'light';
+                  var theme = localStorage.getItem('theme-preference') || 'dark';
                   var root = document.documentElement;
                   if (theme === 'dark') {
                     root.classList.add('dark');

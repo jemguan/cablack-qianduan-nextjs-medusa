@@ -102,6 +102,7 @@ export function DesktopCollageHero({
     desktopBlockHeight = '220vh',
     desktopOverlayStartVh = 100,
     desktopOverlayEndVh = 180,
+    desktopBackgroundImageOpacity = 1,
   } = containerData;
 
   const [scrollState, setScrollState] = useState({
@@ -321,7 +322,7 @@ export function DesktopCollageHero({
             aria-label={backgroundImageAlt || 'Collage Hero Background Video'}
             className="w-full h-full object-cover will-change-opacity"
             style={{
-              opacity: scrollState.backgroundOpacity,
+              opacity: scrollState.backgroundOpacity * desktopBackgroundImageOpacity,
             }}
           >
             <track kind="captions" />
@@ -334,7 +335,7 @@ export function DesktopCollageHero({
             decoding="async"
             className="w-full h-full object-cover will-change-opacity"
             style={{
-              opacity: scrollState.backgroundOpacity,
+              opacity: scrollState.backgroundOpacity * desktopBackgroundImageOpacity,
             }}
           />
         ) : null}

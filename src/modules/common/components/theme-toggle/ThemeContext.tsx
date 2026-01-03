@@ -22,7 +22,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
  * @param children 子组件
  */
 export function ThemeProvider({children}: {children: ReactNode}) {
-  const [theme, setThemeState] = useState<Theme>('light'); // 服务端默认浅色主题
+  const [theme, setThemeState] = useState<Theme>('dark'); // 服务端默认深色主题
   const [isHydrated, setIsHydrated] = useState(false);
 
   // 客户端水合时获取保存的主题

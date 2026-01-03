@@ -1,6 +1,6 @@
 import { Metadata } from "next"
 
-import { listCollections } from "@lib/data/collections"
+import { listCategories } from "@lib/data/categories"
 import { getCurrentRegion, getCountryCode } from "@lib/data/regions"
 import { getMedusaConfig } from "@lib/admin-api/config"
 import { getPageLayoutBlocks } from "@lib/admin-api/pageLayoutUtils"
@@ -31,11 +31,11 @@ export default async function Home() {
   const countryCode = await getCountryCode()
   const region = await getCurrentRegion()
 
-  const { collections } = await listCollections({
-    fields: "id, handle, title",
+  const categories = await listCategories({
+    fields: "id, handle, name",
   })
 
-  if (!collections || !region) {
+  if (!categories || !region) {
     return null
   }
 
@@ -109,7 +109,7 @@ export default async function Home() {
   }
 
   // 根据 pageLayouts 配置获取首页 blocks
-  const pageBlocks = await getHomePageLayoutBlocks(config, collections, region, collageHeroProducts, blogArticles)
+  const pageBlocks = await getHomePageLayoutBlocks(config, categories, region, collageHeroProducts, blogArticles)
 
   // 组件映射
   const componentMap: Record<string, React.ComponentType<any>> = {

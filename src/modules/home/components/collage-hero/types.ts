@@ -290,6 +290,10 @@ export interface CollageHeroData {
   mobileOverlayStartVh?: number;
   /** 移动端遮罩完全显示的 vh 值（默认 180，即 180vh） */
   mobileOverlayEndVh?: number;
+  /** 桌面端背景图片透明度（0-1，默认 1） */
+  desktopBackgroundImageOpacity?: number;
+  /** 移动端背景图片透明度（0-1，默认 1） */
+  mobileBackgroundImageOpacity?: number;
   /** 产品数据（用于产品模块） */
   products?: HttpTypes.StoreProduct[];
 }

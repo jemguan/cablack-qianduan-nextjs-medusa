@@ -8,7 +8,7 @@ import { listProducts } from '@lib/data/products';
 import { FeaturedCollectionsClient } from './FeaturedCollectionsClient';
 
 interface FeaturedCollectionsProps {
-  collection: HttpTypes.StoreCollection; // 单个集合
+  category: HttpTypes.StoreProductCategory; // 单个分类
   region: HttpTypes.StoreRegion;
   title?: string;
   subtitle?: string;
@@ -48,7 +48,7 @@ interface FeaturedCollectionsProps {
 }
 
 export default async function FeaturedCollections({
-  collection,
+  category,
   region,
   title,
   subtitle,
@@ -67,17 +67,17 @@ export default async function FeaturedCollections({
   viewAllUrl,
   viewAllText = 'View All',
 }: FeaturedCollectionsProps) {
-  if (!collection) {
+  if (!category) {
     return null;
   }
 
-  // 获取该集合的产品
+  // 获取该分类的产品
   const {
     response: { products: pricedProducts },
   } = await listProducts({
     regionId: region.id,
     queryParams: {
-      collection_id: collection.id,
+      category_id: category.id,
       fields: "*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.images.id,*variants.images.url,*variants.images.metadata",
     },
   });
@@ -86,13 +86,13 @@ export default async function FeaturedCollections({
     return null;
   }
 
-  // 如果没有配置 viewAllUrl，使用集合的链接
-  const finalViewAllUrl = viewAllUrl || `/collections/${collection.handle}`;
+  // 如果没有配置 viewAllUrl，使用分类的链接
+  const finalViewAllUrl = viewAllUrl || `/categories/${category.handle}`;
 
   return (
     <div className="content-container py-12 small:py-24">
       <FeaturedCollectionsClient
-        collection={collection}
+        category={category}
         region={region}
         products={pricedProducts}
         title={title}

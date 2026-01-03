@@ -5,7 +5,7 @@ import ProductPreview from '@modules/products/components/product-preview';
 import { EmblaCarousel } from '@lib/ui/embla-carousel';
 
 interface MobileFeaturedCollectionsProps {
-  collection: HttpTypes.StoreCollection;
+  category: HttpTypes.StoreProductCategory;
   region: HttpTypes.StoreRegion;
   products: HttpTypes.StoreProduct[];
   maxCount?: number;
@@ -28,7 +28,7 @@ interface MobileFeaturedCollectionsProps {
  * 移动端特色集合组件
  */
 export function MobileFeaturedCollections({
-  collection: _collection,
+  category: _category,
   region,
   products,
   maxCount = 6,

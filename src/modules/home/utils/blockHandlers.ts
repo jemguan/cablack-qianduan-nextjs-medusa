@@ -26,23 +26,23 @@ export function handleFeaturedCollectionsBlock(
     config: Record<string, any>;
   },
   blockConfig: Record<string, any>,
-  collections: HttpTypes.StoreCollection[],
+  categories: HttpTypes.StoreProductCategory[],
   region: HttpTypes.StoreRegion
 ): BlockConfig | null {
-  // 从配置中获取要显示的集合 ID 列表（只取第一个）
+  // 从配置中获取要显示的分类 ID 列表（只取第一个）
   const collectionIds = blockConfig.collectionIds || [];
-  const collectionId = collectionIds[0];
+  const categoryId = collectionIds[0];
 
-  // 如果没有配置集合 ID，返回 null（不显示）
-  if (!collectionId) {
+  // 如果没有配置分类 ID，返回 null（不显示）
+  if (!categoryId) {
     return null;
   }
 
-  // 根据 collectionId 查找集合
-  const featuredCollection = collections.find(c => c.id === collectionId);
+  // 根据 categoryId 查找分类
+  const featuredCategory = categories.find(c => c.id === categoryId);
 
-  // 如果没有找到集合，返回 null
-  if (!featuredCollection) {
+  // 如果没有找到分类，返回 null
+  if (!featuredCategory) {
     return null;
   }
 
@@ -91,7 +91,7 @@ export function handleFeaturedCollectionsBlock(
     config: blockConfig,
     componentName: 'FeaturedCollections',
     props: {
-      collection: featuredCollection, // 传递单个集合
+      category: featuredCategory, // 传递单个分类
       region,
       title,
       subtitle,
@@ -236,6 +236,8 @@ export function handleCollageHeroBlock(
     desktopOverlayEndVh: blockConfig.desktopOverlayEndVh ?? 180,
     mobileOverlayStartVh: blockConfig.mobileOverlayStartVh ?? 100,
     mobileOverlayEndVh: blockConfig.mobileOverlayEndVh ?? 180,
+    desktopBackgroundImageOpacity: blockConfig.desktopBackgroundImageOpacity,
+    mobileBackgroundImageOpacity: blockConfig.mobileBackgroundImageOpacity,
     modules,
   };
 

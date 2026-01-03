@@ -6,7 +6,7 @@ import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import Divider from "@modules/common/components/divider"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
-import { useParams, usePathname, useSearchParams } from "next/navigation"
+import { useParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { isEqual } from "lodash"
 import ProductPrice from "../product-price"
@@ -36,9 +36,6 @@ export default function ProductActions({
   disabled,
   mobileLayout = false,
 }: ProductActionsProps) {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
   const { options, selectedVariant, setOptionValue, setOptions } = useVariantSelection()
   const [isAdding, setIsAdding] = useState(false)
   const [quantity, setQuantity] = useState(1)
@@ -52,26 +49,7 @@ export default function ProductActions({
     })
   }, [product.variants, options])
 
-  // 使用 window.history.replaceState 更新 URL，避免触发服务器组件重新渲染
-  useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString())
-    const value = isValidVariant ? selectedVariant?.id : null
-
-    if (params.get("v_id") === value) {
-      return
-    }
-
-    if (value) {
-      params.set("v_id", value)
-    } else {
-      params.delete("v_id")
-    }
-
-    // 使用 window.history.replaceState 而不是 router.replace
-    // 这样可以更新 URL 而不触发 Next.js 服务器组件重新执行
-    const newUrl = pathname + (params.toString() ? "?" + params.toString() : "")
-    window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, "", newUrl)
-  }, [selectedVariant, isValidVariant, pathname, searchParams])
+  // 不再更新 URL 中的 v_id 参数，保持 URL 简洁
 
   // check if the selected variant is in stock
   const inStock = useMemo(() => {
@@ -164,7 +142,7 @@ export default function ProductActions({
 
         {/* 价格 - 移动端布局时隐藏 */}
         {!mobileLayout && (
-          <ProductPrice product={product} variant={selectedVariant} />
+          <ProductPrice product={product} variant={selectedVariant || undefined} />
         )}
 
         {/* 数量选择器 */}

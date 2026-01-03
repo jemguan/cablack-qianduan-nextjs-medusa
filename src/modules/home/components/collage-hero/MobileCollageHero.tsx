@@ -103,11 +103,17 @@ export function MobileCollageHero({
     mobileBlockHeight = '220vh',
     mobileOverlayStartVh = 100,
     mobileOverlayEndVh = 180,
+    mobileBackgroundImageOpacity = 1,
+    desktopBackgroundImageOpacity = 1,
   } = containerData;
 
   // 移动端优先使用移动端资源，如果没有则使用桌面端资源
   const backgroundVideo = mobileBackgroundVideo || desktopBackgroundVideo;
   const backgroundImage = mobileBackgroundImage || desktopBackgroundImage;
+  // 移动端优先使用移动端透明度，如果没有则使用桌面端透明度
+  const backgroundImageOpacity = mobileBackgroundImageOpacity !== undefined 
+    ? mobileBackgroundImageOpacity 
+    : desktopBackgroundImageOpacity;
 
   const [scrollState, setScrollState] = useState({
     overlayOpacity: 0,
@@ -324,7 +330,7 @@ export function MobileCollageHero({
             aria-label={backgroundImageAlt || 'Collage Hero Background Video'}
             className="w-full h-full object-cover will-change-opacity"
             style={{
-              opacity: scrollState.backgroundOpacity,
+              opacity: scrollState.backgroundOpacity * backgroundImageOpacity,
             }}
           >
             <track kind="captions" />
@@ -337,7 +343,7 @@ export function MobileCollageHero({
             decoding="async"
             className="w-full h-full object-cover will-change-opacity"
             style={{
-              opacity: scrollState.backgroundOpacity,
+              opacity: scrollState.backgroundOpacity * backgroundImageOpacity,
             }}
           />
         ) : null}

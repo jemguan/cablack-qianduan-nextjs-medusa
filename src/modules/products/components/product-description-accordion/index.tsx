@@ -176,7 +176,15 @@ const ProductDescriptionAccordion: React.FC<ProductDescriptionAccordionProps> = 
           prose-blockquote:border-l-ui-border-base prose-blockquote:text-ui-fg-subtle
           prose-ul:text-ui-fg-subtle prose-ol:text-ui-fg-subtle
           prose-li:text-ui-fg-subtle
-          prose-hr:border-ui-border-base"
+          prose-hr:border-ui-border-base
+          [&_input]:bg-background [&_input]:text-foreground [&_input]:border-input [&_input]:rounded-md [&_input]:px-3 [&_input]:py-2
+          dark:[&_input]:bg-background dark:[&_input]:text-foreground dark:[&_input]:border-input
+          [&_textarea]:bg-background [&_textarea]:text-foreground [&_textarea]:border-input [&_textarea]:rounded-md [&_textarea]:px-3 [&_textarea]:py-2
+          dark:[&_textarea]:bg-background dark:[&_textarea]:text-foreground dark:[&_textarea]:border-input
+          [&_select]:bg-background [&_select]:text-foreground [&_select]:border-input [&_select]:rounded-md [&_select]:px-3 [&_select]:py-2
+          dark:[&_select]:bg-background dark:[&_select]:text-foreground dark:[&_select]:border-input
+          [&_button]:bg-primary [&_button]:text-primary-foreground [&_button]:rounded-md [&_button]:px-4 [&_button]:py-2 [&_button]:transition-colors
+          dark:[&_button]:bg-primary dark:[&_button]:text-primary-foreground"
         data-testid="product-html-description"
         dangerouslySetInnerHTML={{ __html: sanitizeHtml(htmlDescription) }}
       />
@@ -208,7 +216,15 @@ const ProductDescriptionAccordion: React.FC<ProductDescriptionAccordionProps> = 
                 prose-blockquote:border-l-ui-border-base prose-blockquote:text-ui-fg-subtle
                 prose-ul:text-ui-fg-subtle prose-ol:text-ui-fg-subtle
                 prose-li:text-ui-fg-subtle
-                prose-hr:border-ui-border-base"
+                prose-hr:border-ui-border-base
+                [&_input]:bg-background [&_input]:text-foreground [&_input]:border-input [&_input]:rounded-md [&_input]:px-3 [&_input]:py-2
+                dark:[&_input]:bg-background dark:[&_input]:text-foreground dark:[&_input]:border-input
+                [&_textarea]:bg-background [&_textarea]:text-foreground [&_textarea]:border-input [&_textarea]:rounded-md [&_textarea]:px-3 [&_textarea]:py-2
+                dark:[&_textarea]:bg-background dark:[&_textarea]:text-foreground dark:[&_textarea]:border-input
+                [&_select]:bg-background [&_select]:text-foreground [&_select]:border-input [&_select]:rounded-md [&_select]:px-3 [&_select]:py-2
+                dark:[&_select]:bg-background dark:[&_select]:text-foreground dark:[&_select]:border-input
+                [&_button]:bg-primary [&_button]:text-primary-foreground [&_button]:rounded-md [&_button]:px-4 [&_button]:py-2 [&_button]:transition-colors
+                dark:[&_button]:bg-primary dark:[&_button]:text-primary-foreground"
               dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.content) }}
             />
           </Accordion.Item>

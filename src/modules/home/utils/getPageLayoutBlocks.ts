@@ -22,7 +22,7 @@ export interface BlockConfig {
 /**
  * 获取首页的布局 blocks
  * @param config Medusa 配置
- * @param collections 所有集合数据
+ * @param categories 所有分类数据
  * @param region 区域信息
  * @param products 产品数据（用于 CollageHero 等需要产品的 blocks）
  * @param articles 博客文章数据（用于 FeaturedBlog 等需要文章的 blocks）
@@ -30,7 +30,7 @@ export interface BlockConfig {
  */
 export async function getHomePageLayoutBlocks(
   config: MedusaConfig | null | undefined,
-  collections: HttpTypes.StoreCollection[],
+  categories: HttpTypes.StoreProductCategory[],
   region: HttpTypes.StoreRegion,
   products?: HttpTypes.StoreProduct[],
   articles?: BlogPost[]
@@ -46,7 +46,7 @@ export async function getHomePageLayoutBlocks(
   const blockConfigs: BlockConfig[] = [];
 
   for (const block of blocks) {
-    const blockConfig = await getBlockConfigForBlock(block, config, collections, region, products, articles);
+    const blockConfig = await getBlockConfigForBlock(block, config, categories, region, products, articles);
     if (blockConfig) {
       blockConfigs.push(blockConfig);
     }
@@ -67,14 +67,14 @@ async function getBlockConfigForBlock(
     config: Record<string, any>;
   },
   config: MedusaConfig | null | undefined,
-  collections: HttpTypes.StoreCollection[],
+  categories: HttpTypes.StoreProductCategory[],
   region: HttpTypes.StoreRegion,
   products?: HttpTypes.StoreProduct[],
   articles?: BlogPost[]
 ): Promise<BlockConfig | null> {
   switch (block.type) {
     case 'featuredCollections':
-      return handleFeaturedCollectionsBlock(block, block.config, collections, region);
+      return handleFeaturedCollectionsBlock(block, block.config, categories, region);
 
     case 'collageHero':
       return handleCollageHeroBlock(block, block.config, products, region);
