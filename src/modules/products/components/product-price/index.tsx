@@ -23,9 +23,11 @@ export default function ProductPrice({
 
   // 只有在选择了对应变体时才显示对比价格
   // 检查是否需要显示对比价格（现价低于原价，且已选择变体）
+  // 如果价格和对比价格相等，则不显示对比价格
   const showComparePrice = variant && 
     selectedPrice.price_type === "sale" && 
-    selectedPrice.original_price_number > selectedPrice.calculated_price_number
+    selectedPrice.original_price_number > selectedPrice.calculated_price_number &&
+    selectedPrice.original_price_number !== selectedPrice.calculated_price_number
 
   // 只有在没有选择变体时才显示 "From"
   // 如果 variant 存在且有 variantPrice，说明已选择变体，不显示 "From"

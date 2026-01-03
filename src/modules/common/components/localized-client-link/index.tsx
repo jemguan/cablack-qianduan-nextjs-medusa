@@ -20,10 +20,15 @@ const LocalizedClientLink = ({
   passHref?: true
   [x: string]: any
 }) => {
-  const { countryCode } = useParams()
+  const params = useParams()
+  const countryCode = params?.countryCode as string | undefined
+
+  // 如果 countryCode 不存在，使用 href 本身（可能是绝对路径或已经包含 countryCode）
+  // 否则添加 countryCode 前缀
+  const finalHref = countryCode ? `/${countryCode}${href}` : href
 
   return (
-    <Link href={`/${countryCode}${href}`} {...props}>
+    <Link href={finalHref} {...props}>
       {children}
     </Link>
   )

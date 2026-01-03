@@ -220,16 +220,20 @@ export default async function SitemapPage(props: Params) {
               </h2>
               {brands.brands && brands.brands.length > 0 ? (
                 <ul className="space-y-2 max-h-96 overflow-y-auto">
-                  {brands.brands.map((brand) => (
-                    <li key={brand.id}>
-                      <Link
-                        href={`/${countryCode}/brands/${brand.slug}`}
-                        className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover hover:underline"
-                      >
-                        {brand.name}
-                      </Link>
-                    </li>
-                  ))}
+                  {brands.brands.map((brand) => {
+                    // 如果 slug 为空，使用 id 作为后备
+                    const brandIdentifier = brand.slug || brand.id
+                    return (
+                      <li key={brand.id}>
+                        <Link
+                          href={`/${countryCode}/brands/${brandIdentifier}`}
+                          className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover hover:underline"
+                        >
+                          {brand.name}
+                        </Link>
+                      </li>
+                    )
+                  })}
                 </ul>
               ) : (
                 <p className="text-ui-fg-subtle text-sm">No brands available</p>

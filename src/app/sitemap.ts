@@ -7,11 +7,15 @@ import { listBlogs } from "@lib/data/blogs"
 import { sdk } from "@lib/config"
 import { getCacheConfig } from "@lib/config/cache"
 
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
-    ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-    : process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL?.replace(":9000", ":8000") ||
-      "http://localhost:8000"
+  // 优先使用 NEXT_PUBLIC_SITE_URL，然后是 NEXT_PUBLIC_BASE_URL，最后是 NEXT_PUBLIC_VERCEL_URL
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    (process.env.NEXT_PUBLIC_VERCEL_URL
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+      : process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL?.replace(":9000", ":8000") ||
+        "http://localhost:8000")
 
   const sitemapEntries: MetadataRoute.Sitemap = []
 
@@ -124,8 +128,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             if (response.products && response.products.length > 0) {
               response.products.forEach((product) => {
                 if (product.handle) {
+                  // 编码产品 handle 以确保 URL 安全
+                  const encodedHandle = encodeURIComponent(product.handle)
                   sitemapEntries.push({
-                    url: `${baseUrl}/${countryCode}/products/${product.handle}`,
+                    url: `${baseUrl}/${countryCode}/products/${encodedHandle}`,
                     lastModified: new Date(),
                     changeFrequency: "weekly",
                     priority: 0.8,
@@ -177,10 +183,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           }
 
           const categoryPath = buildCategoryPath(category)
+          // 编码每个 category handle
+          const encodedCategoryPath = categoryPath.map(handle => encodeURIComponent(handle)).join("/")
 
           for (const countryCode of countryCodes) {
             sitemapEntries.push({
-              url: `${baseUrl}/${countryCode}/categories/${categoryPath.join("/")}`,
+              url: `${baseUrl}/${countryCode}/categories/${encodedCategoryPath}`,
               lastModified: new Date(),
               changeFrequency: "weekly",
               priority: 0.7,
@@ -203,9 +211,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         for (const collection of collections) {
           if (!collection.handle) continue
 
+          // 编码 collection handle
+          const encodedHandle = encodeURIComponent(collection.handle)
+
           for (const countryCode of countryCodes) {
             sitemapEntries.push({
-              url: `${baseUrl}/${countryCode}/collections/${collection.handle}`,
+              url: `${baseUrl}/${countryCode}/collections/${encodedHandle}`,
               lastModified: new Date(),
               changeFrequency: "weekly",
               priority: 0.7,
@@ -228,9 +239,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         for (const brand of brands) {
           if (!brand.slug) continue
 
+          // 编码 brand slug
+          const encodedSlug = encodeURIComponent(brand.slug)
+
           for (const countryCode of countryCodes) {
             sitemapEntries.push({
-              url: `${baseUrl}/${countryCode}/brands/${brand.slug}`,
+              url: `${baseUrl}/${countryCode}/brands/${encodedSlug}`,
               lastModified: new Date(),
               changeFrequency: "weekly",
               priority: 0.6,
