@@ -7,13 +7,12 @@ export interface BreadcrumbItem {
 
 interface BreadcrumbProps {
   items: BreadcrumbItem[]
-  countryCode: string
+  countryCode?: string // No longer used, kept for backward compatibility
   className?: string
 }
 
 export default function Breadcrumb({
   items,
-  countryCode,
   className = "",
 }: BreadcrumbProps) {
   if (!items || items.length === 0) {
@@ -34,7 +33,7 @@ export default function Breadcrumb({
               {index > 0 && <span className="mx-2">/</span>}
               {item.href && !isLast ? (
                 <Link
-                  href={`/${countryCode}${item.href}`}
+                  href={item.href}
                   className="hover:text-ui-fg-base transition-colors"
                 >
                   {item.label}
@@ -51,4 +50,3 @@ export default function Breadcrumb({
     </nav>
   )
 }
-

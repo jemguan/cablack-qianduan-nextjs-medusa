@@ -4,10 +4,10 @@ import { getImageUrl } from "@lib/util/image"
 
 export default function CollectionsListTemplate({
   collections,
-  countryCode,
+  countryCode, // No longer used, kept for backward compatibility
 }: {
   collections: HttpTypes.StoreCollection[]
-  countryCode: string
+  countryCode?: string
 }) {
   if (!collections || collections.length === 0) {
     return (
@@ -33,7 +33,7 @@ export default function CollectionsListTemplate({
 
       <ul className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8">
         {collections.map((collection) => {
-          const collectionLink = `/${countryCode}/collections/${collection.handle}`
+          const collectionLink = `/collections/${collection.handle}`
           const thumbnailUrl = getImageUrl(collection.thumbnail)
 
           return (
@@ -66,4 +66,3 @@ export default function CollectionsListTemplate({
     </div>
   )
 }
-

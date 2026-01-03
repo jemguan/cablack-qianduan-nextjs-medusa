@@ -87,3 +87,25 @@ export const removeCartId = async () => {
     maxAge: -1,
   })
 }
+
+// Default region country code
+const DEFAULT_REGION = "ca"
+
+export const getRegionCountryCode = async (): Promise<string> => {
+  try {
+    const cookies = await nextCookies()
+    return cookies.get("_medusa_region")?.value || DEFAULT_REGION
+  } catch {
+    return DEFAULT_REGION
+  }
+}
+
+export const setRegionCountryCode = async (countryCode: string) => {
+  const cookies = await nextCookies()
+  cookies.set("_medusa_region", countryCode.toLowerCase(), {
+    maxAge: 60 * 60 * 24 * 365, // 1 year
+    httpOnly: false, // Client needs to read this
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  })
+}

@@ -4,10 +4,10 @@ import { getImageUrl } from "@lib/util/image"
 
 export default function BlogDetailTemplate({
   post,
-  countryCode,
+  countryCode, // No longer used, kept for backward compatibility
 }: {
   post: BlogPost
-  countryCode: string
+  countryCode?: string
 }) {
   // Format date
   const formatDate = (dateString: string | null | undefined) => {
@@ -79,7 +79,7 @@ export default function BlogDetailTemplate({
         {/* Back to blog list */}
         <div className="mt-12 pt-8 border-t border-ui-border-base">
           <Link
-            href={`/${countryCode}/blogs`}
+            href="/blogs"
             className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover transition-colors inline-flex items-center gap-2"
           >
             ← Back to Blog
@@ -89,4 +89,3 @@ export default function BlogDetailTemplate({
     </div>
   )
 }
-

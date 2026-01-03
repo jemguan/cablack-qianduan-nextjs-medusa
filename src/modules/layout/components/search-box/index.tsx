@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useRef, useEffect, useCallback } from "react"
-import { useRouter, useParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
 import { useDebounce } from "@lib/hooks/use-debounce"
 import { searchProductsClient } from "@lib/data/search-client"
@@ -37,7 +37,6 @@ const SearchBox = ({
   regionId,
 }: SearchBoxProps) => {
   const router = useRouter()
-  const params = useParams()
   const searchParams = useSearchParams()
   const [searchTerm, setSearchTerm] = useState("")
   const [isExpanded, setIsExpanded] = useState(false)
@@ -47,7 +46,6 @@ const SearchBox = ({
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const countryCode = params?.countryCode as string
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
   // Get current search term from URL
@@ -122,7 +120,7 @@ const SearchBox = ({
         return
       }
 
-      const searchUrl = `/${countryCode}/search?q=${encodeURIComponent(trimmedTerm)}`
+      const searchUrl = `/search?q=${encodeURIComponent(trimmedTerm)}`
       router.push(searchUrl)
       setShowPreview(false)
 
@@ -131,7 +129,7 @@ const SearchBox = ({
         setIsExpanded(false)
       }
     },
-    [countryCode, router, variant, isExpanded]
+    [router, variant, isExpanded]
   )
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

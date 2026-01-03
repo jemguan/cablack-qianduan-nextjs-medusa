@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 const BACKEND_URL = process.env.MEDUSA_BACKEND_URL
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
-const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "us"
+const DEFAULT_REGION = "ca"
 
 const regionMapCache = {
   regionMap: new Map<string, HttpTypes.StoreRegion>(),
@@ -24,8 +24,6 @@ async function getRegionMap(cacheId: string) {
     regionMapUpdated < Date.now() - 3600 * 1000
   ) {
     // Fetch regions from Medusa. We can't use the JS client here because middleware is running on Edge and the client needs a Node environment.
-    // In development, always fetch fresh data (no cache)
-    // In production, use Next.js cache with 1 hour revalidation
     const fetchOptions: RequestInit = {
       headers: {
         "x-publishable-api-key": PUBLISHABLE_API_KEY!,
@@ -72,99 +70,77 @@ async function getRegionMap(cacheId: string) {
 }
 
 /**
- * Fetches regions from Medusa and sets the region cookie.
- * @param request
- * @param response
- */
-async function getCountryCode(
-  request: NextRequest,
-  regionMap: Map<string, HttpTypes.StoreRegion | number>
-) {
-  try {
-    let countryCode
-
-    const vercelCountryCode = request.headers
-      .get("x-vercel-ip-country")
-      ?.toLowerCase()
-
-    const urlCountryCode = request.nextUrl.pathname.split("/")[1]?.toLowerCase()
-
-    if (urlCountryCode && regionMap.has(urlCountryCode)) {
-      countryCode = urlCountryCode
-    } else if (vercelCountryCode && regionMap.has(vercelCountryCode)) {
-      countryCode = vercelCountryCode
-    } else if (regionMap.has(DEFAULT_REGION)) {
-      countryCode = DEFAULT_REGION
-    } else if (regionMap.keys().next().value) {
-      countryCode = regionMap.keys().next().value
-    }
-
-    return countryCode
-  } catch (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.error(
-        "Middleware.ts: Error getting the country code. Did you set up regions in your Medusa Admin and define a MEDUSA_BACKEND_URL environment variable? Note that the variable is no longer named NEXT_PUBLIC_MEDUSA_BACKEND_URL."
-      )
-    }
-  }
-}
-
-/**
- * Middleware to handle region selection and onboarding status.
+ * Middleware to handle region cookie and legacy URL redirects.
+ * No longer adds countryCode to URLs - region is stored in cookie only.
  */
 export async function middleware(request: NextRequest) {
-  let redirectUrl = request.nextUrl.href
-
-  let response = NextResponse.redirect(redirectUrl, 307)
-
-  let cacheIdCookie = request.cookies.get("_medusa_cache_id")
-
-  let cacheId = cacheIdCookie?.value || crypto.randomUUID()
-
-  const regionMap = await getRegionMap(cacheId)
-
-  const countryCode = regionMap && (await getCountryCode(request, regionMap))
-
-  const urlHasCountryCode =
-    countryCode && request.nextUrl.pathname.split("/")[1].includes(countryCode)
-
-  // if one of the country codes is in the url and the cache id is set, return next
-  if (urlHasCountryCode && cacheIdCookie) {
-    return NextResponse.next()
-  }
-
-  // if one of the country codes is in the url and the cache id is not set, set the cache id and redirect
-  if (urlHasCountryCode && !cacheIdCookie) {
-    response.cookies.set("_medusa_cache_id", cacheId, {
-      maxAge: 60 * 60 * 24,
-    })
-
-    return response
-  }
-
-  // check if the url is a static asset
+  // Check if the url is a static asset
   if (request.nextUrl.pathname.includes(".")) {
     return NextResponse.next()
   }
 
-  const redirectPath =
-    request.nextUrl.pathname === "/" ? "" : request.nextUrl.pathname
+  let cacheIdCookie = request.cookies.get("_medusa_cache_id")
+  let cacheId = cacheIdCookie?.value || crypto.randomUUID()
 
-  const queryString = request.nextUrl.search ? request.nextUrl.search : ""
+  const regionMap = await getRegionMap(cacheId)
 
-  // If no country code is set, we redirect to the relevant region.
-  if (!urlHasCountryCode && countryCode) {
-    redirectUrl = `${request.nextUrl.origin}/${countryCode}${redirectPath}${queryString}`
-    response = NextResponse.redirect(`${redirectUrl}`, 307)
-  } else if (!urlHasCountryCode && !countryCode) {
-    // Handle case where no valid country code exists (empty regions)
-    return new NextResponse(
-      "No valid regions configured. Please set up regions with countries in your Medusa Admin.",
-      { status: 500 }
-    )
+  // Get the first path segment to check for legacy countryCode URLs
+  const pathSegments = request.nextUrl.pathname.split("/").filter(Boolean)
+  const firstSegment = pathSegments[0]?.toLowerCase()
+
+  // Check if the URL starts with a country code (legacy URL)
+  const isLegacyUrl = firstSegment && regionMap.has(firstSegment)
+
+  if (isLegacyUrl) {
+    // Redirect legacy URLs (e.g., /ca/products/xxx) to new URLs (e.g., /products/xxx)
+    const newPathname = "/" + pathSegments.slice(1).join("/")
+    const queryString = request.nextUrl.search || ""
+    const redirectUrl = `${request.nextUrl.origin}${newPathname || "/"}${queryString}`
+    
+    const response = NextResponse.redirect(redirectUrl, 301)
+    
+    // Set the region cookie based on the legacy URL's country code
+    response.cookies.set("_medusa_region", firstSegment, {
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    })
+
+    // Set cache id if not present
+    if (!cacheIdCookie) {
+      response.cookies.set("_medusa_cache_id", cacheId, {
+        maxAge: 60 * 60 * 24,
+      })
+    }
+
+    return response
   }
 
-  return response
+  // Normal request - ensure cookies are set
+  const regionCookie = request.cookies.get("_medusa_region")
+  
+  // If no region cookie, set it to default
+  if (!regionCookie || !cacheIdCookie) {
+    const response = NextResponse.next()
+
+    if (!regionCookie) {
+      response.cookies.set("_medusa_region", DEFAULT_REGION, {
+        maxAge: 60 * 60 * 24 * 365, // 1 year
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      })
+    }
+
+    if (!cacheIdCookie) {
+      response.cookies.set("_medusa_cache_id", cacheId, {
+        maxAge: 60 * 60 * 24,
+      })
+    }
+
+    return response
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {

@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 
 import { listCollections } from "@lib/data/collections"
-import { getRegion } from "@lib/data/regions"
+import { getCurrentRegion, getCountryCode } from "@lib/data/regions"
 import { getMedusaConfig } from "@lib/admin-api/config"
 import { getPageLayoutBlocks } from "@lib/admin-api/pageLayoutUtils"
 import { getHomePageLayoutBlocks } from "@modules/home/utils/getPageLayoutBlocks"
@@ -27,14 +27,9 @@ export const metadata: Metadata = {
 // 首页缓存 5 分钟，确保 FeaturedBlog 等组件定期更新
 export const revalidate = 300
 
-export default async function Home(props: {
-  params: Promise<{ countryCode: string }>
-}) {
-  const params = await props.params
-
-  const { countryCode } = params
-
-  const region = await getRegion(countryCode)
+export default async function Home() {
+  const countryCode = await getCountryCode()
+  const region = await getCurrentRegion()
 
   const { collections } = await listCollections({
     fields: "id, handle, title",

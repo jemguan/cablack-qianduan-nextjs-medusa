@@ -5,7 +5,7 @@ import { getCacheConfig } from "@lib/config/cache"
 import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
-import { getAuthHeaders, getCacheOptions } from "./cookies"
+import { getAuthHeaders, getCacheOptions, getRegionCountryCode } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 
 export const listProducts = async ({
@@ -23,8 +23,9 @@ export const listProducts = async ({
   nextPage: number | null
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductListParams
 }> => {
+  // If no countryCode or regionId provided, get from cookie
   if (!countryCode && !regionId) {
-    throw new Error("Country code or region ID is required")
+    countryCode = await getRegionCountryCode()
   }
 
   const limit = queryParams?.limit || 12
@@ -114,13 +115,16 @@ export const listProductsWithSort = async ({
   page?: number
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
   sortBy?: SortOptions
-  countryCode: string
+  countryCode?: string
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
 }> => {
   const limit = queryParams?.limit || 12
+
+  // If no countryCode provided, get from cookie
+  const resolvedCountryCode = countryCode || await getRegionCountryCode()
 
   const {
     response: { products, count },
@@ -130,7 +134,7 @@ export const listProductsWithSort = async ({
       ...queryParams,
       limit: 100,
     },
-    countryCode,
+    countryCode: resolvedCountryCode,
   })
 
   const sortedProducts = sortProducts(products, sortBy)

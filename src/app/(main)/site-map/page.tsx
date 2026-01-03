@@ -1,5 +1,5 @@
 import { Metadata } from "next"
-import { listRegions } from "@lib/data/regions"
+import { getCountryCode } from "@lib/data/regions"
 import { listProducts } from "@lib/data/products"
 import { listCategories } from "@lib/data/categories"
 import { listCollections } from "@lib/data/collections"
@@ -17,19 +17,11 @@ export const metadata: Metadata = {
   },
 }
 
-type Params = {
-  params: Promise<{
-    countryCode: string
-  }>
-}
-
-export default async function SitemapPage(props: Params) {
-  const params = await props.params
-  const countryCode = params.countryCode
+export default async function SitemapPage() {
+  const countryCode = await getCountryCode()
 
   // Fetch all data
-  const [regions, categories, collections, brands, blogs] = await Promise.all([
-    listRegions().catch(() => []),
+  const [categories, collections, brands, blogs] = await Promise.all([
     listCategories({ limit: 1000 }).catch(() => []),
     listCollections({ limit: "1000", offset: "0" }).catch(() => ({ collections: [] })),
     listBrands({ limit: "1000", offset: "0" }).catch(() => ({ brands: [] })),
@@ -42,8 +34,8 @@ export default async function SitemapPage(props: Params) {
     const { response } = await listProducts({
       countryCode,
       queryParams: {
-        limit: "500",
-        offset: "0",
+        limit: 500,
+        offset: 0,
         fields: "handle,title",
       },
     })
@@ -107,7 +99,7 @@ export default async function SitemapPage(props: Params) {
               <ul className="space-y-2">
                 <li>
                   <Link
-                    href={`/${countryCode}`}
+                    href="/"
                     className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover hover:underline"
                   >
                     Home
@@ -115,7 +107,7 @@ export default async function SitemapPage(props: Params) {
                 </li>
                 <li>
                   <Link
-                    href={`/${countryCode}/store`}
+                    href="/store"
                     className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover hover:underline"
                   >
                     Store
@@ -123,7 +115,7 @@ export default async function SitemapPage(props: Params) {
                 </li>
                 <li>
                   <Link
-                    href={`/${countryCode}/search`}
+                    href="/search"
                     className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover hover:underline"
                   >
                     Search
@@ -131,7 +123,7 @@ export default async function SitemapPage(props: Params) {
                 </li>
                 <li>
                   <Link
-                    href={`/${countryCode}/collections`}
+                    href="/collections"
                     className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover hover:underline"
                   >
                     All Collections
@@ -139,7 +131,7 @@ export default async function SitemapPage(props: Params) {
                 </li>
                 <li>
                   <Link
-                    href={`/${countryCode}/categories`}
+                    href="/categories"
                     className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover hover:underline"
                   >
                     All Categories
@@ -147,7 +139,7 @@ export default async function SitemapPage(props: Params) {
                 </li>
                 <li>
                   <Link
-                    href={`/${countryCode}/brands`}
+                    href="/brands"
                     className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover hover:underline"
                   >
                     All Brands
@@ -155,7 +147,7 @@ export default async function SitemapPage(props: Params) {
                 </li>
                 <li>
                   <Link
-                    href={`/${countryCode}/blogs`}
+                    href="/blogs"
                     className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover hover:underline"
                   >
                     Blog
@@ -174,7 +166,7 @@ export default async function SitemapPage(props: Params) {
                   {collections.collections.map((collection) => (
                     <li key={collection.id}>
                       <Link
-                        href={`/${countryCode}/collections/${collection.handle}`}
+                        href={`/collections/${collection.handle}`}
                         className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover hover:underline"
                       >
                         {collection.title}
@@ -199,7 +191,7 @@ export default async function SitemapPage(props: Params) {
                     return (
                       <li key={category.id}>
                         <Link
-                          href={`/${countryCode}/categories/${categoryPath.join("/")}`}
+                          href={`/categories/${categoryPath.join("/")}`}
                           className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover hover:underline"
                         >
                           {category.name}
@@ -226,7 +218,7 @@ export default async function SitemapPage(props: Params) {
                     return (
                       <li key={brand.id}>
                         <Link
-                          href={`/${countryCode}/brands/${brandIdentifier}`}
+                          href={`/brands/${brandIdentifier}`}
                           className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover hover:underline"
                         >
                           {brand.name}
@@ -250,7 +242,7 @@ export default async function SitemapPage(props: Params) {
                   {products.slice(0, 100).map((product) => (
                     <li key={product.id}>
                       <Link
-                        href={`/${countryCode}/products/${product.handle}`}
+                        href={`/products/${product.handle}`}
                         className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover hover:underline"
                       >
                         {product.title}
@@ -278,7 +270,7 @@ export default async function SitemapPage(props: Params) {
                   {publishedBlogs.map((post) => (
                     <li key={post.id}>
                       <Link
-                        href={`/${countryCode}/blogs/${encodeURIComponent(post.url!)}`}
+                        href={`/blogs/${encodeURIComponent(post.url!)}`}
                         className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover hover:underline"
                       >
                         {post.title}
@@ -309,4 +301,3 @@ export default async function SitemapPage(props: Params) {
     </>
   )
 }
-

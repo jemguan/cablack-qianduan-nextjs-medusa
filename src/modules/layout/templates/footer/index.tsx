@@ -223,7 +223,7 @@ export default async function Footer() {
             
             {/* Sitemap Link */}
             <LocalizedClientLink
-              href="/sitemap"
+              href="/site-map"
               className="txt-compact-small hover:text-ui-fg-base transition-colors"
             >
               Sitemap

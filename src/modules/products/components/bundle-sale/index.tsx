@@ -1,7 +1,6 @@
 "use client"
 
-import { useRef } from "react"
-import { useParams } from "next/navigation"
+import { useRef, useState, useEffect } from "react"
 import type { BundleSaleBlockProps, BundleSaleData } from "./types"
 import { useBundleProducts } from "./hooks"
 import { DEFAULT_BUNDLE_SALE_CONFIG } from "./config"
@@ -11,14 +10,24 @@ import { useResponsiveRender } from "@lib/hooks/useResponsiveRender"
 import { useIntersection } from "@lib/hooks/use-in-view"
 import { Text, clx } from "@medusajs/ui"
 
+// Helper to get region cookie on client side
+const getRegionCookie = (): string => {
+  if (typeof document === "undefined") return "ca"
+  const match = document.cookie.match(/(?:^|; )_medusa_region=([^;]*)/)
+  return match ? match[1] : "ca"
+}
+
 /**
  * Bundle Sale 主组件
  * 响应式切换桌面端和移动端布局
  * 样式与其他 block 保持统一
  */
 export function BundleSale({ product, region, config }: BundleSaleBlockProps) {
-  const params = useParams()
-  const countryCode = params.countryCode as string
+  const [countryCode, setCountryCode] = useState<string>("ca")
+  
+  useEffect(() => {
+    setCountryCode(getRegionCookie())
+  }, [])
   
   // 视口检测 - 性能优化
   const ref = useRef<HTMLDivElement>(null)

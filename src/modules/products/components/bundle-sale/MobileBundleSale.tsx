@@ -1,19 +1,25 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import type { BundleSaleData } from "./types"
 import type { BundleWithProducts } from "./hooks"
 import { DEFAULT_BUNDLE_SALE_CONFIG } from "./config"
 import { convertToLocale } from "@lib/util/money"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { addToCart, createBundlePromotion } from "@lib/data/cart"
-import { useParams } from "next/navigation"
 import { calculateBundlePrice } from "@lib/util/bundle-price"
 import BundleProductCard from "./BundleProductCard"
 import { EmblaCarousel } from "@lib/ui/embla-carousel"
 import type { HttpTypes } from "@medusajs/types"
 import { clx } from "@medusajs/ui"
 import { ChevronDownMini, ChevronUpMini } from "@medusajs/icons"
+
+// Helper to get region cookie on client side
+const getRegionCookie = (): string => {
+  if (typeof document === "undefined") return "ca"
+  const match = document.cookie.match(/(?:^|; )_medusa_region=([^;]*)/)
+  return match ? match[1] : "ca"
+}
 
 interface MobileBundleSaleProps {
   currentProduct: HttpTypes.StoreProduct
@@ -139,8 +145,11 @@ function MobileBundleCard({
   const [error, setError] = useState<string | null>(null)
   const [isExpanded, setIsExpanded] = useState(false)
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({})
-  const params = useParams()
-  const countryCode = params.countryCode as string
+  const [countryCode, setCountryCode] = useState<string>("ca")
+  
+  useEffect(() => {
+    setCountryCode(getRegionCookie())
+  }, [])
 
   const { bundle, addonProducts, quantityMap } = bundleData
 

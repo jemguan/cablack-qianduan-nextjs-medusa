@@ -2,14 +2,14 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { getCollectionByHandle, listCollections } from "@lib/data/collections"
-import { listRegions } from "@lib/data/regions"
-import { StoreCollection, StoreRegion } from "@medusajs/types"
+import { getCountryCode } from "@lib/data/regions"
+import { StoreCollection } from "@medusajs/types"
 import CollectionTemplate from "@modules/collections/templates"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
 type Props = {
-  params: Promise<{ handle: string; countryCode: string }>
+  params: Promise<{ handle: string }>
   searchParams: Promise<{
     page?: string
     sortBy?: SortOptions
@@ -27,28 +27,10 @@ export async function generateStaticParams() {
     return []
   }
 
-  const countryCodes = await listRegions().then(
-    (regions: StoreRegion[]) =>
-      regions
-        ?.map((r) => r.countries?.map((c) => c.iso_2))
-        .flat()
-        .filter(Boolean) as string[]
-  )
-
-  const collectionHandles = collections.map(
-    (collection: StoreCollection) => collection.handle
-  )
-
-  const staticParams = countryCodes
-    ?.map((countryCode: string) =>
-      collectionHandles.map((handle: string | undefined) => ({
-        countryCode,
-        handle,
-      }))
-    )
-    .flat()
-
-  return staticParams
+  // No countryCode in URL anymore, just generate handles
+  return collections.map((collection: StoreCollection) => ({
+    handle: collection.handle,
+  }))
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
@@ -71,6 +53,7 @@ export default async function CollectionPage(props: Props) {
   const searchParams = await props.searchParams
   const params = await props.params
   const { sortBy, page } = searchParams
+  const countryCode = await getCountryCode()
 
   const collection = await getCollectionByHandle(params.handle).then(
     (collection: StoreCollection) => collection
@@ -91,7 +74,7 @@ export default async function CollectionPage(props: Props) {
       {/* Breadcrumb container below header */}
       <div className="border-b border-ui-border-base bg-background">
         <div className="content-container py-2">
-          <Breadcrumb items={breadcrumbItems} countryCode={params.countryCode} />
+          <Breadcrumb items={breadcrumbItems} countryCode={countryCode} />
         </div>
       </div>
 
@@ -100,7 +83,7 @@ export default async function CollectionPage(props: Props) {
         collection={collection}
         page={page}
         sortBy={sortBy}
-        countryCode={params.countryCode}
+        countryCode={countryCode}
       />
     </>
   )

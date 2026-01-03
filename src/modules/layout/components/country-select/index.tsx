@@ -9,9 +9,9 @@ import {
 } from "@headlessui/react"
 import { Fragment, useEffect, useMemo, useState } from "react"
 import ReactCountryFlag from "react-country-flag"
+import { useRouter } from "next/navigation"
 
 import { StateType } from "@lib/hooks/use-toggle-state"
-import { useParams, usePathname } from "next/navigation"
 import { updateRegion } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 
@@ -26,14 +26,21 @@ type CountrySelectProps = {
   regions: HttpTypes.StoreRegion[]
 }
 
+// Helper to get cookie value on client side
+const getRegionCookie = (): string => {
+  if (typeof document === "undefined") return "ca"
+  const match = document.cookie.match(/(?:^|; )_medusa_region=([^;]*)/)
+  return match ? match[1] : "ca"
+}
+
 const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
   const [current, setCurrent] = useState<
     | { country: string | undefined; region: string; label: string | undefined }
     | undefined
   >(undefined)
 
-  const { countryCode } = useParams()
-  const currentPath = usePathname().split(`/${countryCode}`)[1]
+  const router = useRouter()
+  const [currentCountryCode, setCurrentCountryCode] = useState<string>("")
 
   const { state, close } = toggleState
 
@@ -50,16 +57,30 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
       .sort((a, b) => (a?.label ?? "").localeCompare(b?.label ?? ""))
   }, [regions])
 
+  // Get current country code from cookie on client side
   useEffect(() => {
-    if (countryCode) {
-      const option = options?.find((o) => o?.country === countryCode)
+    const countryCode = getRegionCookie()
+    setCurrentCountryCode(countryCode)
+  }, [])
+
+  useEffect(() => {
+    if (currentCountryCode) {
+      const option = options?.find((o) => o?.country === currentCountryCode)
       setCurrent(option)
     }
-  }, [options, countryCode])
+  }, [options, currentCountryCode])
 
-  const handleChange = (option: CountryOption) => {
-    updateRegion(option.country, currentPath)
+  const handleChange = async (option: CountryOption) => {
     close()
+    
+    // Update the region (this updates cart and sets cookie on server)
+    await updateRegion(option.country)
+    
+    // Update local state
+    setCurrentCountryCode(option.country)
+    
+    // Refresh the page to reload data with new region
+    router.refresh()
   }
 
   return (
@@ -68,8 +89,8 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
         as="span"
         onChange={handleChange}
         defaultValue={
-          countryCode
-            ? options?.find((o) => o?.country === countryCode)
+          currentCountryCode
+            ? options?.find((o) => o?.country === currentCountryCode)
             : undefined
         }
       >

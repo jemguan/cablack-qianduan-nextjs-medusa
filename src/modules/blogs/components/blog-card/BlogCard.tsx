@@ -6,12 +6,12 @@ import { getImageUrl } from "@lib/util/image"
 
 interface BlogCardProps {
   post: BlogPost
-  countryCode: string
+  countryCode?: string // No longer used, kept for backward compatibility
 }
 
-export function BlogCard({ post, countryCode }: BlogCardProps) {
+export function BlogCard({ post }: BlogCardProps) {
   const blogUrl = post.url || post.id
-  const blogLink = `/${countryCode}/blogs/${encodeURIComponent(blogUrl)}`
+  const blogLink = `/blogs/${encodeURIComponent(blogUrl)}`
 
   // Format date
   const formatDate = (dateString: string | null | undefined) => {
@@ -83,4 +83,3 @@ export function BlogCard({ post, countryCode }: BlogCardProps) {
     </article>
   )
 }
-

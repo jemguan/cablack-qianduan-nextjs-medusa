@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 
 import { listBlogs } from "@lib/data/blogs"
+import { getCountryCode } from "@lib/data/regions"
 import BlogsListTemplate from "@modules/blogs/templates/blogs-list"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 
@@ -13,9 +14,6 @@ export const metadata: Metadata = {
 }
 
 type Params = {
-  params: Promise<{
-    countryCode: string
-  }>
   searchParams: Promise<{
     page?: string
     search?: string
@@ -25,8 +23,8 @@ type Params = {
 const BLOGS_PER_PAGE = 12
 
 export default async function BlogsPage(props: Params) {
-  const params = await props.params
   const searchParams = await props.searchParams
+  const countryCode = await getCountryCode()
 
   const page = searchParams.page ? parseInt(searchParams.page) : 1
   const search = searchParams.search || ""
@@ -72,7 +70,7 @@ export default async function BlogsPage(props: Params) {
       {/* Breadcrumb container below header */}
       <div className="border-b border-ui-border-base bg-background">
         <div className="content-container py-2">
-          <Breadcrumb items={breadcrumbItems} countryCode={params.countryCode} />
+          <Breadcrumb items={breadcrumbItems} countryCode={countryCode} />
         </div>
       </div>
 
@@ -83,9 +81,8 @@ export default async function BlogsPage(props: Params) {
         totalPages={totalPages}
         totalCount={filteredCount}
         search={search}
-        countryCode={params.countryCode}
+        countryCode={countryCode}
       />
     </>
   )
 }
-

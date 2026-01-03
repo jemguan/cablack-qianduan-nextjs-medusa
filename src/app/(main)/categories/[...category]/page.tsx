@@ -2,14 +2,14 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { getCategoryByHandle, listCategories } from "@lib/data/categories"
-import { listRegions } from "@lib/data/regions"
-import { StoreRegion, HttpTypes } from "@medusajs/types"
+import { getCountryCode } from "@lib/data/regions"
+import { HttpTypes } from "@medusajs/types"
 import CategoryTemplate from "@modules/categories/templates"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
 type Props = {
-  params: Promise<{ category: string[]; countryCode: string }>
+  params: Promise<{ category: string[] }>
   searchParams: Promise<{
     sortBy?: SortOptions
     page?: string
@@ -23,24 +23,10 @@ export async function generateStaticParams() {
     return []
   }
 
-  const countryCodes = await listRegions().then((regions: StoreRegion[]) =>
-    regions?.map((r) => r.countries?.map((c) => c.iso_2)).flat()
-  )
-
-  const categoryHandles = product_categories.map(
-    (category: any) => category.handle
-  )
-
-  const staticParams = countryCodes
-    ?.map((countryCode: string | undefined) =>
-      categoryHandles.map((handle: any) => ({
-        countryCode,
-        category: [handle],
-      }))
-    )
-    .flat()
-
-  return staticParams
+  // No countryCode in URL anymore, just generate category handles
+  return product_categories.map((category: any) => ({
+    category: [category.handle],
+  }))
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
@@ -68,6 +54,7 @@ export default async function CategoryPage(props: Props) {
   const searchParams = await props.searchParams
   const params = await props.params
   const { sortBy, page } = searchParams
+  const countryCode = await getCountryCode()
 
   const productCategory = await getCategoryByHandle(params.category)
 
@@ -124,7 +111,7 @@ export default async function CategoryPage(props: Props) {
       {/* Breadcrumb container below header */}
       <div className="border-b border-ui-border-base bg-background">
         <div className="content-container py-2">
-          <Breadcrumb items={breadcrumbItems} countryCode={params.countryCode} />
+          <Breadcrumb items={breadcrumbItems} countryCode={countryCode} />
         </div>
       </div>
 
@@ -133,7 +120,7 @@ export default async function CategoryPage(props: Props) {
         category={productCategory}
         sortBy={sortBy}
         page={page}
-        countryCode={params.countryCode}
+        countryCode={countryCode}
       />
     </>
   )

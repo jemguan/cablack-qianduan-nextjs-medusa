@@ -2,8 +2,7 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { getBrandBySlug } from "@lib/data/brands"
-import { listRegions } from "@lib/data/regions"
-import { StoreRegion } from "@medusajs/types"
+import { getCountryCode } from "@lib/data/regions"
 import BrandTemplate from "@modules/brands/templates"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -13,7 +12,7 @@ export const dynamic = 'force-dynamic'
 export const dynamicParams = true
 
 type Props = {
-  params: Promise<{ slug: string; countryCode: string }>
+  params: Promise<{ slug: string }>
   searchParams: Promise<{
     page?: string
     sortBy?: SortOptions
@@ -63,6 +62,7 @@ export default async function BrandPage(props: Props) {
     const searchParams = await props.searchParams
     const params = await props.params
     const { sortBy, page } = searchParams
+    const countryCode = await getCountryCode()
 
     if (!params.slug) {
       notFound()
@@ -85,7 +85,7 @@ export default async function BrandPage(props: Props) {
         {/* Breadcrumb container below header */}
         <div className="border-b border-ui-border-base bg-background">
           <div className="content-container py-2">
-            <Breadcrumb items={breadcrumbItems} countryCode={params.countryCode} />
+            <Breadcrumb items={breadcrumbItems} countryCode={countryCode} />
           </div>
         </div>
 
@@ -94,7 +94,7 @@ export default async function BrandPage(props: Props) {
           brand={brand}
           page={page}
           sortBy={sortBy}
-          countryCode={params.countryCode}
+          countryCode={countryCode}
         />
       </>
     )
@@ -103,4 +103,3 @@ export default async function BrandPage(props: Props) {
     notFound()
   }
 }
-

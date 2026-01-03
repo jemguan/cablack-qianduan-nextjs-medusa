@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { listProducts } from "@lib/data/products"
-import { getRegion, listRegions } from "@lib/data/regions"
+import { getCurrentRegion, getCountryCode } from "@lib/data/regions"
 import { getProductHtmlDescription } from "@lib/data/product-html-description"
 import ProductTemplate from "@modules/products/templates"
 import Breadcrumb from "@modules/common/components/breadcrumb"
@@ -9,42 +9,22 @@ import { ReviewStatsProvider } from "@modules/products/components/reviews/Review
 import { HttpTypes } from "@medusajs/types"
 
 type Props = {
-  params: Promise<{ countryCode: string; handle: string }>
+  params: Promise<{ handle: string }>
   searchParams: Promise<{ v_id?: string }>
 }
 
 export async function generateStaticParams() {
   try {
-    const countryCodes = await listRegions().then((regions) =>
-      regions?.map((r) => r.countries?.map((c) => c.iso_2)).flat()
-    )
-
-    if (!countryCodes) {
-      return []
-    }
-
-    const promises = countryCodes.map(async (country) => {
-      const { response } = await listProducts({
-        countryCode: country,
-        queryParams: { limit: 100, fields: "handle" },
-      })
-
-      return {
-        country,
-        products: response.products,
-      }
+    // For static generation, we generate params for handles only (no countryCode in URL)
+    const { response } = await listProducts({
+      queryParams: { limit: 100, fields: "handle" },
     })
 
-    const countryProducts = await Promise.all(promises)
-
-    return countryProducts
-      .flatMap((countryData) =>
-        countryData.products.map((product) => ({
-          countryCode: countryData.country,
-          handle: product.handle,
-        }))
-      )
-      .filter((param) => param.handle)
+    return response.products
+      .filter((product) => product.handle)
+      .map((product) => ({
+        handle: product.handle,
+      }))
   } catch (error) {
     console.error(
       `Failed to generate static paths for product pages: ${
@@ -75,14 +55,13 @@ function getImagesForVariant(
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params
   const { handle } = params
-  const region = await getRegion(params.countryCode)
+  const region = await getCurrentRegion()
 
   if (!region) {
     notFound()
   }
 
   const product = await listProducts({
-    countryCode: params.countryCode,
     queryParams: { 
       handle,
     },
@@ -105,7 +84,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 export default async function ProductPage(props: Props) {
   const params = await props.params
-  const region = await getRegion(params.countryCode)
+  const countryCode = await getCountryCode()
+  const region = await getCurrentRegion()
   const searchParams = await props.searchParams
 
   const selectedVariantId = searchParams.v_id
@@ -115,7 +95,6 @@ export default async function ProductPage(props: Props) {
   }
 
   const pricedProduct = await listProducts({
-    countryCode: params.countryCode,
     queryParams: {
       handle: params.handle,
       fields: "+*categories,+*categories.parent_category,+*categories.parent_category.parent_category",
@@ -139,7 +118,6 @@ export default async function ProductPage(props: Props) {
   // Add category to breadcrumb if product has a category
   if (pricedProduct.categories && pricedProduct.categories.length > 0) {
     const category = pricedProduct.categories[0]
-    const categoryHandle = category.handle || category.id
     
     // Build category path (handle parent categories)
     const categoryPath: string[] = []
@@ -168,7 +146,7 @@ export default async function ProductPage(props: Props) {
       {/* Breadcrumb container below header */}
       <div className="border-b border-ui-border-base bg-background">
         <div className="content-container py-2">
-          <Breadcrumb items={breadcrumbItems} countryCode={params.countryCode} />
+          <Breadcrumb items={breadcrumbItems} countryCode={countryCode} />
         </div>
       </div>
 
@@ -176,7 +154,7 @@ export default async function ProductPage(props: Props) {
       <ProductTemplate
         product={pricedProduct}
         region={region}
-        countryCode={params.countryCode}
+        countryCode={countryCode}
         images={images}
         initialVariantId={selectedVariantId}
         htmlDescription={htmlDescription}

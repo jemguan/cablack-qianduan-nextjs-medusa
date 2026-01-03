@@ -1,16 +1,14 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { searchProducts } from "@lib/data/search"
-import { getRegion } from "@lib/data/regions"
+import { getCurrentRegion, getCountryCode } from "@lib/data/regions"
 import SearchResults from "@modules/search/templates/search-results"
 
 type Props = {
-  params: Promise<{ countryCode: string }>
   searchParams: Promise<{ q?: string; page?: string }>
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await props.params
   const searchParams = await props.searchParams
   const searchTerm = searchParams.q || ""
 
@@ -23,12 +21,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function SearchPage(props: Props) {
-  const params = await props.params
   const searchParams = await props.searchParams
-  const { countryCode } = params
   const { q: searchTerm, page } = searchParams
+  const countryCode = await getCountryCode()
 
-  const region = await getRegion(countryCode)
+  const region = await getCurrentRegion()
 
   if (!region) {
     notFound()
@@ -77,4 +74,3 @@ export default async function SearchPage(props: Props) {
     </div>
   )
 }
-

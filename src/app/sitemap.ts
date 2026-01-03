@@ -5,8 +5,9 @@ import { listCollections } from "@lib/data/collections"
 import { listBrands } from "@lib/data/brands"
 import { listBlogs } from "@lib/data/blogs"
 import { sdk } from "@lib/config"
-import { getCacheConfig } from "@lib/config/cache"
 
+// Default region for sitemap generation
+const DEFAULT_REGION = "ca"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 优先使用 NEXT_PUBLIC_SITE_URL，然后是 NEXT_PUBLIC_BASE_URL，最后是 NEXT_PUBLIC_VERCEL_URL
@@ -20,91 +21,73 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const sitemapEntries: MetadataRoute.Sitemap = []
 
   try {
-    // Get all regions and country codes
+    // Get regions to find the default region for product fetching
     const regions = await listRegions()
-    const countryCodes =
-      regions
-        ?.map((r) => r.countries?.map((c) => c.iso_2))
-        .flat()
-        .filter(Boolean) || []
+    const defaultRegion = regions?.find((r) =>
+      r.countries?.some((c) => c.iso_2 === DEFAULT_REGION)
+    ) || regions?.[0]
 
-    if (countryCodes.length === 0) {
-      // Fallback to default country code if no regions found
-      countryCodes.push("us")
-    }
+    // Add static pages (no countryCode in URL)
+    // Home page
+    sitemapEntries.push({
+      url: baseUrl,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 1.0,
+    })
 
-    // Add static pages for each country code
-    for (const countryCode of countryCodes) {
-      // Home page
-      sitemapEntries.push({
-        url: `${baseUrl}/${countryCode}`,
-        lastModified: new Date(),
-        changeFrequency: "daily",
-        priority: 1.0,
-      })
+    // Static pages
+    sitemapEntries.push({
+      url: `${baseUrl}/search`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
+    })
 
-      // Static pages
-      sitemapEntries.push({
-        url: `${baseUrl}/${countryCode}/search`,
-        lastModified: new Date(),
-        changeFrequency: "daily",
-        priority: 0.8,
-      })
+    sitemapEntries.push({
+      url: `${baseUrl}/store`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
+    })
 
-      sitemapEntries.push({
-        url: `${baseUrl}/${countryCode}/store`,
-        lastModified: new Date(),
-        changeFrequency: "daily",
-        priority: 0.8,
-      })
+    sitemapEntries.push({
+      url: `${baseUrl}/blogs`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.7,
+    })
 
-      sitemapEntries.push({
-        url: `${baseUrl}/${countryCode}/blogs`,
-        lastModified: new Date(),
-        changeFrequency: "daily",
-        priority: 0.7,
-      })
+    sitemapEntries.push({
+      url: `${baseUrl}/collections`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    })
 
-      sitemapEntries.push({
-        url: `${baseUrl}/${countryCode}/collections`,
-        lastModified: new Date(),
-        changeFrequency: "weekly",
-        priority: 0.7,
-      })
+    sitemapEntries.push({
+      url: `${baseUrl}/categories`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    })
 
-      sitemapEntries.push({
-        url: `${baseUrl}/${countryCode}/categories`,
-        lastModified: new Date(),
-        changeFrequency: "weekly",
-        priority: 0.7,
-      })
+    sitemapEntries.push({
+      url: `${baseUrl}/brands`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    })
 
-      sitemapEntries.push({
-        url: `${baseUrl}/${countryCode}/brands`,
-        lastModified: new Date(),
-        changeFrequency: "weekly",
-        priority: 0.7,
-      })
-    }
-
-    // Get all products and generate URLs for each country code
-    // Note: Products are fetched directly via SDK with static caching for build-time generation
-    try {
-      for (const countryCode of countryCodes) {
-        const region = regions?.find((r) =>
-          r.countries?.some((c) => c.iso_2 === countryCode)
-        )
-
-        if (!region) continue
-
-        // Fetch products in batches using SDK directly with static cache
+    // Get all products (use default region for fetching)
+    if (defaultRegion) {
+      try {
         let offset = 0
         const limit = 100
         let hasMore = true
 
         while (hasMore) {
           try {
-            // Use static cache for sitemap generation (we only need handles, not prices/inventory)
             const response = await sdk.client.fetch<{
               products: Array<{ handle?: string }>
               count: number
@@ -115,23 +98,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 query: {
                   limit: limit.toString(),
                   offset: offset.toString(),
-                  region_id: region.id,
+                  region_id: defaultRegion.id,
                   fields: "handle",
                 },
                 next: {
-                  revalidate: 3600, // Revalidate every hour for static generation
+                  revalidate: 3600,
                 },
-                cache: "force-cache" as const, // Force static cache for build-time generation
+                cache: "force-cache" as const,
               }
             )
 
             if (response.products && response.products.length > 0) {
               response.products.forEach((product) => {
                 if (product.handle) {
-                  // 编码产品 handle 以确保 URL 安全
                   const encodedHandle = encodeURIComponent(product.handle)
                   sitemapEntries.push({
-                    url: `${baseUrl}/${countryCode}/products/${encodedHandle}`,
+                    url: `${baseUrl}/products/${encodedHandle}`,
                     lastModified: new Date(),
                     changeFrequency: "weekly",
                     priority: 0.8,
@@ -145,16 +127,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
               hasMore = false
             }
           } catch (error) {
-            console.error(
-              `Error fetching products for ${countryCode}:`,
-              error
-            )
+            console.error("Error fetching products for sitemap:", error)
             hasMore = false
           }
         }
+      } catch (error) {
+        console.error("Error generating product URLs:", error)
       }
-    } catch (error) {
-      console.error("Error generating product URLs:", error)
     }
 
     // Get all categories
@@ -165,10 +144,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         for (const category of categories) {
           if (!category.handle) continue
 
-          // Build category path (handle nested categories)
-          const buildCategoryPath = (
-            cat: typeof category
-          ): string[] => {
+          const buildCategoryPath = (cat: typeof category): string[] => {
             const path: string[] = []
             let current: typeof category | null = cat
 
@@ -183,17 +159,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           }
 
           const categoryPath = buildCategoryPath(category)
-          // 编码每个 category handle
           const encodedCategoryPath = categoryPath.map(handle => encodeURIComponent(handle)).join("/")
 
-          for (const countryCode of countryCodes) {
-            sitemapEntries.push({
-              url: `${baseUrl}/${countryCode}/categories/${encodedCategoryPath}`,
-              lastModified: new Date(),
-              changeFrequency: "weekly",
-              priority: 0.7,
-            })
-          }
+          sitemapEntries.push({
+            url: `${baseUrl}/categories/${encodedCategoryPath}`,
+            lastModified: new Date(),
+            changeFrequency: "weekly",
+            priority: 0.7,
+          })
         }
       }
     } catch (error) {
@@ -211,17 +184,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         for (const collection of collections) {
           if (!collection.handle) continue
 
-          // 编码 collection handle
           const encodedHandle = encodeURIComponent(collection.handle)
 
-          for (const countryCode of countryCodes) {
-            sitemapEntries.push({
-              url: `${baseUrl}/${countryCode}/collections/${encodedHandle}`,
-              lastModified: new Date(),
-              changeFrequency: "weekly",
-              priority: 0.7,
-            })
-          }
+          sitemapEntries.push({
+            url: `${baseUrl}/collections/${encodedHandle}`,
+            lastModified: new Date(),
+            changeFrequency: "weekly",
+            priority: 0.7,
+          })
         }
       }
     } catch (error) {
@@ -239,17 +209,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         for (const brand of brands) {
           if (!brand.slug) continue
 
-          // 编码 brand slug
           const encodedSlug = encodeURIComponent(brand.slug)
 
-          for (const countryCode of countryCodes) {
-            sitemapEntries.push({
-              url: `${baseUrl}/${countryCode}/brands/${encodedSlug}`,
-              lastModified: new Date(),
-              changeFrequency: "weekly",
-              priority: 0.6,
-            })
-          }
+          sitemapEntries.push({
+            url: `${baseUrl}/brands/${encodedSlug}`,
+            lastModified: new Date(),
+            changeFrequency: "weekly",
+            priority: 0.6,
+          })
         }
       }
     } catch (error) {
@@ -271,16 +238,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         for (const post of publishedPosts) {
           if (!post.url) continue
 
-          for (const countryCode of countryCodes) {
-            sitemapEntries.push({
-              url: `${baseUrl}/${countryCode}/blogs/${encodeURIComponent(post.url)}`,
-              lastModified: post.updated_at
-                ? new Date(post.updated_at)
-                : new Date(),
-              changeFrequency: "monthly",
-              priority: 0.6,
-            })
-          }
+          sitemapEntries.push({
+            url: `${baseUrl}/blogs/${encodeURIComponent(post.url)}`,
+            lastModified: post.updated_at
+              ? new Date(post.updated_at)
+              : new Date(),
+            changeFrequency: "monthly",
+            priority: 0.6,
+          })
         }
       }
     } catch (error) {
@@ -292,4 +257,3 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return sitemapEntries
 }
-

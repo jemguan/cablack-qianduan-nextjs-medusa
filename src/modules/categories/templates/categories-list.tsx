@@ -3,10 +3,10 @@ import Link from "next/link"
 
 export default function CategoriesListTemplate({
   categories,
-  countryCode,
+  countryCode, // No longer used, kept for backward compatibility
 }: {
   categories: HttpTypes.StoreProductCategory[]
-  countryCode: string
+  countryCode?: string
 }) {
   if (!categories || categories.length === 0) {
     return (
@@ -32,7 +32,7 @@ export default function CategoriesListTemplate({
 
       <ul className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8">
         {categories.map((category) => {
-          const categoryLink = `/${countryCode}/categories/${category.handle}`
+          const categoryLink = `/categories/${category.handle}`
 
           return (
             <li key={category.id}>
@@ -61,4 +61,3 @@ export default function CategoriesListTemplate({
     </div>
   )
 }
-

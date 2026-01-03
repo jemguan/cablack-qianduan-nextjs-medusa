@@ -4,7 +4,7 @@ import { sdk } from "@lib/config"
 import { getCacheConfig } from "@lib/config/cache"
 import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
-import { getCacheOptions } from "./cookies"
+import { getCacheOptions, getRegionCountryCode } from "./cookies"
 
 export const listRegions = async () => {
   // 获取缓存标签
@@ -72,10 +72,28 @@ export const getRegion = async (countryCode: string) => {
 
     const region = countryCode
       ? regionMap.get(countryCode)
-      : regionMap.get("us")
+      : regionMap.get("ca")
 
     return region
   } catch (e: any) {
     return null
   }
+}
+
+/**
+ * Get the current region based on the country code stored in cookie.
+ * This is a convenience function that gets the countryCode from cookie
+ * and returns the corresponding region.
+ */
+export const getCurrentRegion = async () => {
+  const countryCode = await getRegionCountryCode()
+  return getRegion(countryCode)
+}
+
+/**
+ * Get the current country code from cookie.
+ * Wrapper function for use in server actions (re-export not allowed in "use server" files).
+ */
+export const getCountryCode = async (): Promise<string> => {
+  return getRegionCountryCode()
 }
