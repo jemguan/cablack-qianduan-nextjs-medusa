@@ -32,6 +32,11 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
   const actionsRef = useRef<HTMLDivElement>(null)
   const mobileActionsRef = useRef<HTMLDivElement>(null)
 
+  // 调试：检查 htmlDescription 是否正确传递
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[TwoColumnLayout] htmlDescription:', htmlDescription ? 'exists' : 'null/undefined', htmlDescription?.substring(0, 100))
+  }
+
   return (
     <ProductPageClientWrapper product={product} initialVariantId={initialVariantId}>
     <div
@@ -69,7 +74,7 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
         </div>
 
           {/* 产品描述 - 优先显示 HTML 描述（带折叠功能），如果没有则显示普通描述 */}
-          {htmlDescription ? (
+          {htmlDescription && htmlDescription.trim() ? (
             <ProductDescriptionAccordion htmlDescription={htmlDescription} />
           ) : product.description ? (
             <Text

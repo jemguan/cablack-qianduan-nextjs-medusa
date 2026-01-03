@@ -8,6 +8,10 @@ import BrandTemplate from "@modules/brands/templates"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
+// 强制动态渲染，因为使用了 searchParams
+export const dynamic = 'force-dynamic'
+export const dynamicParams = true
+
 type Props = {
   params: Promise<{ slug: string; countryCode: string }>
   searchParams: Promise<{
