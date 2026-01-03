@@ -31,8 +31,12 @@ export function ScrollToTop() {
         behavior: 'auto' as ScrollBehavior
       })
       // 同时设置 documentElement 和 body 的 scrollTop
-      document.documentElement.scrollTop = 0
-      document.body.scrollTop = 0
+      if (document.documentElement) {
+        document.documentElement.scrollTop = 0
+      }
+      if (document.body) {
+        document.body.scrollTop = 0
+      }
     }
     
     // 立即执行

@@ -39,8 +39,12 @@ export default function RootLayout(props: { children: React.ReactNode }) {
                 if (typeof window !== 'undefined') {
                   // 立即重置滚动位置
                   window.scrollTo(0, 0);
-                  document.documentElement.scrollTop = 0;
-                  document.body.scrollTop = 0;
+                  if (document.documentElement) {
+                    document.documentElement.scrollTop = 0;
+                  }
+                  if (document.body) {
+                    document.body.scrollTop = 0;
+                  }
                   
                   // 监听页面加载完成
                   if (document.readyState === 'complete') {
@@ -48,8 +52,12 @@ export default function RootLayout(props: { children: React.ReactNode }) {
                   } else {
                     window.addEventListener('load', function() {
                       window.scrollTo(0, 0);
-                      document.documentElement.scrollTop = 0;
-                      document.body.scrollTop = 0;
+                      if (document.documentElement) {
+                        document.documentElement.scrollTop = 0;
+                      }
+                      if (document.body) {
+                        document.body.scrollTop = 0;
+                      }
                     });
                   }
                   
@@ -57,13 +65,21 @@ export default function RootLayout(props: { children: React.ReactNode }) {
                   if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', function() {
                       window.scrollTo(0, 0);
-                      document.documentElement.scrollTop = 0;
-                      document.body.scrollTop = 0;
+                      if (document.documentElement) {
+                        document.documentElement.scrollTop = 0;
+                      }
+                      if (document.body) {
+                        document.body.scrollTop = 0;
+                      }
                     });
                   } else {
                     window.scrollTo(0, 0);
-                    document.documentElement.scrollTop = 0;
-                    document.body.scrollTop = 0;
+                    if (document.documentElement) {
+                      document.documentElement.scrollTop = 0;
+                    }
+                    if (document.body) {
+                      document.body.scrollTop = 0;
+                    }
                   }
                 }
               })();
