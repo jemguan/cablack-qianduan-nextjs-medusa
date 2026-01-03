@@ -6,6 +6,7 @@ import ChevronDown from '@modules/common/icons/chevron-down';
 import ChevronUp from '@modules/common/icons/chevron-up';
 import type {TextBlockProps, TextModuleData} from './types';
 import {DEFAULT_TEXT_BLOCK_CONFIG} from './config';
+import {sanitizeHtml} from '@lib/util/sanitize';
 
 /**
  * 获取颜色样式
@@ -54,7 +55,8 @@ function getColorClassName(colorValue: string) {
  */
 function renderContent(content: string, contentMode: 'text' | 'html' = 'text') {
   if (contentMode === 'html') {
-    return <span dangerouslySetInnerHTML={{ __html: content }} />;
+    // Sanitize HTML content to prevent XSS attacks
+    return <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />;
   }
   return content;
 }

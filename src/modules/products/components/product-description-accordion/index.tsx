@@ -2,6 +2,7 @@
 
 import React, { useMemo } from "react"
 import Accordion from "../product-tabs/accordion"
+import { sanitizeHtml } from "@lib/util/sanitize"
 
 type ProductDescriptionAccordionProps = {
   htmlDescription: string
@@ -177,7 +178,7 @@ const ProductDescriptionAccordion: React.FC<ProductDescriptionAccordionProps> = 
           prose-li:text-ui-fg-subtle
           prose-hr:border-ui-border-base"
         data-testid="product-html-description"
-        dangerouslySetInnerHTML={{ __html: htmlDescription }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(htmlDescription) }}
       />
     )
   }
@@ -208,7 +209,7 @@ const ProductDescriptionAccordion: React.FC<ProductDescriptionAccordionProps> = 
                 prose-ul:text-ui-fg-subtle prose-ol:text-ui-fg-subtle
                 prose-li:text-ui-fg-subtle
                 prose-hr:border-ui-border-base"
-              dangerouslySetInnerHTML={{ __html: section.content }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.content) }}
             />
           </Accordion.Item>
         ))}

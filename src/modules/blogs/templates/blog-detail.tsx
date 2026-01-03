@@ -1,6 +1,7 @@
 import { BlogPost } from "@lib/data/blogs"
 import Link from "next/link"
 import { getImageUrl } from "@lib/util/image"
+import { sanitizeHtml } from "@lib/util/sanitize"
 
 export default function BlogDetailTemplate({
   post,
@@ -39,7 +40,8 @@ export default function BlogDetailTemplate({
   }
 
   const publishedDate = formatDate(post.published_at || post.created_at)
-  const processedContent = processContentImages(post.content)
+  // Process images and sanitize HTML content for XSS protection
+  const processedContent = sanitizeHtml(processContentImages(post.content))
 
   return (
     <div className="content-container py-12">

@@ -10,6 +10,40 @@ const regionMapCache = {
   regionMapUpdated: Date.now(),
 }
 
+/**
+ * 添加安全响应头
+ * 防止常见的 Web 攻击（XSS、点击劫持、MIME 嗅探等）
+ */
+function addSecurityHeaders(response: NextResponse): NextResponse {
+  // 防止点击劫持 - 禁止在 iframe 中嵌入
+  response.headers.set("X-Frame-Options", "DENY")
+
+  // 防止 MIME 类型嗅探
+  response.headers.set("X-Content-Type-Options", "nosniff")
+
+  // XSS 保护（现代浏览器已内置，但为旧浏览器保留）
+  response.headers.set("X-XSS-Protection", "1; mode=block")
+
+  // 引用来源策略 - 控制 Referer 头的发送
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
+
+  // 权限策略 - 禁用不需要的浏览器功能
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+  )
+
+  // 强制 HTTPS（生产环境）
+  if (process.env.NODE_ENV === "production") {
+    response.headers.set(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains"
+    )
+  }
+
+  return response
+}
+
 async function getRegionMap(cacheId: string) {
   const { regionMap, regionMapUpdated } = regionMapCache
 
@@ -30,7 +64,7 @@ async function getRegionMap(cacheId: string) {
       },
     }
 
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       fetchOptions.cache = "no-store"
     } else {
       fetchOptions.cache = "force-cache"
@@ -40,7 +74,10 @@ async function getRegionMap(cacheId: string) {
       }
     }
 
-    const { regions } = await fetch(`${BACKEND_URL}/store/regions`, fetchOptions).then(async (response) => {
+    const { regions } = await fetch(
+      `${BACKEND_URL}/store/regions`,
+      fetchOptions
+    ).then(async (response) => {
       const json = await response.json()
 
       if (!response.ok) {
@@ -70,7 +107,7 @@ async function getRegionMap(cacheId: string) {
 }
 
 /**
- * Middleware to handle region cookie and legacy URL redirects.
+ * Middleware to handle region cookie, legacy URL redirects, and security headers.
  * No longer adds countryCode to URLs - region is stored in cookie only.
  */
 export async function middleware(request: NextRequest) {
@@ -96,9 +133,9 @@ export async function middleware(request: NextRequest) {
     const newPathname = "/" + pathSegments.slice(1).join("/")
     const queryString = request.nextUrl.search || ""
     const redirectUrl = `${request.nextUrl.origin}${newPathname || "/"}${queryString}`
-    
+
     const response = NextResponse.redirect(redirectUrl, 301)
-    
+
     // Set the region cookie based on the legacy URL's country code
     response.cookies.set("_medusa_region", firstSegment, {
       maxAge: 60 * 60 * 24 * 365, // 1 year
@@ -113,12 +150,13 @@ export async function middleware(request: NextRequest) {
       })
     }
 
-    return response
+    // Add security headers to redirect response
+    return addSecurityHeaders(response)
   }
 
   // Normal request - ensure cookies are set
   const regionCookie = request.cookies.get("_medusa_region")
-  
+
   // If no region cookie, set it to default
   if (!regionCookie || !cacheIdCookie) {
     const response = NextResponse.next()
@@ -137,10 +175,13 @@ export async function middleware(request: NextRequest) {
       })
     }
 
-    return response
+    // Add security headers
+    return addSecurityHeaders(response)
   }
 
-  return NextResponse.next()
+  // Add security headers to normal response
+  const response = NextResponse.next()
+  return addSecurityHeaders(response)
 }
 
 export const config = {

@@ -5,6 +5,7 @@ import { Text } from '@medusajs/ui'
 import ChevronDown from '@modules/common/icons/chevron-down'
 import type { FAQBlockProps, FAQItem } from './types'
 import { parseFAQMetadata, filterFAQItems } from './utils'
+import { sanitizeHtml } from '@lib/util/sanitize'
 
 // 搜索图标组件
 const SearchIcon = () => (
@@ -233,7 +234,7 @@ export function FAQBlock({ data }: FAQBlockProps) {
                     className="pb-4 text-ui-fg-subtle animate-in fade-in slide-in-from-top-2"
                     style={{ animationDuration: `${animationDuration}ms` }}
                   >
-                    <div dangerouslySetInnerHTML={{ __html: item.answer }} />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.answer) }} />
                   </div>
                 )}
               </div>

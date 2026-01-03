@@ -3,6 +3,7 @@
 import Back from "@modules/common/icons/back"
 import FastDelivery from "@modules/common/icons/fast-delivery"
 import Refresh from "@modules/common/icons/refresh"
+import { sanitizeHtml } from "@lib/util/sanitize"
 
 import Accordion from "./accordion"
 import { HttpTypes } from "@medusajs/types"
@@ -163,8 +164,8 @@ const ShippingInfoTab = ({ config }: { config?: ShippingReturnsConfig }) => {
       if (customIcon.startsWith('http') || customIcon.startsWith('/')) {
         return <img src={customIcon} alt="" className="w-6 h-6 flex-shrink-0" />
       }
-      // Otherwise, treat as SVG
-      return <div className="w-6 h-6 flex-shrink-0" dangerouslySetInnerHTML={{ __html: customIcon }} />
+      // Otherwise, treat as SVG - sanitize to prevent XSS
+      return <div className="w-6 h-6 flex-shrink-0" dangerouslySetInnerHTML={{ __html: sanitizeHtml(customIcon) }} />
     }
 
     switch (iconType) {
