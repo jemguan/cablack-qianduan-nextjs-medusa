@@ -16,6 +16,7 @@ type ProductTemplateProps = {
   countryCode: string
   images: HttpTypes.StoreProductImage[]
   initialVariantId?: string
+  htmlDescription?: string | null
 }
 
 const ProductTemplate: React.FC<ProductTemplateProps> = async ({
@@ -24,6 +25,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = async ({
   countryCode,
   images,
   initialVariantId,
+  htmlDescription,
 }) => {
   if (!product || !product.id) {
     return notFound()
@@ -39,7 +41,8 @@ const ProductTemplate: React.FC<ProductTemplateProps> = async ({
     region,
     images,
     initialVariantId,
-    countryCode
+    countryCode,
+    htmlDescription
   )
 
   // 组件映射

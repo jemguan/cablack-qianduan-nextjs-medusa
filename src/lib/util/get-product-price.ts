@@ -49,6 +49,15 @@ export const getPricesForVariant = (variant: any) => {
     displayOriginalAmount = originalAmount / 100
   }
 
+  // 最终检查：如果显示价格和原价相等，则不显示对比价格
+  // 使用 displayOriginalAmount 进行比较，因为这是实际显示的价格
+  if (shouldShowComparePrice && displayOriginalAmount <= calculatedAmount) {
+    shouldShowComparePrice = false
+    // 如果价格相等，重置 originalAmount 为 calculatedAmount
+    originalAmount = calculatedAmount
+    displayOriginalAmount = calculatedAmount
+  }
+
   return {
     calculated_price_number: calculatedAmount,
     calculated_price: convertToLocale({

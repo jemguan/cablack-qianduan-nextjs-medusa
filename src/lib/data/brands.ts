@@ -49,6 +49,10 @@ export const listBrands = async (
 export const getBrandBySlug = async (
   slugOrId: string
 ): Promise<(Brand & { products?: any[] }) | null> => {
+  if (!slugOrId) {
+    return null
+  }
+
   // 获取缓存标签
   const cacheOptions = await getCacheOptions("brands")
   
@@ -61,15 +65,33 @@ export const getBrandBySlug = async (
     ...(cacheConfig && 'next' in cacheConfig ? cacheConfig.next : {}),
   }
 
+  // 合并缓存配置
+  const fetchOptions: any = {
+    next,
+  }
+
+  // 如果缓存配置有 cache 属性，也需要合并
+  if (cacheConfig && 'cache' in cacheConfig) {
+    fetchOptions.cache = cacheConfig.cache
+  }
+
   try {
+    // 编码 slug 以确保 URL 安全
+    const encodedSlug = encodeURIComponent(slugOrId)
+    
     const response = await sdk.client.fetch<{ brand: Brand & { products?: any[] } }>(
-      `/store/brands/${slugOrId}`,
-      {
-        next,
-      }
+      `/store/brands/${encodedSlug}`,
+      fetchOptions
     )
+    
+    if (!response || !response.brand) {
+      return null
+    }
+    
     return response.brand
   } catch (error) {
+    // 记录错误以便调试，但不抛出异常
+    console.error(`Error fetching brand by slug "${slugOrId}":`, error)
     return null
   }
 }

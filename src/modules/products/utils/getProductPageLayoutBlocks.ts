@@ -39,7 +39,8 @@ export function getProductPageLayoutBlocks(
   region: HttpTypes.StoreRegion,
   images: HttpTypes.StoreProductImage[],
   initialVariantId?: string,
-  countryCode?: string
+  countryCode?: string,
+  htmlDescription?: string | null
 ): BlockConfig[] {
   // 从 pageLayouts 获取 blocks
   const blocks = getPageLayoutBlocks(config, 'product');
@@ -67,6 +68,7 @@ export function getProductPageLayoutBlocks(
           initialVariantId,
           layout: productPageConfig.layout || 'two-column',
           shippingReturnsConfig,
+          htmlDescription,
         },
       },
     ];
@@ -82,7 +84,8 @@ export function getProductPageLayoutBlocks(
       region,
       images,
       initialVariantId,
-      countryCode
+      countryCode,
+      htmlDescription
     );
     if (blockConfig) {
       blockConfigs.push(blockConfig);
@@ -109,7 +112,8 @@ function getBlockConfigForBlock(
   region: HttpTypes.StoreRegion,
   images: HttpTypes.StoreProductImage[],
   initialVariantId?: string,
-  countryCode?: string
+  countryCode?: string,
+  htmlDescription?: string | null
 ): BlockConfig | null {
   switch (block.type) {
     case 'productContent':
@@ -131,7 +135,8 @@ function getBlockConfigForBlock(
         product,
         region,
         images,
-        initialVariantId
+        initialVariantId,
+        htmlDescription
       );
 
     case 'faq':

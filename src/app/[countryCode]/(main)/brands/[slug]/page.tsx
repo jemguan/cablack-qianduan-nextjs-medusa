@@ -19,70 +19,84 @@ type Props = {
 export const PRODUCT_LIMIT = 12
 
 export async function generateStaticParams() {
-  try {
-    const { brands } = await getBrandBySlug("").then(() => ({ brands: [] })).catch(() => ({ brands: [] }))
-    
-    // 由于无法直接获取所有品牌，这里返回空数组，使用动态渲染
-    return []
-  } catch (error) {
-    return []
-  }
+  // 品牌页面使用动态渲染，不预生成静态路径
+  // 因为品牌数量可能很多，且会动态变化
+  return []
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await props.params
-  const brand = await getBrandBySlug(params.slug)
+  try {
+    const params = await props.params
+    
+    if (!params.slug) {
+      notFound()
+    }
+    
+    const brand = await getBrandBySlug(params.slug)
 
-  if (!brand) {
+    if (!brand) {
+      notFound()
+    }
+
+    // 使用元标题和元描述，如果为空则使用默认值
+    const metaTitle = brand.meta_title || `${brand.name} | Medusa Store`
+    const metaDescription = brand.meta_description || `Shop ${brand.name} products at Medusa Store`
+
+    const metadata = {
+      title: metaTitle,
+      description: metaDescription,
+    } as Metadata
+
+    return metadata
+  } catch (error) {
+    console.error("Error generating metadata for brand page:", error)
     notFound()
   }
-
-  // 使用元标题和元描述，如果为空则使用默认值
-  const metaTitle = brand.meta_title || `${brand.name} | Medusa Store`
-  const metaDescription = brand.meta_description || `Shop ${brand.name} products at Medusa Store`
-
-  const metadata = {
-    title: metaTitle,
-    description: metaDescription,
-  } as Metadata
-
-  return metadata
 }
 
 export default async function BrandPage(props: Props) {
-  const searchParams = await props.searchParams
-  const params = await props.params
-  const { sortBy, page } = searchParams
+  try {
+    const searchParams = await props.searchParams
+    const params = await props.params
+    const { sortBy, page } = searchParams
 
-  const brand = await getBrandBySlug(params.slug)
+    if (!params.slug) {
+      notFound()
+    }
 
-  if (!brand) {
+    const brand = await getBrandBySlug(params.slug)
+
+    if (!brand) {
+      notFound()
+    }
+
+    const breadcrumbItems = [
+      { label: "Home", href: "/" },
+      { label: "Brands", href: "/brands" },
+      { label: brand.name },
+    ]
+
+    return (
+      <>
+        {/* Breadcrumb container below header */}
+        <div className="border-b border-ui-border-base bg-background">
+          <div className="content-container py-2">
+            <Breadcrumb items={breadcrumbItems} countryCode={params.countryCode} />
+          </div>
+        </div>
+
+        {/* Brand content */}
+        <BrandTemplate
+          brand={brand}
+          page={page}
+          sortBy={sortBy}
+          countryCode={params.countryCode}
+        />
+      </>
+    )
+  } catch (error) {
+    console.error("Error rendering brand page:", error)
     notFound()
   }
-
-  const breadcrumbItems = [
-    { label: "Home", href: "/" },
-    { label: "Brands", href: "/brands" },
-    { label: brand.name },
-  ]
-
-  return (
-    <>
-      {/* Breadcrumb container below header */}
-      <div className="border-b border-ui-border-base bg-background">
-        <div className="content-container py-2">
-          <Breadcrumb items={breadcrumbItems} countryCode={params.countryCode} />
-        </div>
-      </div>
-
-      {/* Brand content */}
-      <BrandTemplate
-        brand={brand}
-        page={page}
-        sortBy={sortBy}
-        countryCode={params.countryCode}
-      />
-    </>
-  )
 }
 

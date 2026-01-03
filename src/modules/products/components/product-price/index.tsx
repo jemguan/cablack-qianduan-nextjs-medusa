@@ -27,7 +27,7 @@ export default function ProductPrice({
   const showComparePrice = variant && 
     selectedPrice.price_type === "sale" && 
     selectedPrice.original_price_number > selectedPrice.calculated_price_number &&
-    selectedPrice.original_price_number !== selectedPrice.calculated_price_number
+    Math.abs(selectedPrice.original_price_number - selectedPrice.calculated_price_number) > 0.01 // 允许小的浮点数误差
 
   // 只有在没有选择变体时才显示 "From"
   // 如果 variant 存在且有 variantPrice，说明已选择变体，不显示 "From"

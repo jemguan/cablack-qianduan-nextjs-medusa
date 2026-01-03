@@ -10,7 +10,7 @@ export default async function PreviewPrice({ price }: { price: VariantPrice }) {
   // 如果价格和对比价格相等，则不显示对比价格
   const showComparePrice = price.price_type === "sale" && 
     price.original_price_number > price.calculated_price_number &&
-    price.original_price_number !== price.calculated_price_number
+    Math.abs(price.original_price_number - price.calculated_price_number) > 0.01 // 允许小的浮点数误差
 
   return (
     <div className="flex items-center gap-x-2 flex-wrap">

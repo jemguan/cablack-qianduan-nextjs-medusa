@@ -26,7 +26,7 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
         {/* 副标题 */}
         {product.subtitle && (
         <Text
-            className="text-lg text-ui-fg-subtle"
+            className="text-lg font-light text-red-600"
             data-testid="product-subtitle"
         >
             {product.subtitle}

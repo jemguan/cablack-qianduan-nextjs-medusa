@@ -2,6 +2,7 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { listProducts } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
+import { getProductHtmlDescription } from "@lib/data/product-html-description"
 import ProductTemplate from "@modules/products/templates"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 import { ReviewStatsProvider } from "@modules/products/components/reviews/ReviewStatsContext"
@@ -127,6 +128,9 @@ export default async function ProductPage(props: Props) {
     notFound()
   }
 
+  // 获取产品 HTML 描述
+  const htmlDescription = await getProductHtmlDescription(pricedProduct.id)
+
   // Build breadcrumb items
   const breadcrumbItems = [
     { label: "Home", href: "/" },
@@ -175,6 +179,7 @@ export default async function ProductPage(props: Props) {
         countryCode={params.countryCode}
         images={images}
         initialVariantId={selectedVariantId}
+        htmlDescription={htmlDescription}
       />
     </ReviewStatsProvider>
   )

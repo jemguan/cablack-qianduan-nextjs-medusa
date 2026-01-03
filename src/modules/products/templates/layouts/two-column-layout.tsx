@@ -10,6 +10,7 @@ import ProductTabs from "@modules/products/components/product-tabs"
 import ProductPageClientWrapper from "@modules/products/components/product-page-client-wrapper"
 import { StickyAddToCart } from "@modules/products/components/sticky-add-to-cart"
 import { MedusaConfig } from "@lib/admin-api/config"
+import ProductDescriptionAccordion from "@modules/products/components/product-description-accordion"
 
 type TwoColumnLayoutProps = {
   product: HttpTypes.StoreProduct
@@ -17,6 +18,7 @@ type TwoColumnLayoutProps = {
   images: HttpTypes.StoreProductImage[]
   initialVariantId?: string
   shippingReturnsConfig?: MedusaConfig['shippingReturnsConfig']
+  htmlDescription?: string | null
 }
 
 const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
@@ -25,6 +27,7 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
   images,
   initialVariantId,
   shippingReturnsConfig,
+  htmlDescription,
 }) => {
   const actionsRef = useRef<HTMLDivElement>(null)
   const mobileActionsRef = useRef<HTMLDivElement>(null)
@@ -65,15 +68,17 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
           />
         </div>
 
-          {/* 产品描述 */}
-          {product.description && (
+          {/* 产品描述 - 优先显示 HTML 描述（带折叠功能），如果没有则显示普通描述 */}
+          {htmlDescription ? (
+            <ProductDescriptionAccordion htmlDescription={htmlDescription} />
+          ) : product.description ? (
             <Text
               className="text-medium text-ui-fg-subtle whitespace-pre-line"
               data-testid="product-description"
             >
               {product.description}
             </Text>
-          )}
+          ) : null}
 
         {/* 产品标签页 */}
           <ProductTabs product={product} shippingReturnsConfig={shippingReturnsConfig} />

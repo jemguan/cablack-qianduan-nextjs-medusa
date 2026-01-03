@@ -27,7 +27,8 @@ export function handleProductContentBlock(
   product: HttpTypes.StoreProduct,
   region: HttpTypes.StoreRegion,
   images: HttpTypes.StoreProductImage[],
-  initialVariantId?: string
+  initialVariantId?: string,
+  htmlDescription?: string | null
 ): BlockConfig | null {
   // 确定布局类型，默认为 two-column
   const layout = blockConfig.layout || 'two-column';
@@ -52,6 +53,7 @@ export function handleProductContentBlock(
       initialVariantId,
       layout,
       shippingReturnsConfig: blockConfig.shippingReturnsConfig,
+      htmlDescription,
     },
   };
 }

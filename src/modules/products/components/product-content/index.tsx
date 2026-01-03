@@ -11,6 +11,7 @@ type ProductContentProps = {
   initialVariantId?: string
   layout?: 'two-column' | 'three-column'
   shippingReturnsConfig?: MedusaConfig['shippingReturnsConfig']
+  htmlDescription?: string | null
 }
 
 const ProductContent: React.FC<ProductContentProps> = ({
@@ -20,6 +21,7 @@ const ProductContent: React.FC<ProductContentProps> = ({
   initialVariantId,
   layout = 'two-column',
   shippingReturnsConfig,
+  htmlDescription,
 }) => {
   if (layout === 'three-column') {
     return (
@@ -29,6 +31,7 @@ const ProductContent: React.FC<ProductContentProps> = ({
         images={images}
         initialVariantId={initialVariantId}
         shippingReturnsConfig={shippingReturnsConfig}
+        htmlDescription={htmlDescription}
       />
     )
   }
@@ -40,6 +43,7 @@ const ProductContent: React.FC<ProductContentProps> = ({
       images={images}
       initialVariantId={initialVariantId}
       shippingReturnsConfig={shippingReturnsConfig}
+      htmlDescription={htmlDescription}
     />
   )
 }

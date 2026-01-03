@@ -12,6 +12,7 @@ import ProductBrandLink from "@modules/products/components/product-brand-link"
 import { StickyAddToCart } from "@modules/products/components/sticky-add-to-cart"
 import { MedusaConfig } from "@lib/admin-api/config"
 import ProductRating from "@modules/products/components/reviews/ProductRating"
+import ProductDescriptionAccordion from "@modules/products/components/product-description-accordion"
 
 type ThreeColumnLayoutProps = {
   product: HttpTypes.StoreProduct
@@ -19,6 +20,7 @@ type ThreeColumnLayoutProps = {
   images: HttpTypes.StoreProductImage[]
   initialVariantId?: string
   shippingReturnsConfig?: MedusaConfig['shippingReturnsConfig']
+  htmlDescription?: string | null
 }
 
 const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
@@ -27,6 +29,7 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
   images,
   initialVariantId,
   shippingReturnsConfig,
+  htmlDescription,
 }) => {
   const actionsRef = useRef<HTMLDivElement>(null)
   const mobileActionsRef = useRef<HTMLDivElement>(null)
@@ -63,7 +66,7 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
         {/* 副标题 */}
         {product.subtitle && (
           <Text
-            className="text-lg text-ui-fg-subtle"
+            className="text-lg font-light text-red-600"
             data-testid="product-subtitle"
           >
             {product.subtitle}
@@ -84,15 +87,19 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
 
           {/* 产品标签页 */}
           <div className="mt-4">
-        {/* 产品描述 */}
-        {product.description && (
+        {/* 产品描述 - 优先显示 HTML 描述（带折叠功能），如果没有则显示普通描述 */}
+        {htmlDescription ? (
+          <div className="mb-4">
+            <ProductDescriptionAccordion htmlDescription={htmlDescription} />
+          </div>
+        ) : product.description ? (
           <Text
-                className="text-medium text-ui-fg-subtle whitespace-pre-line mb-4"
+            className="text-medium text-ui-fg-subtle whitespace-pre-line mb-4"
             data-testid="product-description"
           >
             {product.description}
           </Text>
-        )}
+        ) : null}
             <ProductTabs product={product} shippingReturnsConfig={shippingReturnsConfig} />
         </div>
       </div>

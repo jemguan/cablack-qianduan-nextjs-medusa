@@ -20,7 +20,7 @@ export default function PreviewPriceClient({
   const showComparePrice = selectedVariant &&
     price.price_type === "sale" && 
     price.original_price_number > price.calculated_price_number &&
-    price.original_price_number !== price.calculated_price_number
+    Math.abs(price.original_price_number - price.calculated_price_number) > 0.01 // 允许小的浮点数误差
 
   return (
     <div className="flex items-center gap-x-2 flex-wrap">
