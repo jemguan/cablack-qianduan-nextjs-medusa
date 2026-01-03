@@ -8,7 +8,6 @@ import {
   clearViewingHistory,
 } from './utils';
 import type { HttpTypes } from '@medusajs/types';
-import { sdk } from '@lib/config';
 
 /**
  * 最近浏览产品的Hook
@@ -47,24 +46,33 @@ export function useRecentlyViewedProducts(
       // 提取产品ID列表
       const productIds = viewedProducts.map((p) => p.id);
 
-      // 从服务器获取完整的产品数据（包括所有变体）
-      // 使用客户端 SDK 直接调用 API
-      const response = await sdk.client.fetch<{
-        products: HttpTypes.StoreProduct[];
-        count: number;
-      }>('/store/products', {
+      // 使用 Next.js API 代理路由获取产品数据，避免 CORS 问题
+      const params = new URLSearchParams();
+      productIds.forEach((id) => params.append('id', id));
+      if (regionId) {
+        params.append('region_id', regionId);
+      }
+      params.append('fields', '*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.inventory_items.inventory_item_id,*variants.inventory_items.required_quantity,*variants.images.id,*variants.images.url,*variants.images.metadata,*variants.options.option_id,*variants.options.value,*options.id,*options.title,*options.values.id,*options.values.value,+metadata,+tags,');
+
+      const response = await fetch(`/api/medusa-proxy/products?${params.toString()}`, {
         method: 'GET',
-        query: {
-          id: productIds,
-          region_id: regionId,
-          fields:
-            '*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.inventory_items.inventory_item_id,*variants.inventory_items.required_quantity,*variants.images.id,*variants.images.url,*variants.images.metadata,*variants.options.option_id,*variants.options.value,*options.id,*options.title,*options.values.id,*options.values.value,+metadata,+tags,',
+        headers: {
+          'Content-Type': 'application/json',
         },
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+
+      const data = await response.json() as {
+        products: HttpTypes.StoreProduct[];
+        count: number;
+      };
+
       // 按照浏览顺序排序（保持 localStorage 中的顺序）
       const productMap = new Map(
-        (response.products || []).map((p) => [p.id, p]),
+        (data.products || []).map((p) => [p.id, p]),
       );
       const orderedProducts = viewedProducts
         .map((viewed) => productMap.get(viewed.id))

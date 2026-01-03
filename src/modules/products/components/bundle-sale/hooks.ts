@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react"
 import type { Bundle } from "@lib/types/bundle"
 import type { HttpTypes } from "@medusajs/types"
 import { getBundlesByProductId } from "@lib/data/bundles"
-import { sdk } from "@lib/config"
 
 /**
  * Bundle 数据及其完整产品信息
@@ -76,20 +75,28 @@ export function useBundleProducts(
         return
       }
 
-      // 3. 从 Medusa Store API 获取完整的产品数据
-      const response = await sdk.client.fetch<{
+      // 3. 使用 Next.js API 代理路由获取产品数据，避免 CORS 问题
+      const params = new URLSearchParams()
+      Array.from(allAddonProductIds).forEach((id) => params.append('id', id))
+      params.append('region_id', regionId)
+      params.append('fields', '*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.inventory_items.inventory_item_id,*variants.inventory_items.required_quantity,*variants.images.id,*variants.images.url,*variants.images.metadata,*variants.options.option_id,*variants.options.value,*options.id,*options.title,*options.values.id,*options.values.value,+metadata,+tags,')
+
+      const fetchResponse = await fetch(`/api/medusa-proxy/products?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-store', // 产品数据包含价格和库存，需要实时更新
+      })
+
+      if (!fetchResponse.ok) {
+        throw new Error(`HTTP error: ${fetchResponse.status}`)
+      }
+
+      const response = await fetchResponse.json() as {
         products: HttpTypes.StoreProduct[]
         count: number
-      }>("/store/products", {
-        method: "GET",
-        query: {
-          id: Array.from(allAddonProductIds),
-          region_id: regionId,
-          fields:
-            "*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.inventory_items.inventory_item_id,*variants.inventory_items.required_quantity,*variants.images.id,*variants.images.url,*variants.images.metadata,*variants.options.option_id,*variants.options.value,*options.id,*options.title,*options.values.id,*options.values.value,+metadata,+tags,",
-        },
-        cache: "no-store", // 产品数据包含价格和库存，需要实时更新
-      })
+      }
 
       // 创建产品 ID 到产品对象的映射
       const productMap = new Map(
