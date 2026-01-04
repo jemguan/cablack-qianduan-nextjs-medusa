@@ -109,32 +109,32 @@ const StripePaymentButton = ({
         },
       },
       redirect: "if_required",
-    })
+      })
 
-    if (error) {
-      const pi = error.payment_intent
+        if (error) {
+          const pi = error.payment_intent
 
-      if (
-        (pi && pi.status === "requires_capture") ||
-        (pi && pi.status === "succeeded")
-      ) {
-        onPaymentCompleted()
+          if (
+            (pi && pi.status === "requires_capture") ||
+            (pi && pi.status === "succeeded")
+          ) {
+            onPaymentCompleted()
         return
-      }
+          }
 
-      setErrorMessage(error.message || null)
+          setErrorMessage(error.message || null)
       setSubmitting(false)
-      return
-    }
+          return
+        }
 
-    if (
+        if (
       paymentIntent &&
       (paymentIntent.status === "requires_capture" ||
         paymentIntent.status === "succeeded")
-    ) {
+        ) {
       onPaymentCompleted()
       return
-    }
+        }
 
     setSubmitting(false)
   }

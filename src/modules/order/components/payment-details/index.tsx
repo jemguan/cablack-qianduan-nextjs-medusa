@@ -1,6 +1,6 @@
 import { Container, Heading, Text } from "@medusajs/ui"
 
-import { isStripeLike, paymentInfoMap } from "@lib/constants"
+import { isStripeLike, isEmt, paymentInfoMap } from "@lib/constants"
 import Divider from "@modules/common/components/divider"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
@@ -9,8 +9,36 @@ type PaymentDetailsProps = {
   order: HttpTypes.StoreOrder
 }
 
+// Helper to get Stripe payment details from payment data
+const getStripePaymentInfo = (paymentData: Record<string, unknown> | undefined) => {
+  if (!paymentData) return null
+  
+  // Stripe stores payment method details in different places depending on the flow
+  const data = paymentData as Record<string, any>
+  
+  // Try to get card details from various possible locations
+  const cardLast4 = data.card_last4 || 
+    data.payment_method?.card?.last4 ||
+    data.charges?.data?.[0]?.payment_method_details?.card?.last4
+    
+  const cardBrand = data.card_brand ||
+    data.payment_method?.card?.brand ||
+    data.charges?.data?.[0]?.payment_method_details?.card?.brand
+    
+  const paymentIntentId = data.id || data.payment_intent_id
+  
+  return {
+    cardLast4,
+    cardBrand: cardBrand ? cardBrand.charAt(0).toUpperCase() + cardBrand.slice(1) : null,
+    paymentIntentId,
+  }
+}
+
 const PaymentDetails = ({ order }: PaymentDetailsProps) => {
   const payment = order.payment_collections?.[0].payments?.[0]
+  const stripeInfo = isStripeLike(payment?.provider_id) 
+    ? getStripePaymentInfo(payment?.data as Record<string, unknown>) 
+    : null
 
   return (
     <div>
@@ -28,28 +56,77 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
                 className="txt-medium text-ui-fg-subtle"
                 data-testid="payment-method"
               >
-                {paymentInfoMap[payment.provider_id].title}
+                {paymentInfoMap[payment.provider_id]?.title || payment.provider_id}
               </Text>
             </div>
             <div className="flex flex-col w-2/3">
               <Text className="txt-medium-plus text-ui-fg-base mb-1">
                 Payment details
               </Text>
-              <div className="flex gap-2 txt-medium text-ui-fg-subtle items-center">
-                <Container className="flex items-center h-7 w-fit p-2 bg-ui-button-neutral-hover">
-                  {paymentInfoMap[payment.provider_id].icon}
-                </Container>
-                <Text data-testid="payment-amount">
-                  {isStripeLike(payment.provider_id) && payment.data?.card_last4
-                    ? `**** **** **** ${payment.data.card_last4}`
-                    : `${convertToLocale({
-                        amount: payment.amount,
-                        currency_code: order.currency_code,
-                      })} paid at ${new Date(
-                        payment.created_at ?? ""
-                      ).toLocaleString()}`}
-                </Text>
-              </div>
+              
+              {/* Stripe payment details */}
+              {isStripeLike(payment.provider_id) && stripeInfo && (
+                <div className="space-y-2">
+                  <div className="flex gap-2 txt-medium text-ui-fg-subtle items-center">
+                    <Container className="flex items-center h-7 w-fit p-2 bg-ui-button-neutral-hover">
+                      {paymentInfoMap[payment.provider_id]?.icon}
+                    </Container>
+                    <Text data-testid="payment-card">
+                      {stripeInfo.cardBrand && stripeInfo.cardLast4
+                        ? `${stripeInfo.cardBrand} **** ${stripeInfo.cardLast4}`
+                        : stripeInfo.cardLast4
+                        ? `**** **** **** ${stripeInfo.cardLast4}`
+                        : "Card payment"}
+                    </Text>
+                  </div>
+                  <Text className="txt-small text-ui-fg-muted" data-testid="payment-amount">
+                    {convertToLocale({
+                      amount: payment.amount,
+                      currency_code: order.currency_code,
+                    })} paid at {new Date(payment.created_at ?? "").toLocaleString()}
+                  </Text>
+                  {stripeInfo.paymentIntentId && (
+                    <Text className="txt-small text-ui-fg-muted font-mono" data-testid="payment-id">
+                      Ref: {stripeInfo.paymentIntentId}
+                    </Text>
+                  )}
+                </div>
+              )}
+              
+              {/* EMT payment details */}
+              {isEmt(payment.provider_id) && (
+                <div className="space-y-2">
+                  <div className="flex gap-2 txt-medium text-ui-fg-subtle items-center">
+                    <Container className="flex items-center h-7 w-fit p-2 bg-ui-button-neutral-hover">
+                      {paymentInfoMap[payment.provider_id]?.icon}
+                    </Container>
+                    <Text>
+                      {(payment.data as any)?.name || "EMT Payment"}
+                    </Text>
+                  </div>
+                  <Text className="txt-small text-ui-fg-muted" data-testid="payment-amount">
+                    {convertToLocale({
+                      amount: payment.amount,
+                      currency_code: order.currency_code,
+                    })} - {new Date(payment.created_at ?? "").toLocaleString()}
+                  </Text>
+                </div>
+              )}
+              
+              {/* Default payment details */}
+              {!isStripeLike(payment.provider_id) && !isEmt(payment.provider_id) && (
+                <div className="flex gap-2 txt-medium text-ui-fg-subtle items-center">
+                  <Container className="flex items-center h-7 w-fit p-2 bg-ui-button-neutral-hover">
+                    {paymentInfoMap[payment.provider_id]?.icon}
+                  </Container>
+                  <Text data-testid="payment-amount">
+                    {convertToLocale({
+                      amount: payment.amount,
+                      currency_code: order.currency_code,
+                    })} paid at {new Date(payment.created_at ?? "").toLocaleString()}
+                  </Text>
+                </div>
+              )}
             </div>
           </div>
         )}
