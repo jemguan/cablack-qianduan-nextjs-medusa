@@ -1,6 +1,6 @@
 "use client"
 
-import { Stripe, StripeElementsOptions } from "@stripe/stripe-js"
+import { Stripe, StripeElementsOptions, Appearance } from "@stripe/stripe-js"
 import { Elements } from "@stripe/react-stripe-js"
 import { HttpTypes } from "@medusajs/types"
 import { createContext } from "react"
@@ -20,8 +20,33 @@ const StripeWrapper: React.FC<StripeWrapperProps> = ({
   stripePromise,
   children,
 }) => {
+  // Payment Element appearance configuration
+  const appearance: Appearance = {
+    theme: "stripe",
+    variables: {
+      colorPrimary: "#0570de",
+      colorBackground: "#ffffff",
+      colorText: "#30313d",
+      colorDanger: "#df1b41",
+      fontFamily: "Inter, system-ui, sans-serif",
+      spacingUnit: "4px",
+      borderRadius: "8px",
+    },
+    rules: {
+      ".Input": {
+        border: "1px solid #e6e6e6",
+        boxShadow: "none",
+      },
+      ".Input:focus": {
+        border: "1px solid #0570de",
+        boxShadow: "0 0 0 1px #0570de",
+      },
+    },
+  }
+
   const options: StripeElementsOptions = {
     clientSecret: paymentSession!.data?.client_secret as string | undefined,
+    appearance,
   }
 
   if (!stripeKey) {

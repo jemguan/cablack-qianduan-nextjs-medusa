@@ -7,7 +7,7 @@ import { CheckCircleSolid, CreditCard } from "@medusajs/icons"
 import { Button, Container, Heading, Text, clx } from "@medusajs/ui"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import PaymentContainer, {
-  StripeCardContainer,
+  StripePaymentContainer,
   EmtContainer,
 } from "@modules/checkout/components/payment-container"
 import Divider from "@modules/common/components/divider"
@@ -28,8 +28,7 @@ const Payment = ({
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [cardBrand, setCardBrand] = useState<string | null>(null)
-  const [cardComplete, setCardComplete] = useState(false)
+  const [stripePaymentComplete, setStripePaymentComplete] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
     pendingSession?.provider_id ?? ""
   )
@@ -202,13 +201,12 @@ const Payment = ({
                   return (
                     <div key={paymentMethod.id}>
                       {isStripeLike(paymentMethod.id) ? (
-                        <StripeCardContainer
+                        <StripePaymentContainer
                           paymentProviderId={paymentMethod.id}
                           selectedPaymentOptionId={selectedPaymentMethod}
                           paymentInfoMap={paymentInfoMap}
-                          setCardBrand={setCardBrand}
                           setError={setError}
-                          setCardComplete={setCardComplete}
+                          setPaymentReady={setStripePaymentComplete}
                         />
                       ) : isEmt(paymentMethod.id) ? (
                         <EmtContainer
@@ -256,13 +254,13 @@ const Payment = ({
             onClick={handleSubmit}
             isLoading={isLoading}
             disabled={
-              (isStripeLike(selectedPaymentMethod) && !cardComplete) ||
+              (isStripeLike(selectedPaymentMethod) && !stripePaymentComplete) ||
               (!selectedPaymentMethod && !paidByGiftcard)
             }
             data-testid="submit-payment-button"
           >
             {!activeSession && isStripeLike(selectedPaymentMethod)
-              ? " Enter card details"
+              ? "Enter payment details"
               : "Continue to review"}
           </Button>
         </div>
@@ -326,8 +324,8 @@ const Payment = ({
                       )}
                     </Container>
                     <Text>
-                      {isStripeLike(selectedPaymentMethod) && cardBrand
-                        ? cardBrand
+                      {isStripeLike(selectedPaymentMethod)
+                        ? "Payment method selected"
                         : "Another step will appear"}
                     </Text>
                   </div>
