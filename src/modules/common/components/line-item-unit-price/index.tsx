@@ -13,8 +13,9 @@ const LineItemUnitPrice = ({
   style = "default",
   currencyCode,
 }: LineItemUnitPriceProps) => {
-  const { total, original_total } = item
-  const unitPrice = total / item.quantity
+  const { total, original_total, unit_price } = item
+  // 优先使用 unit_price，如果没有则通过 total / quantity 计算
+  const unitPrice = unit_price || (total / item.quantity)
   
   // 获取对比价格（从 variant metadata 中）
   let compareAtPriceAmount: number | null = null
