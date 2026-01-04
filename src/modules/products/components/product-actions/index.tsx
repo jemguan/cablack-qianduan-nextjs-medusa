@@ -13,6 +13,7 @@ import ProductPrice from "../product-price"
 // import MobileActions from "./mobile-actions" // 已禁用，使用 StickyAddToCart 替代
 import { useVariantSelection } from "@modules/products/contexts/variant-selection-context"
 import { ProductQuantitySelector } from "../quantity-selector"
+import WishlistButton from "@modules/wishlist/components/wishlist-button"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -156,27 +157,30 @@ export default function ProductActions({
           disabled={!!disabled || isAdding || !selectedVariant || !isValidVariant}
         />
 
-        {/* 加入购物车按钮 */}
-        <Button
-          onClick={handleAddToCart}
-          disabled={
-            !inStock ||
-            !selectedVariant ||
-            !!disabled ||
-            isAdding ||
-            !isValidVariant
-          }
-          variant="primary"
-          className="w-full h-10"
-          isLoading={isAdding}
-          data-testid="add-product-button"
-        >
-          {!selectedVariant && !options
-            ? "Select variant"
-            : !inStock || !isValidVariant
-            ? "Out of stock"
-            : "Add to cart"}
-        </Button>
+        {/* 加入购物车和心愿单按钮 */}
+        <div className="flex gap-2">
+          <Button
+            onClick={handleAddToCart}
+            disabled={
+              !inStock ||
+              !selectedVariant ||
+              !!disabled ||
+              isAdding ||
+              !isValidVariant
+            }
+            variant="primary"
+            className="flex-1 h-10"
+            isLoading={isAdding}
+            data-testid="add-product-button"
+          >
+            {!selectedVariant && !options
+              ? "Select variant"
+              : !inStock || !isValidVariant
+              ? "Out of stock"
+              : "Add to cart"}
+          </Button>
+          <WishlistButton product={product} size="md" iconOnly />
+        </div>
         {/* MobileActions 已禁用，因为 StickyAddToCart 提供了更好的移动端体验 */}
         {/* <MobileActions
           product={product}

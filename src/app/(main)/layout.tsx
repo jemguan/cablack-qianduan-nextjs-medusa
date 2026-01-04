@@ -9,6 +9,7 @@ import Footer from "@modules/layout/templates/footer"
 import Nav from "@modules/layout/templates/nav"
 import FreeShippingPriceNudge from "@modules/shipping/components/free-shipping-price-nudge"
 import { ScrollToTop } from "@components/ScrollToTop"
+import { WishlistProvider } from "@lib/context/wishlist-context"
 
 // 页面级别缓存设置（5分钟）
 // 注意：购物车页面和结账页面有各自的 force-dynamic 设置，不受此影响
@@ -30,7 +31,7 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
   }
 
   return (
-    <>
+    <WishlistProvider customer={customer}>
       <ScrollToTop />
       <Nav />
       {customer && cart && (
@@ -46,6 +47,6 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
       )}
       {props.children}
       <Footer />
-    </>
+    </WishlistProvider>
   )
 }

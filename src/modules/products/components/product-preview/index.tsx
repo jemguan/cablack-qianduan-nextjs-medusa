@@ -14,6 +14,7 @@ import Eye from "@modules/common/icons/eye"
 import Image from "next/image"
 import { getImageUrl } from "@lib/util/image"
 import ProductRating from "../reviews/ProductRating"
+import WishlistButton from "@modules/wishlist/components/wishlist-button"
 
 const optionsAsKeymap = (
   variantOptions: HttpTypes.StoreProductVariant["options"]
@@ -226,6 +227,9 @@ const ProductPreview = ({
               </span>
             )}
           </div>
+
+          {/* Wishlist Button */}
+          <WishlistButton product={product} size="sm" overlay />
 
           {/* Quick View Button - Show on Hover */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none">

@@ -8,6 +8,7 @@ import ChevronDown from "@modules/common/icons/chevron-down"
 import User from "@modules/common/icons/user"
 import MapPin from "@modules/common/icons/map-pin"
 import Package from "@modules/common/icons/package"
+import Heart from "@modules/common/icons/heart"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 import { signout } from "@lib/data/customer"
@@ -88,6 +89,19 @@ const AccountNav = ({
                   </LocalizedClientLink>
                 </li>
                 <li>
+                  <LocalizedClientLink
+                    href="/account/wishlist"
+                    className="flex items-center justify-between py-4 border-b border-border px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                    data-testid="wishlist-link"
+                  >
+                    <div className="flex items-center gap-x-2">
+                      <Heart size="20" />
+                      <span>Wishlist</span>
+                    </div>
+                    <ChevronDown className="transform -rotate-90" />
+                  </LocalizedClientLink>
+                </li>
+                <li>
                   <button
                     type="button"
                     className="flex items-center justify-between py-4 border-b border-border px-8 w-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
@@ -147,6 +161,15 @@ const AccountNav = ({
                   data-testid="orders-link"
                 >
                   Orders
+                </AccountNavLink>
+              </li>
+              <li>
+                <AccountNavLink
+                  href="/account/wishlist"
+                  route={route!}
+                  data-testid="wishlist-link"
+                >
+                  Wishlist
                 </AccountNavLink>
               </li>
               <li className="text-muted-foreground hover:text-foreground transition-colors">
