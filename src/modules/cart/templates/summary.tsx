@@ -14,19 +14,7 @@ type SummaryProps = {
   }
 }
 
-function getCheckoutStep(cart: HttpTypes.StoreCart) {
-  if (!cart?.shipping_address?.address_1 || !cart.email) {
-    return "address"
-  } else if (cart?.shipping_methods?.length === 0) {
-    return "delivery"
-  } else {
-    return "payment"
-  }
-}
-
 const Summary = ({ cart }: SummaryProps) => {
-  const step = getCheckoutStep(cart)
-
   return (
     <div className="flex flex-col gap-y-4">
       <Heading level="h2" className="text-xl small:text-[2rem] leading-tight small:leading-[2.75rem] text-foreground">
@@ -40,7 +28,7 @@ const Summary = ({ cart }: SummaryProps) => {
         <CartTotals totals={cart} />
       </div>
       <LocalizedClientLink
-        href={"/checkout?step=" + step}
+        href={"/checkout"}
         data-testid="checkout-button"
       >
         <Button className="w-full h-10 bg-primary text-primary-foreground hover:bg-primary/90">Go to checkout</Button>

@@ -300,6 +300,62 @@
     color: hsl(var(--foreground)) !important;
   }
 
+  /* Stripe PaymentElement dark mode styles */
+  .stripe-payment-container {
+    background-color: transparent;
+  }
+
+  .dark .stripe-payment-container {
+    background-color: transparent;
+  }
+
+  /* Override Stripe PaymentElement internal styles for dark mode */
+  .dark .stripe-payment-container * {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .dark .stripe-payment-container .Input,
+  .dark .stripe-payment-container .Input--empty,
+  .dark .stripe-payment-container .Input--invalid,
+  .dark .stripe-payment-container input,
+  .dark .stripe-payment-container select,
+  .dark .stripe-payment-container [data-testid],
+  .dark .stripe-payment-container .pii,
+  .dark .stripe-payment-container .pii input {
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+    border-color: hsl(var(--border)) !important;
+  }
+
+  .dark .stripe-payment-container .Tab,
+  .dark .stripe-payment-container button[role="tab"] {
+    background-color: hsl(var(--muted)) !important;
+    color: hsl(var(--foreground)) !important;
+    border-color: hsl(var(--border)) !important;
+  }
+
+  .dark .stripe-payment-container .Tab--selected,
+  .dark .stripe-payment-container button[role="tab"][aria-selected="true"] {
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+    border-color: hsl(var(--border)) !important;
+  }
+
+  .dark .stripe-payment-container .Label,
+  .dark .stripe-payment-container label {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .dark .stripe-payment-container .Error,
+  .dark .stripe-payment-container [role="alert"] {
+    color: hsl(var(--destructive)) !important;
+  }
+
+  /* Stripe iframe and shadow DOM styles */
+  .dark .stripe-payment-container iframe {
+    background-color: hsl(var(--background)) !important;
+  }
+
   /* Shadcn/ui animations */
   @keyframes fade-in {
     from {

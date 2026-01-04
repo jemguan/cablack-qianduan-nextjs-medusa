@@ -33,7 +33,7 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
       value={paymentProviderId}
       disabled={disabled}
       className={clx(
-        "flex flex-col gap-y-2 text-small-regular cursor-pointer py-4 border rounded-rounded px-8 mb-2 hover:shadow-borders-interactive-with-active",
+        "flex flex-col gap-y-2 text-small-regular cursor-pointer py-4 border rounded-rounded px-8 mb-2 hover:shadow-borders-interactive-with-active bg-transparent",
         {
           "border-ui-border-interactive":
             selectedPaymentOptionId === paymentProviderId,
@@ -88,13 +88,16 @@ export const StripePaymentContainer = ({
     >
       {selectedPaymentOptionId === paymentProviderId &&
         (stripeReady ? (
-          <div className="my-4 transition-all duration-150 ease-in-out">
+          <div className="my-4 transition-all duration-150 ease-in-out stripe-payment-container">
             <PaymentElement
               options={{
                 layout: "tabs",
               }}
               onChange={(e) => {
-                setError(e.complete ? null : "Please complete payment details")
+                // 只在表单完成时清除错误，不主动设置错误提示
+                if (e.complete) {
+                  setError(null)
+                }
                 setPaymentReady(e.complete)
               }}
             />

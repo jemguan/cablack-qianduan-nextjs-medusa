@@ -3,7 +3,7 @@
 import { Stripe, StripeElementsOptions, Appearance } from "@stripe/stripe-js"
 import { Elements } from "@stripe/react-stripe-js"
 import { HttpTypes } from "@medusajs/types"
-import { createContext } from "react"
+import { createContext, useEffect, useState } from "react"
 
 type StripeWrapperProps = {
   paymentSession: HttpTypes.StorePaymentSession
@@ -20,13 +20,33 @@ const StripeWrapper: React.FC<StripeWrapperProps> = ({
   stripePromise,
   children,
 }) => {
+  const [isDarkMode, setIsDarkMode] = useState(false)
+
+  // Detect dark mode
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains("dark"))
+    }
+    
+    checkDarkMode()
+    
+    // Watch for theme changes
+    const observer = new MutationObserver(checkDarkMode)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    })
+    
+    return () => observer.disconnect()
+  }, [])
+
   // Payment Element appearance configuration
   const appearance: Appearance = {
-    theme: "stripe",
+    theme: isDarkMode ? "night" : "stripe",
     variables: {
       colorPrimary: "#0570de",
-      colorBackground: "#ffffff",
-      colorText: "#30313d",
+      colorBackground: isDarkMode ? "hsl(0, 0%, 0%)" : "#ffffff",
+      colorText: isDarkMode ? "hsl(210, 40%, 98%)" : "#30313d",
       colorDanger: "#df1b41",
       fontFamily: "Inter, system-ui, sans-serif",
       spacingUnit: "4px",
@@ -34,12 +54,22 @@ const StripeWrapper: React.FC<StripeWrapperProps> = ({
     },
     rules: {
       ".Input": {
-        border: "1px solid #e6e6e6",
+        border: isDarkMode ? "1px solid hsl(0, 0%, 15%)" : "1px solid #e6e6e6",
         boxShadow: "none",
+        backgroundColor: isDarkMode ? "hsl(0, 0%, 0%)" : "#ffffff",
+        color: isDarkMode ? "hsl(210, 40%, 98%)" : "#30313d",
       },
       ".Input:focus": {
         border: "1px solid #0570de",
         boxShadow: "0 0 0 1px #0570de",
+      },
+      ".Tab": {
+        backgroundColor: isDarkMode ? "hsl(0, 0%, 10%)" : "#f9fafb",
+        color: isDarkMode ? "hsl(210, 40%, 98%)" : "#30313d",
+      },
+      ".Tab--selected": {
+        backgroundColor: isDarkMode ? "hsl(0, 0%, 0%)" : "#ffffff",
+        color: isDarkMode ? "hsl(210, 40%, 98%)" : "#30313d",
       },
     },
   }
@@ -69,7 +99,11 @@ const StripeWrapper: React.FC<StripeWrapperProps> = ({
 
   return (
     <StripeContext.Provider value={true}>
-      <Elements options={options} stripe={stripePromise}>
+      <Elements 
+        key={isDarkMode ? "dark" : "light"} 
+        options={options} 
+        stripe={stripePromise}
+      >
         {children}
       </Elements>
     </StripeContext.Provider>

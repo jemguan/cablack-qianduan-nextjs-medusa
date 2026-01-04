@@ -577,8 +577,6 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
   } catch (e: any) {
     return e.message
   }
-
-  redirect(`/checkout?step=delivery`)
 }
 
 /**
