@@ -9,23 +9,28 @@ type PaymentDetailsProps = {
   order: HttpTypes.StoreOrder
 }
 
-// Helper to get Stripe payment details from payment data
-const getStripePaymentInfo = (paymentData: Record<string, unknown> | undefined) => {
-  if (!paymentData) return null
+// Helper to get Stripe payment details from payment data and order metadata
+const getStripePaymentInfo = (
+  paymentData: Record<string, unknown> | undefined,
+  orderMetadata: Record<string, unknown> | undefined
+) => {
+  const metadata = orderMetadata as Record<string, any> | undefined
+  const data = paymentData as Record<string, any> | undefined
   
-  // Stripe stores payment method details in different places depending on the flow
-  const data = paymentData as Record<string, any>
-  
-  // Try to get card details from various possible locations
-  const cardLast4 = data.card_last4 || 
-    data.payment_method?.card?.last4 ||
-    data.charges?.data?.[0]?.payment_method_details?.card?.last4
+  // 优先从 order.metadata 获取（由 subscriber 写入）
+  const cardLast4 = metadata?.stripe_card_last4 || 
+    data?.card_last4 || 
+    data?.payment_method?.card?.last4 ||
+    data?.charges?.data?.[0]?.payment_method_details?.card?.last4
     
-  const cardBrand = data.card_brand ||
-    data.payment_method?.card?.brand ||
-    data.charges?.data?.[0]?.payment_method_details?.card?.brand
+  const cardBrand = metadata?.stripe_card_brand ||
+    data?.card_brand ||
+    data?.payment_method?.card?.brand ||
+    data?.charges?.data?.[0]?.payment_method_details?.card?.brand
     
-  const paymentIntentId = data.id || data.payment_intent_id
+  const paymentIntentId = metadata?.stripe_payment_intent_id ||
+    data?.id || 
+    data?.payment_intent_id
   
   return {
     cardLast4,
@@ -37,7 +42,10 @@ const getStripePaymentInfo = (paymentData: Record<string, unknown> | undefined) 
 const PaymentDetails = ({ order }: PaymentDetailsProps) => {
   const payment = order.payment_collections?.[0].payments?.[0]
   const stripeInfo = isStripeLike(payment?.provider_id) 
-    ? getStripePaymentInfo(payment?.data as Record<string, unknown>) 
+    ? getStripePaymentInfo(
+        payment?.data as Record<string, unknown>,
+        order.metadata as Record<string, unknown>
+      ) 
     : null
 
   return (
