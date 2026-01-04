@@ -42,10 +42,19 @@ let sdkInstance: Medusa | null = null
 function getSdk(): Medusa {
   if (!sdkInstance) {
     const baseUrl = getMedusaBackendUrl()
+    const isServer = typeof window === 'undefined'
+    
     sdkInstance = new Medusa({
       baseUrl: baseUrl,
       debug: process.env.NODE_ENV === "development",
       publishableKey: process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
+      // 配置认证方式
+      // 服务端使用 "nostore" 避免 localStorage 错误
+      // 客户端使用默认的 localStorage
+      auth: {
+        type: "jwt",
+        jwtTokenStorageMethod: isServer ? "nostore" : "local",
+      },
     })
   }
   return sdkInstance
