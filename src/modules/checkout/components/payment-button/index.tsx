@@ -5,6 +5,7 @@ import { placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
+import { useRouter } from "next/navigation"
 import React, { useState } from "react"
 import ErrorMessage from "../error-message"
 
@@ -57,17 +58,22 @@ const StripePaymentButton = ({
   notReady: boolean
   "data-testid"?: string
 }) => {
+  const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const onPaymentCompleted = async () => {
-    await placeOrder()
-      .catch((err) => {
-        setErrorMessage(err.message)
-      })
-      .finally(() => {
-        setSubmitting(false)
-      })
+    try {
+      const result = await placeOrder()
+      // If placeOrder returns an order, redirect manually
+      if (result && typeof result === 'object' && 'type' in result && result.type === 'order' && result.order?.id) {
+        router.push(result.redirectUrl || `/order/${result.order.id}/confirmed`)
+        return
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || "Failed to place order")
+      setSubmitting(false)
+    }
   }
 
   const stripe = useStripe()
@@ -158,18 +164,23 @@ const StripePaymentButton = ({
   )
 }
 
-const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
+const ManualTestPaymentButton = ({ notReady, "data-testid": dataTestId }: { notReady: boolean; "data-testid"?: string }) => {
+  const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const onPaymentCompleted = async () => {
-    await placeOrder()
-      .catch((err) => {
-        setErrorMessage(err.message)
-      })
-      .finally(() => {
-        setSubmitting(false)
-      })
+    try {
+      const result = await placeOrder()
+      // If placeOrder returns an order, redirect manually
+      if (result && typeof result === 'object' && 'type' in result && result.type === 'order' && result.order?.id) {
+        router.push(result.redirectUrl || `/order/${result.order.id}/confirmed`)
+        return
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || "Failed to place order")
+      setSubmitting(false)
+    }
   }
 
   const handlePayment = () => {
@@ -198,17 +209,22 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
 }
 
 const EmtPaymentButton = ({ notReady, "data-testid": dataTestId }: { notReady: boolean; "data-testid"?: string }) => {
+  const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const onPaymentCompleted = async () => {
-    await placeOrder()
-      .catch((err) => {
-        setErrorMessage(err.message)
-      })
-      .finally(() => {
-        setSubmitting(false)
-      })
+    try {
+      const result = await placeOrder()
+      // If placeOrder returns an order, redirect manually
+      if (result && typeof result === 'object' && 'type' in result && result.type === 'order' && result.order?.id) {
+        router.push(result.redirectUrl || `/order/${result.order.id}/confirmed`)
+        return
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || "Failed to place order")
+      setSubmitting(false)
+    }
   }
 
   const handlePayment = () => {

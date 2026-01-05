@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { clx } from "@medusajs/ui"
 import { ArrowRightOnRectangle } from "@medusajs/icons"
 import { usePathname } from "next/navigation"
@@ -9,6 +10,7 @@ import User from "@modules/common/icons/user"
 import MapPin from "@modules/common/icons/map-pin"
 import Package from "@modules/common/icons/package"
 import Heart from "@modules/common/icons/heart"
+import Spinner from "@modules/common/icons/spinner"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 import { signout } from "@lib/data/customer"
@@ -19,9 +21,16 @@ const AccountNav = ({
   customer: HttpTypes.StoreCustomer | null
 }) => {
   const route = usePathname()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const handleLogout = async () => {
-    await signout()
+    setIsLoggingOut(true)
+    try {
+      await signout()
+    } catch (error) {
+      setIsLoggingOut(false)
+      console.error("Logout failed:", error)
+    }
   }
 
   return (
@@ -104,15 +113,23 @@ const AccountNav = ({
                 <li>
                   <button
                     type="button"
-                    className="flex items-center justify-between py-4 border-b border-border px-8 w-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                    disabled={isLoggingOut}
+                    className={clx(
+                      "flex items-center justify-between py-4 border-b border-border px-8 w-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all",
+                      isLoggingOut && "opacity-50 cursor-not-allowed"
+                    )}
                     onClick={handleLogout}
                     data-testid="logout-button"
                   >
                     <div className="flex items-center gap-x-2">
-                      <ArrowRightOnRectangle />
-                      <span>Log out</span>
+                      {isLoggingOut ? (
+                        <Spinner className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <ArrowRightOnRectangle />
+                      )}
+                      <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
                     </div>
-                    <ChevronDown className="transform -rotate-90" />
+                    {!isLoggingOut && <ChevronDown className="transform -rotate-90" />}
                   </button>
                 </li>
               </ul>
@@ -175,10 +192,16 @@ const AccountNav = ({
               <li className="text-muted-foreground hover:text-foreground transition-colors">
                 <button
                   type="button"
+                  disabled={isLoggingOut}
+                  className={clx(
+                    "flex items-center gap-x-2",
+                    isLoggingOut && "opacity-50 cursor-not-allowed"
+                  )}
                   onClick={handleLogout}
                   data-testid="logout-button"
                 >
-                  Log out
+                  {isLoggingOut && <Spinner className="w-4 h-4 animate-spin" />}
+                  <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
                 </button>
               </li>
             </ul>

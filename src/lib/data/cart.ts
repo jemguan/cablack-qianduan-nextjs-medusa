@@ -592,7 +592,14 @@ export async function placeOrder(cartId?: string) {
     revalidateTag(orderCacheTag)
 
     removeCartId()
-    redirect(`/order/${cartRes?.order.id}/confirmed`)
+    
+    // Return order info instead of redirecting
+    // Client component will handle the redirect
+    return {
+      type: "order" as const,
+      order: cartRes.order,
+      redirectUrl: `/order/${cartRes.order.id}/confirmed`,
+    }
   }
 
   return cartRes.cart
