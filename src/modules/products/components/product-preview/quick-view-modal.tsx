@@ -15,7 +15,7 @@ import ProductImageCarousel from "./product-image-carousel"
 import ProductBrandLink from "../product-brand-link"
 import { ProductQuantitySelector } from "../quantity-selector"
 import { addToCart } from "@lib/data/cart"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 
 type QuickViewModalProps = {
   product: HttpTypes.StoreProduct
@@ -42,7 +42,6 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
   const [quantity, setQuantity] = useState(1)
   const [isAdding, setIsAdding] = useState(false)
-  const router = useRouter()
   const params = useParams()
   const countryCode = params?.countryCode as string
 
@@ -117,8 +116,9 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
         countryCode,
       })
 
-      router.refresh()
-      // 可以在这里添加成功提示或关闭模态框
+      // addToCart 内部已调用 revalidateTag，无需 router.refresh()
+      // 添加成功后关闭模态框
+      onClose()
     } catch (error) {
       console.error("Failed to add to cart:", error)
     } finally {

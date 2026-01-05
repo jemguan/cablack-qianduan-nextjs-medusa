@@ -144,21 +144,23 @@ export const listProducts = async ({
 }
 
 /**
- * 获取价格排序的产品 ID 列表（使用缓存）
+ * 获取所有产品并按指定规则排序（使用缓存）
  * 缓存 60 秒以避免频繁请求所有产品
+ * 
+ * 所有排序都会将缺货产品放到最后
  */
-const getPriceSortedProductIds = async (
+const getSortedProductIds = async (
   countryCode: string,
-  sortBy: "price_asc" | "price_desc",
+  sortBy: SortOptions,
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
 ): Promise<{ sortedIds: string[]; totalCount: number }> => {
   // 创建缓存 key
-  const cacheKey = `price-sorted-${countryCode}-${sortBy}-${JSON.stringify(queryParams || {})}`
+  const cacheKey = `sorted-${countryCode}-${sortBy}-${JSON.stringify(queryParams || {})}`
   
   // 使用 unstable_cache 缓存排序结果
   const getCachedSortedIds = unstable_cache(
     async () => {
-      // 获取所有产品的 ID 和价格信息（使用精简字段）
+      // 获取所有产品的 ID 和排序信息（使用精简字段）
       const allProducts: HttpTypes.StoreProduct[] = []
       let offset = 0
       const batchSize = 100
@@ -187,22 +189,30 @@ const getPriceSortedProductIds = async (
         offset += batchSize
       }
 
-      // 计算每个产品的价格和库存状态
+      // 计算每个产品的排序信息
       const productsWithMeta = allProducts.map((product) => ({
         id: product.id,
         minPrice: getMinPrice(product),
+        createdAt: product.created_at ? new Date(product.created_at).getTime() : 0,
         outOfStock: isProductOutOfStock(product),
       }))
 
-      // 排序：有货的在前，缺货的在后；同类按价格排序
+      // 排序逻辑：先按库存状态（有货在前），再按指定排序方式
       productsWithMeta.sort((a, b) => {
-        // 先按库存状态排序
+        // 先按库存状态排序：有货的在前，缺货的在后
         if (a.outOfStock !== b.outOfStock) {
           return a.outOfStock ? 1 : -1
         }
-        // 再按价格排序
-        const diff = a.minPrice - b.minPrice
-        return sortBy === "price_asc" ? diff : -diff
+        
+        // 再按指定排序方式
+        if (sortBy === "price_asc") {
+          return a.minPrice - b.minPrice
+        } else if (sortBy === "price_desc") {
+          return b.minPrice - a.minPrice
+        } else {
+          // created_at: 按创建时间降序（最新的在前）
+          return b.createdAt - a.createdAt
+        }
       })
 
       return {
@@ -213,7 +223,7 @@ const getPriceSortedProductIds = async (
     [cacheKey],
     {
       revalidate: 60, // 缓存 60 秒
-      tags: ["products", "price-sort"],
+      tags: ["products", "sort"],
     }
   )
 
@@ -224,8 +234,9 @@ const getPriceSortedProductIds = async (
  * 使用服务端分页获取产品列表并排序
  * 
  * 优化策略：
- * - created_at 排序：直接使用 API 的 order 参数和 offset/limit 分页
- * - price 排序：使用缓存的排序 ID 列表，只获取当前页的产品
+ * - 使用缓存的排序 ID 列表，确保缺货产品全局排在最后
+ * - 分页时只获取当前页的产品详情
+ * - 缓存 60 秒，平衡性能和实时性
  */
 export const listProductsWithSort = async ({
   page = 1,
@@ -245,96 +256,52 @@ export const listProductsWithSort = async ({
   const limit = queryParams?.limit || 12
   const resolvedCountryCode = countryCode || (await getRegionCountryCode())
 
-  // 对于 created_at 排序，使用真正的服务端分页
-  if (sortBy === "created_at") {
-    const { response, nextPage } = await listProducts({
-      pageParam: page,
-      queryParams: {
-        ...queryParams,
-        limit,
-        order: "-created_at", // 按创建时间降序
-      },
-      countryCode: resolvedCountryCode,
-      useListViewFields: true,
-    })
+  // 使用统一的缓存排序逻辑，确保缺货产品全局排在最后
+  const { sortedIds, totalCount } = await getSortedProductIds(
+    resolvedCountryCode,
+    sortBy,
+    queryParams
+  )
 
-    // 将缺货产品移到后面（只在当前页内排序）
-    const sortedProducts = [...response.products].sort((a, b) => {
-      const aOutOfStock = isProductOutOfStock(a)
-      const bOutOfStock = isProductOutOfStock(b)
-      if (aOutOfStock === bOutOfStock) return 0
-      return aOutOfStock ? 1 : -1
-    })
+  // 计算当前页需要的产品 ID
+  const startIndex = (page - 1) * limit
+  const endIndex = startIndex + limit
+  const pageIds = sortedIds.slice(startIndex, endIndex)
 
+  if (pageIds.length === 0) {
     return {
-      response: {
-        products: sortedProducts,
-        count: response.count,
-      },
-      nextPage: nextPage ? page + 1 : null,
+      response: { products: [], count: totalCount },
+      nextPage: null,
       queryParams,
     }
   }
 
-  // 对于价格排序，使用缓存的排序 ID 列表
-  if (sortBy === "price_asc" || sortBy === "price_desc") {
-    const { sortedIds, totalCount } = await getPriceSortedProductIds(
-      resolvedCountryCode,
-      sortBy,
-      queryParams
-    )
-
-    // 计算当前页需要的产品 ID
-    const startIndex = (page - 1) * limit
-    const endIndex = startIndex + limit
-    const pageIds = sortedIds.slice(startIndex, endIndex)
-
-    if (pageIds.length === 0) {
-      return {
-        response: { products: [], count: totalCount },
-        nextPage: null,
-        queryParams,
-      }
-    }
-
-    // 只获取当前页的产品详情
-    const { response } = await listProducts({
-      pageParam: 1,
-      queryParams: {
-        ...queryParams,
-        id: pageIds,
-        limit: pageIds.length,
-      },
-      countryCode: resolvedCountryCode,
-      useListViewFields: true,
-    })
-
-    // 按照排序后的 ID 顺序重新排列产品
-    const productMap = new Map(response.products.map((p) => [p.id, p]))
-    const orderedProducts = pageIds
-      .map((id) => productMap.get(id))
-      .filter((p): p is HttpTypes.StoreProduct => p !== undefined)
-
-    const hasNextPage = endIndex < totalCount
-
-    return {
-      response: {
-        products: orderedProducts,
-        count: totalCount,
-      },
-      nextPage: hasNextPage ? page + 1 : null,
-      queryParams,
-    }
-  }
-
-  // 默认情况，回退到原始逻辑
-  return listProducts({
-    pageParam: page,
+  // 只获取当前页的产品详情
+  const { response } = await listProducts({
+    pageParam: 1,
     queryParams: {
       ...queryParams,
-      limit,
+      id: pageIds,
+      limit: pageIds.length,
     },
     countryCode: resolvedCountryCode,
     useListViewFields: true,
   })
+
+  // 按照排序后的 ID 顺序重新排列产品
+  const productMap = new Map(response.products.map((p) => [p.id, p]))
+  const orderedProducts = pageIds
+    .map((id) => productMap.get(id))
+    .filter((p): p is HttpTypes.StoreProduct => p !== undefined)
+
+  const hasNextPage = endIndex < totalCount
+
+  return {
+    response: {
+      products: orderedProducts,
+      count: totalCount,
+    },
+    nextPage: hasNextPage ? page + 1 : null,
+    queryParams,
+  }
 }

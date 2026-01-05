@@ -23,8 +23,9 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
   className,
   "data-testid": dataTestid,
 }) => {
-  // Prioritize images array over thumbnail to show variant-specific images
-  const initialImage = images?.[0]?.url || thumbnail
+  // Prioritize thumbnail (product main image) over images array
+  // This ensures the correct main image is shown in cart and other places
+  const initialImage = thumbnail || images?.[0]?.url
 
   return (
     <Container

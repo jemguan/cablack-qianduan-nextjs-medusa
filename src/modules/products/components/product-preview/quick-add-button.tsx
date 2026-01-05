@@ -5,7 +5,7 @@ import { HttpTypes } from "@medusajs/types"
 import { Button, clx } from "@medusajs/ui"
 import ShoppingBag from "@modules/common/icons/shopping-bag"
 import Check from "@modules/common/icons/check"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 import { useState, useMemo } from "react"
 import { isEqual } from "lodash"
 
@@ -35,7 +35,6 @@ const QuickAddButton: React.FC<QuickAddButtonProps> = ({
 }) => {
   const [isAdding, setIsAdding] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
-  const router = useRouter()
   const params = useParams()
   const countryCode = params?.countryCode as string
 
@@ -99,7 +98,7 @@ const QuickAddButton: React.FC<QuickAddButtonProps> = ({
       })
 
       setIsSuccess(true)
-      router.refresh()
+      // addToCart 内部已调用 revalidateTag，无需 router.refresh()
 
       // Reset success state after 2 seconds
       setTimeout(() => {
