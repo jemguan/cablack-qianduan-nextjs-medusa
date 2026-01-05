@@ -32,30 +32,41 @@ export default async function Footer() {
                   </span>
                   <ul className="grid grid-cols-1 gap-2 text-ui-fg-subtle txt-small">
                     {menuItem.children && menuItem.children.length > 0 ? (
-                      menuItem.children.map((child) => (
-                        <li key={child.id}>
-                          {child.openInNewTab ? (
-                            <a
-                              href={child.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="hover:text-ui-fg-base"
-                            >
-                              {child.label}
-                            </a>
-                          ) : (
-                            <LocalizedClientLink
-                              href={child.url}
-                              className="hover:text-ui-fg-base"
-                            >
-                              {child.label}
-                            </LocalizedClientLink>
-                          )}
-                        </li>
-                      ))
+                      menuItem.children.map((child) => {
+                        const hasUrl = child.url && child.url.trim() !== ""
+                        return (
+                          <li key={child.id}>
+                            {!hasUrl ? (
+                              <span className="text-ui-fg-subtle">
+                                {child.label}
+                              </span>
+                            ) : child.openInNewTab ? (
+                              <a
+                                href={child.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="hover:text-ui-fg-base"
+                              >
+                                {child.label}
+                              </a>
+                            ) : (
+                              <LocalizedClientLink
+                                href={child.url}
+                                className="hover:text-ui-fg-base"
+                              >
+                                {child.label}
+                              </LocalizedClientLink>
+                            )}
+                          </li>
+                        )
+                      })
                     ) : (
                       <li>
-                        {menuItem.openInNewTab ? (
+                        {!menuItem.url || menuItem.url.trim() === "" ? (
+                          <span className="text-ui-fg-subtle">
+                            {menuItem.label}
+                          </span>
+                        ) : menuItem.openInNewTab ? (
                           <a
                             href={menuItem.url}
                             target="_blank"

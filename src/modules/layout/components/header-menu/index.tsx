@@ -8,7 +8,7 @@ import { clx } from "@medusajs/ui"
 interface MenuItem {
   id: string
   label: string
-  url: string
+  url?: string | null  // URL can be empty/null for non-clickable items
   openInNewTab?: boolean
   children?: MenuItem[]
 }
@@ -25,19 +25,24 @@ const HeaderMenu = ({ menuItems }: HeaderMenuProps) => {
       {menuItems.map((item) => {
         // 检查当前路径是否匹配菜单项 URL
         // 支持多种 locale 前缀逻辑
-        const isActive = pathname === item.url || 
-                        pathname.startsWith(`${item.url}/`) ||
-                        pathname.includes(`/${item.url.replace(/^\//, '')}`)
+        const itemUrl = item.url?.trim() || ""
+        const hasUrl = itemUrl !== ""
+        const isActive = hasUrl && (
+          pathname === itemUrl || 
+          pathname.startsWith(`${itemUrl}/`) ||
+          pathname.includes(`/${itemUrl.replace(/^\//, '')}`)
+        )
         
         return (
           <div key={item.id} className="relative group flex items-center">
             <LocalizedClientLink
               href={item.url}
               className={clx(
-                "text-small-regular transition-all duration-200 hover:text-foreground py-1",
-                isActive ? "text-foreground font-semibold" : "text-muted-foreground"
+                "text-small-regular transition-all duration-200 py-1",
+                hasUrl && "hover:text-foreground",
+                isActive ? "text-foreground font-semibold" : hasUrl ? "text-muted-foreground" : "text-muted-foreground cursor-default"
               )}
-              {...(item.openInNewTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              {...(item.openInNewTab && hasUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
             >
               {item.label}
             </LocalizedClientLink>

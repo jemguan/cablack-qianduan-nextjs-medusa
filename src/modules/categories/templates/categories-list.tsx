@@ -32,7 +32,31 @@ export default function CategoriesListTemplate({
 
       <ul className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8">
         {categories.map((category) => {
-          const categoryLink = `/categories/${category.handle}`
+          const hasHandle = category.handle && category.handle.trim() !== ""
+          const categoryLink = hasHandle ? `/categories/${category.handle}` : null
+
+          // Render non-clickable element if handle is empty
+          if (!categoryLink) {
+            return (
+              <li key={category.id}>
+                <div className="block">
+                  <div className="aspect-square w-full overflow-hidden rounded-lg bg-ui-bg-subtle mb-3 flex items-center justify-center border border-ui-border-base">
+                    <span className="text-ui-fg-subtle text-lg font-medium">
+                      {category.name}
+                    </span>
+                  </div>
+                  <h3 className="text-base font-semibold text-ui-fg-base">
+                    {category.name}
+                  </h3>
+                  {category.description && (
+                    <p className="text-sm text-ui-fg-subtle mt-1 line-clamp-2">
+                      {category.description}
+                    </p>
+                  )}
+                </div>
+              </li>
+            )
+          }
 
           return (
             <li key={category.id}>

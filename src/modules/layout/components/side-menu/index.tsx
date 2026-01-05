@@ -24,7 +24,7 @@ const DEFAULT_SIDE_MENU_ITEMS = {
 export interface MenuItem {
   id: string;
   label: string;
-  url: string;
+  url?: string | null;  // URL can be empty/null for non-clickable items
   openInNewTab?: boolean;
   children?: MenuItem[];
 }
@@ -40,12 +40,14 @@ const SideMenu = ({ regions, menuItems, regionId }: SideMenuProps) => {
   const pathname = usePathname()
 
   // 如果没有配置菜单项，使用默认菜单项
-  const displayMenuItems = menuItems && menuItems.length > 0
+  const displayMenuItems: MenuItem[] = menuItems && menuItems.length > 0
     ? menuItems
     : Object.entries(DEFAULT_SIDE_MENU_ITEMS).map(([label, url]) => ({
         id: label.toLowerCase(),
         label,
         url,
+        openInNewTab: false,
+        children: undefined,
       }))
 
   return (
@@ -114,7 +116,9 @@ const SideMenu = ({ regions, menuItems, regionId }: SideMenuProps) => {
                       <ul className="flex flex-col gap-y-6 items-start justify-start py-4">
                         {displayMenuItems.map((item) => {
                           const hasChildren = item.children && item.children.length > 0
-                          const isActive = pathname === item.url || pathname.startsWith(`${item.url}/`) || pathname.includes(`/${item.url.replace(/^\//, '')}`)
+                          const itemUrl = item.url?.trim() || ""
+                          const hasUrl = itemUrl !== ""
+                          const isActive = hasUrl && (pathname === itemUrl || pathname.startsWith(`${itemUrl}/`) || pathname.includes(`/${itemUrl.replace(/^\//, '')}`))
 
                           return (
                             <li key={item.id} className="w-full">
@@ -123,31 +127,35 @@ const SideMenu = ({ regions, menuItems, regionId }: SideMenuProps) => {
                                   <LocalizedClientLink
                                     href={item.url}
                                     className={clx(
-                                      "text-2xl font-bold transition-all hover:pl-2",
-                                      isActive ? "text-primary" : "text-foreground hover:text-primary"
+                                      "text-2xl font-bold transition-all",
+                                      hasUrl && "hover:pl-2",
+                                      isActive ? "text-primary" : hasUrl ? "text-foreground hover:text-primary" : "text-muted-foreground"
                                     )}
-                                    onClick={close}
+                                    onClick={hasUrl ? close : undefined}
                                     data-testid={`${item.id}-link`}
-                                    {...(item.openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                    {...(item.openInNewTab && hasUrl ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                                   >
                                     {item.label}
                                   </LocalizedClientLink>
                                   {item.children && (
                                     <ul className="flex flex-col gap-3 ml-4 border-l-2 border-primary/20 pl-6 my-2">
-                                      {item.children.map((child) => {
-                                        const isChildActive = pathname === child.url || pathname.startsWith(`${child.url}/`) || pathname.includes(`/${child.url.replace(/^\//, '')}`)
+                                      {item.children.map((child: MenuItem) => {
+                                        const childUrl = child.url?.trim() || ""
+                                        const hasChildUrl = childUrl !== ""
+                                        const isChildActive = hasChildUrl && (pathname === childUrl || pathname.startsWith(`${childUrl}/`) || pathname.includes(`/${childUrl.replace(/^\//, '')}`))
                                         
                                         return (
                                           <li key={child.id}>
                                             <LocalizedClientLink
                                               href={child.url}
                                               className={clx(
-                                                "text-lg transition-all hover:pl-2",
-                                                isChildActive ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                                                "text-lg transition-all",
+                                                hasChildUrl && "hover:pl-2",
+                                                isChildActive ? "text-primary font-semibold" : hasChildUrl ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground"
                                               )}
-                                              onClick={close}
+                                              onClick={hasChildUrl ? close : undefined}
                                               data-testid={`${child.id}-link`}
-                                              {...(child.openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                              {...(child.openInNewTab && hasChildUrl ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                                             >
                                               {child.label}
                                             </LocalizedClientLink>
@@ -161,12 +169,13 @@ const SideMenu = ({ regions, menuItems, regionId }: SideMenuProps) => {
                                 <LocalizedClientLink
                                   href={item.url}
                                   className={clx(
-                                    "text-2xl font-bold transition-all hover:pl-2",
-                                    isActive ? "text-primary" : "text-foreground hover:text-primary"
+                                    "text-2xl font-bold transition-all",
+                                    hasUrl && "hover:pl-2",
+                                    isActive ? "text-primary" : hasUrl ? "text-foreground hover:text-primary" : "text-muted-foreground"
                                   )}
-                                  onClick={close}
+                                  onClick={hasUrl ? close : undefined}
                                   data-testid={`${item.id}-link`}
-                                  {...(item.openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                  {...(item.openInNewTab && hasUrl ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                                 >
                                   {item.label}
                                 </LocalizedClientLink>

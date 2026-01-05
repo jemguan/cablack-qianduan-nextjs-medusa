@@ -45,18 +45,25 @@ export default function CategoryTemplate({
       <div className="w-full">
         <div className="flex flex-row mb-8 text-2xl-semi gap-4">
           {parents &&
-            parents.map((parent) => (
-              <span key={parent.id} className="text-ui-fg-subtle">
-                <LocalizedClientLink
-                  className="mr-4 hover:text-black"
-                  href={`/categories/${parent.handle}`}
-                  data-testid="sort-by-link"
-                >
-                  {parent.name}
-                </LocalizedClientLink>
-                /
-              </span>
-            ))}
+            parents.map((parent) => {
+              const hasHandle = parent.handle && parent.handle.trim() !== ""
+              return (
+                <span key={parent.id} className="text-ui-fg-subtle">
+                  {hasHandle ? (
+                    <LocalizedClientLink
+                      className="mr-4 hover:text-black"
+                      href={`/categories/${parent.handle}`}
+                      data-testid="sort-by-link"
+                    >
+                      {parent.name}
+                    </LocalizedClientLink>
+                  ) : (
+                    <span className="mr-4">{parent.name}</span>
+                  )}
+                  /
+                </span>
+              )
+            })}
           <h1 data-testid="category-page-title">{category.name}</h1>
         </div>
         {category.description && (
@@ -67,13 +74,16 @@ export default function CategoryTemplate({
         {category.category_children && (
           <div className="mb-8 text-base-large">
             <ul className="grid grid-cols-1 gap-2">
-              {category.category_children?.map((c) => (
-                <li key={c.id}>
-                  <InteractiveLink href={`/categories/${c.handle}`}>
-                    {c.name}
-                  </InteractiveLink>
-                </li>
-              ))}
+              {category.category_children?.map((c) => {
+                const hasHandle = c.handle && c.handle.trim() !== ""
+                return (
+                  <li key={c.id}>
+                    <InteractiveLink href={hasHandle ? `/categories/${c.handle}` : undefined}>
+                      {c.name}
+                    </InteractiveLink>
+                  </li>
+                )
+              })}
             </ul>
           </div>
         )}
