@@ -50,11 +50,26 @@ function getSdk(): Medusa {
     try {
       const baseUrl = getMedusaBackendUrl()
       const isServer = typeof window === 'undefined'
+      const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+      
+      // 调试日志：仅在服务端输出，避免客户端暴露敏感信息
+      if (isServer && process.env.NODE_ENV === "development") {
+        console.log('[Medusa SDK] Initializing with:', {
+          baseUrl,
+          isServer,
+          hasPublishableKey: !!publishableKey,
+        })
+      }
+      
+      // 验证必要的配置
+      if (!baseUrl) {
+        throw new Error("MEDUSA_BACKEND_URL is not configured")
+      }
       
       sdkInstance = new Medusa({
         baseUrl: baseUrl,
         debug: process.env.NODE_ENV === "development",
-        publishableKey: process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
+        publishableKey: publishableKey,
         // 配置认证方式
         // 服务端使用 "nostore" 避免 localStorage 错误
         // 客户端使用默认的 localStorage
@@ -68,7 +83,13 @@ function getSdk(): Medusa {
       if (!sdkInstance) {
         throw new Error("Medusa SDK initialization returned null")
       }
+      
+      // 验证 auth 模块存在
+      if (!sdkInstance.auth) {
+        console.error('[Medusa SDK] WARNING: auth module is null after initialization')
+      }
     } catch (error: any) {
+      console.error('[Medusa SDK] Initialization failed:', error.message)
       sdkInitError = error
       throw error
     }
