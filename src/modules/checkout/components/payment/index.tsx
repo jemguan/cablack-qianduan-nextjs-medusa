@@ -59,25 +59,14 @@ const Payment = ({
           throw new Error("Cart region not found")
         }
         
-        console.log("Initiating payment session for:", method, "Cart ID:", cart.id)
-        
         // Pass only cart.id to avoid serialization issues in server action
-        const result = await initiatePaymentSession(cart.id, {
+        await initiatePaymentSession(cart.id, {
           provider_id: method,
         })
-        
-        console.log("Payment session initiated successfully:", result)
         
         // Refresh the page to get updated cart data with payment session
         router.refresh()
       } catch (err: any) {
-        console.error("Error initiating payment session:", err)
-        console.error("Error details:", {
-          message: err.message,
-          stack: err.stack,
-          cart: cart?.id,
-          method: method,
-        })
         setError(err.message || "Failed to initialize payment session")
         // Reset selection on error
         setSelectedPaymentMethod(activeSession?.provider_id ?? "")

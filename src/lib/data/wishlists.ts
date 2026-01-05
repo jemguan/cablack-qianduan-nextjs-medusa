@@ -229,7 +229,6 @@ export async function getOrCreateDefaultWishlist(): Promise<Wishlist | null> {
 
     return wishlist
   } catch (error) {
-    console.error("Failed to get or create default wishlist:", error)
     return null
   }
 }

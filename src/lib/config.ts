@@ -5,6 +5,8 @@ import Medusa from "@medusajs/js-sdk"
  * 优先使用客户端环境变量（NEXT_PUBLIC_*），如果没有则使用服务端环境变量
  */
 function getMedusaBackendUrl(): string {
+  const isProduction = process.env.NODE_ENV === "production"
+  
   if (typeof window !== 'undefined') {
     // 客户端：优先使用从 HTML 注入的 URL（window.__MEDUSA_BACKEND_URL__）
     // 这样可以确保在生产环境中使用正确的 URL，即使构建时环境变量未设置
@@ -26,13 +28,23 @@ function getMedusaBackendUrl(): string {
       return windowUrl
     }
     
-    // 最后使用环境变量或默认值
+    // 生产环境必须设置环境变量
+    if (isProduction) {
+      throw new Error("NEXT_PUBLIC_MEDUSA_BACKEND_URL is required in production")
+    }
+    
+    // 开发环境使用默认值
     return envUrl || "http://localhost:9000"
   } else {
     // 服务端：可以使用不带 NEXT_PUBLIC_ 前缀的环境变量
-    return process.env.MEDUSA_BACKEND_URL || 
-           process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || 
-           "http://localhost:9000"
+    const serverUrl = process.env.MEDUSA_BACKEND_URL || 
+                      process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
+    
+    if (!serverUrl && isProduction) {
+      throw new Error("MEDUSA_BACKEND_URL is required in production")
+    }
+    
+    return serverUrl || "http://localhost:9000"
   }
 }
 

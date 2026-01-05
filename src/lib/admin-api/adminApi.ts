@@ -12,6 +12,8 @@ interface AdminApiConfig {
  * 获取配置（客户端和服务端都使用代理路由）
  */
 function getConfig(): AdminApiConfig {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   // 客户端：使用相对路径的代理路由
   if (typeof window !== 'undefined') {
     return {
@@ -21,18 +23,19 @@ function getConfig(): AdminApiConfig {
   }
 
   // 服务端：也使用代理路由，但需要完整的 URL
-  // 优先使用环境变量，如果没有则使用 localhost（Next.js 默认端口）
+  // 优先使用环境变量
   let baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
   
   if (!baseUrl) {
     // 在 Vercel 等平台上使用 VERCEL_URL
     if (process.env.VERCEL_URL) {
       baseUrl = `https://${process.env.VERCEL_URL}`;
-    } else {
-      // 开发环境默认使用 localhost:3000（Next.js 默认端口）
-      // 如果设置了 PORT 环境变量，使用该端口
+    } else if (!isProduction) {
+      // 仅在开发环境使用 localhost
       const port = process.env.PORT || '3000';
       baseUrl = `http://localhost:${port}`;
+    } else {
+      throw new Error('NEXT_PUBLIC_BASE_URL or VERCEL_URL is required in production');
     }
   }
   
@@ -85,10 +88,6 @@ export async function apiRequest<T = any>(
     try {
       data = JSON.parse(responseText) as ApiResponse<T>;
     } catch (parseError) {
-      console.error('[Admin API] Invalid JSON response:', {
-        status: response.status,
-        bodyPreview: responseText.substring(0, 200),
-      });
       throw new Error('Invalid response from Admin API');
     }
 
@@ -98,7 +97,6 @@ export async function apiRequest<T = any>(
 
     return data;
   } catch (error: any) {
-    console.error('[Admin API] Request failed:', error);
     throw error;
   }
 }

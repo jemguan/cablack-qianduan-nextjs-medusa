@@ -4,15 +4,49 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  rateLimit,
+  getClientIdentifier,
+  RATE_LIMITS,
+} from '@lib/util/rate-limiter';
 
 // 获取 Medusa 后端 URL（服务端）
 function getMedusaBackendUrl(): string {
-  return process.env.MEDUSA_BACKEND_URL || 
-         process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || 
-         "http://localhost:9000";
+  const isProduction = process.env.NODE_ENV === 'production';
+  const url = process.env.MEDUSA_BACKEND_URL || 
+              process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL;
+  
+  if (!url && isProduction) {
+    throw new Error('MEDUSA_BACKEND_URL is required in production');
+  }
+  
+  return url || "http://localhost:9000";
 }
 
 export async function GET(request: NextRequest) {
+  // 速率限制检查
+  const clientId = getClientIdentifier(request);
+  const rateLimitResult = rateLimit(
+    `medusa-proxy:${clientId}`,
+    RATE_LIMITS.API_DEFAULT
+  );
+
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      {
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+          'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+          'Retry-After': Math.ceil(
+            (rateLimitResult.resetAt - Date.now()) / 1000
+          ).toString(),
+        },
+      }
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const backendUrl = getMedusaBackendUrl();
@@ -42,8 +76,6 @@ export async function GET(request: NextRequest) {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[Medusa Proxy] Error response:', response.status, errorText);
       return NextResponse.json(
         { error: `Medusa API error: ${response.status}` },
         { status: response.status }
@@ -58,9 +90,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('[Medusa Proxy] Request failed:', error);
+    // 不泄露内部错误详情到客户端
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch products' },
+      { error: 'Failed to fetch products' },
       { status: 500 }
     );
   }

@@ -68,7 +68,7 @@ export const WishlistProvider = ({
         return JSON.parse(stored) as LocalWishlist
       }
     } catch (error) {
-      console.error("Failed to load local wishlist:", error)
+      // Silently fail for local storage errors
     }
     return null
   }, [])
@@ -79,7 +79,7 @@ export const WishlistProvider = ({
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(wishlist))
     } catch (error) {
-      console.error("Failed to save local wishlist:", error)
+      // Silently fail for local storage errors
     }
   }, [])
 
@@ -89,7 +89,7 @@ export const WishlistProvider = ({
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY)
     } catch (error) {
-      console.error("Failed to clear local wishlist:", error)
+      // Silently fail for local storage errors
     }
   }, [])
 
@@ -104,7 +104,7 @@ export const WishlistProvider = ({
         return fullWishlist
       }
     } catch (error) {
-      console.error("Failed to load server wishlist:", error)
+      // Silently fail for server wishlist errors
     }
     return null
   }, [isAuthenticated])
@@ -145,7 +145,7 @@ export const WishlistProvider = ({
       const updatedWishlist = await getWishlist(serverWishlist.id)
       setWishlist(updatedWishlist)
     } catch (error) {
-      console.error("Failed to sync local wishlist to server:", error)
+      // Silently fail for sync errors
     }
   }, [isAuthenticated, loadLocalWishlist, clearLocalWishlist])
 
@@ -225,7 +225,6 @@ export const WishlistProvider = ({
           const updatedWishlist = await getWishlist(serverWishlist.id)
           setWishlist(updatedWishlist)
         } catch (error) {
-          console.error("Failed to add to wishlist:", error)
           throw error
         }
       } else {
@@ -265,7 +264,6 @@ export const WishlistProvider = ({
           const updatedWishlist = await getWishlist(wishlist.id)
           setWishlist(updatedWishlist)
         } catch (error) {
-          console.error("Failed to remove from wishlist:", error)
           throw error
         }
       } else {

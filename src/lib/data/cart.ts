@@ -279,19 +279,9 @@ export async function initiatePaymentSession(
     revalidateTag(cartCacheTag)
     return resp
   } catch (error: any) {
-    console.error("initiatePaymentSession error:", error)
-    console.error("Error type:", typeof error)
-    console.error("Error message:", error?.message)
-    console.error("Error stack:", error?.stack)
-    const cartId = typeof cart === "string" ? cart : cart?.id
-    console.error("Cart ID:", cartId)
-    if (typeof cart !== "string") {
-      console.error("Cart region_id:", cart?.region_id)
-    }
-    console.error("Provider ID:", data.provider_id)
-    if (error?.config) {
-      console.error("Request URL:", error.config.url)
-      console.error("Request method:", error.config.method)
+    // 仅在开发环境输出详细调试信息
+    if (process.env.NODE_ENV === "development") {
+      console.error("initiatePaymentSession error:", error?.message)
     }
     throw medusaError(error)
   }
@@ -305,7 +295,6 @@ export async function applyPromotions(codes: string[]) {
   }
 
   if (!codes || codes.length === 0) {
-    console.log("No promotion codes to apply")
     return
   }
 
@@ -331,7 +320,9 @@ export async function applyPromotions(codes: string[]) {
       revalidateTag(fulfillmentCacheTag)
     })
     .catch((error) => {
-      console.error("Error applying promotions:", error)
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error applying promotions:", error?.message)
+      }
       medusaError(error)
     })
 }
@@ -396,8 +387,6 @@ export async function createBundlePromotion(bundleId: string): Promise<{
       ...(await getAuthHeaders()),
     }
 
-    console.log("Creating single-use promotion for bundle:", bundleId)
-
     // 调用后端 API 创建单次使用的 Promotion
     // SDK 会自动处理 JSON 序列化，不需要手动 JSON.stringify
     const response = await sdk.client.fetch<{
@@ -411,8 +400,6 @@ export async function createBundlePromotion(bundleId: string): Promise<{
       },
     })
 
-    console.log("Created promotion:", response)
-
     // 注意：不在这里应用 Promotion，因为此时购物车中还没有产品
     // Promotion 将在所有产品添加到购物车后应用
 
@@ -420,8 +407,10 @@ export async function createBundlePromotion(bundleId: string): Promise<{
     revalidateTag(cartCacheTag)
 
     return response
-  } catch (error) {
-    console.error("Error creating bundle promotion:", error)
+  } catch (error: any) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error creating bundle promotion:", error?.message)
+    }
     throw error
   }
 }
@@ -434,15 +423,12 @@ export async function syncBundlePromotions() {
   try {
     const cartId = await getCartId()
     if (!cartId) {
-      console.log("No cart ID found for syncing bundle promotions")
       return
     }
 
     const headers = {
       ...(await getAuthHeaders()),
     }
-
-    console.log("Syncing bundle promotions for cart:", cartId)
 
     // 调用后端 API 获取需要应用/移除的 Promotion
     const response = await sdk.client.fetch<{
@@ -454,14 +440,9 @@ export async function syncBundlePromotions() {
       headers,
     })
 
-    console.log("Sync bundle promotions response:", response)
-
     // 应用更新后的 Promotion codes
     if (response.updatedPromotionCodes && response.updatedPromotionCodes.length > 0) {
-      console.log("Applying promotion codes:", response.updatedPromotionCodes)
       await applyPromotions(response.updatedPromotionCodes)
-    } else {
-      console.log("No promotion codes to apply")
     }
 
     const cartCacheTag = await getCacheTag("carts")
@@ -469,8 +450,10 @@ export async function syncBundlePromotions() {
 
     const fulfillmentCacheTag = await getCacheTag("fulfillment")
     revalidateTag(fulfillmentCacheTag)
-  } catch (error) {
-    console.error("Error syncing bundle promotions:", error)
+  } catch (error: any) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error syncing bundle promotions:", error?.message)
+    }
     // 不抛出错误，只记录日志
   }
 }

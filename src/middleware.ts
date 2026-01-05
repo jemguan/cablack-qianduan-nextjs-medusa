@@ -11,6 +11,51 @@ const regionMapCache = {
 }
 
 /**
+ * 构建 Content-Security-Policy 头
+ * 基于项目需求配置安全策略
+ */
+function buildContentSecurityPolicy(): string {
+  const backendUrl = BACKEND_URL || ""
+  
+  // 解析后端 URL 的域名用于 CSP
+  let backendHost = ""
+  try {
+    if (backendUrl) {
+      backendHost = new URL(backendUrl).origin
+    }
+  } catch {
+    // 忽略解析错误
+  }
+
+  const directives = [
+    // 默认策略：只允许同源
+    "default-src 'self'",
+    // 脚本：允许同源、内联脚本（Next.js 需要）、Stripe
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://m.stripe.com",
+    // 样式：允许同源、内联样式
+    "style-src 'self' 'unsafe-inline'",
+    // 图片：允许同源、data URL、常见 CDN 和后端
+    `img-src 'self' data: blob: https://*.amazonaws.com https://*.cloudfront.net https://*.digitaloceanspaces.com https://cdn.shopify.com ${backendHost}`.trim(),
+    // 字体：允许同源和 data URL
+    "font-src 'self' data:",
+    // 连接：允许同源、后端 API 和 Stripe
+    `connect-src 'self' ${backendHost} https://api.stripe.com https://m.stripe.com wss://*.stripe.com`.trim(),
+    // frame：允许 Stripe iframe
+    "frame-src 'self' https://js.stripe.com https://m.stripe.com https://hooks.stripe.com",
+    // 表单：只允许同源
+    "form-action 'self'",
+    // 基础 URI：只允许同源
+    "base-uri 'self'",
+    // 对象：禁用
+    "object-src 'none'",
+    // 升级不安全请求（生产环境）
+    ...(process.env.NODE_ENV === "production" ? ["upgrade-insecure-requests"] : []),
+  ]
+
+  return directives.join("; ")
+}
+
+/**
  * 添加安全响应头
  * 防止常见的 Web 攻击（XSS、点击劫持、MIME 嗅探等）
  */
@@ -31,6 +76,12 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set(
     "Permissions-Policy",
     "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+  )
+
+  // 内容安全策略 (CSP)
+  response.headers.set(
+    "Content-Security-Policy",
+    buildContentSecurityPolicy()
   )
 
   // 强制 HTTPS（生产环境）

@@ -5,10 +5,21 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  rateLimit,
+  getClientIdentifier,
+  RATE_LIMITS,
+} from '@lib/util/rate-limiter';
 
 // 确保 ADMIN_API_URL 包含协议
 function normalizeAdminApiUrl(url: string | undefined): string {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   if (!url) {
+    // 生产环境必须设置 ADMIN_API_URL
+    if (isProduction) {
+      throw new Error('ADMIN_API_URL is required in production');
+    }
     return 'http://localhost:3003';
   }
   // 如果已经包含协议，直接返回
@@ -70,13 +81,35 @@ async function handleAdminApiProxy(
   pathSegments: string[],
   method: string
 ): Promise<NextResponse> {
+  // 速率限制检查
+  const clientId = getClientIdentifier(request);
+  const rateLimitResult = rateLimit(
+    `admin-proxy:${clientId}`,
+    RATE_LIMITS.API_DEFAULT
+  );
+
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { success: false, error: 'Too many requests' },
+      {
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+          'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+          'Retry-After': Math.ceil(
+            (rateLimitResult.resetAt - Date.now()) / 1000
+          ).toString(),
+        },
+      }
+    );
+  }
+
   try {
     // 构建代理路径
     const proxyPath = '/' + pathSegments.join('/');
     
     // 验证路径是否在白名单中
     if (!isPathAllowed(proxyPath)) {
-      console.warn('[Admin API Proxy] Blocked request to unauthorized path:', proxyPath);
       return NextResponse.json(
         { success: false, error: 'Unauthorized API path' },
         { status: 403 }
@@ -137,17 +170,10 @@ async function handleAdminApiProxy(
     try {
       data = JSON.parse(responseText);
     } catch (parseError) {
-      console.error('[Admin API Proxy] Invalid JSON response:', {
-        status: response.status,
-        bodyPreview: responseText.substring(0, 200),
-      });
       return NextResponse.json(
         {
           success: false,
           error: 'Invalid response from Admin API',
-          details: responseText.length > 200
-            ? responseText.substring(0, 200) + '...'
-            : responseText,
         },
         { status: response.status >= 400 ? response.status : 500 }
       );
@@ -156,12 +182,10 @@ async function handleAdminApiProxy(
     // 返回响应（保持原始状态码）
     return NextResponse.json(data, { status: response.status });
   } catch (error: any) {
-    console.error('[Admin API Proxy] Error:', error);
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to connect to Admin API',
-        details: error.message || 'Unknown error',
       },
       { status: 503 }
     );
