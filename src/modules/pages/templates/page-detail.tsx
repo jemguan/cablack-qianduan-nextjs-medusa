@@ -2,6 +2,7 @@ import { PageData } from "@lib/data/pages"
 import Link from "next/link"
 import { getImageUrl } from "@lib/util/image"
 import { sanitizeHtml } from "@lib/util/sanitize"
+import { FAQBlock } from "@modules/home/components/faq-block"
 
 export default function PageDetailTemplate({
   page,
@@ -25,10 +26,68 @@ export default function PageDetailTemplate({
   // Process images and sanitize HTML content for XSS protection
   const processedContent = sanitizeHtml(processContentImages(page.content))
 
+  // 获取 FAQ 配置和数据
+  const layoutConfig = page.layout_config || {}
+  const faqConfig = layoutConfig.faq || {}
+  
+  // 从 metadata 中获取 FAQ 数据
+  let faqData: Array<{ id: string; question: string; answer: string }> = []
+  
+  if (page.metadata) {
+    // 尝试多种方式获取 FAQ 数据
+    if (Array.isArray(page.metadata.faq)) {
+      faqData = page.metadata.faq
+    } else if (page.metadata.faq && typeof page.metadata.faq === 'string') {
+      // 如果是字符串，尝试解析 JSON
+      try {
+        const parsed = JSON.parse(page.metadata.faq)
+        faqData = Array.isArray(parsed) ? parsed : []
+      } catch (e) {
+        console.error('[PageDetail] Failed to parse FAQ metadata string:', e)
+      }
+    } else if (page.metadata.faq && typeof page.metadata.faq === 'object') {
+      // 如果是对象，尝试转换为数组
+      if (Array.isArray(page.metadata.faq)) {
+        faqData = page.metadata.faq
+      }
+    }
+  }
+  
+  // 验证 FAQ 数据格式
+  faqData = faqData.filter(item => 
+    item && 
+    typeof item === 'object' && 
+    typeof item.id === 'string' && 
+    typeof item.question === 'string' && 
+    typeof item.answer === 'string'
+  )
+  
+  // 如果 layout_config 中没有明确禁用，且有 FAQ 数据，则显示
+  // 默认启用（如果 layout_config 不存在或 faq.enabled 未设置）
+  const showFaq = faqConfig.enabled !== false && faqData.length > 0
+
+  // 合并 FAQ 配置，使用现有组件的数据格式
+  const faqBlockData = {
+    dataMode: 'direct' as const,
+    directItems: faqData,
+    title: faqConfig.title || "常见问题",
+    subtitle: faqConfig.subtitle || "",
+    showTitle: faqConfig.showTitle !== false,
+    showSubtitle: faqConfig.showSubtitle === true,
+    titleAlign: (faqConfig.titleAlign || "left") as "left" | "center" | "right",
+    theme: (faqConfig.theme || "default") as "default" | "bordered" | "minimal",
+    allowMultiple: faqConfig.allowMultiple === true,
+    defaultOpenFirst: faqConfig.defaultOpenFirst === true,
+    showSearch: false,
+    iconType: 'chevron' as const,
+    animationDuration: 300,
+  }
+  
+
   return (
-    <div className="content-container py-12">
+    <div className="py-12">
       {/* Page content */}
-      <article className="max-w-7xl mx-auto">
+      <article className="content-container max-w-7xl mx-auto">
         {/* Title and Subtitle */}
         <header className="mb-8">
           <h1 className="text-3xl-semi mb-4 text-ui-fg-base">{page.title}</h1>
@@ -55,18 +114,22 @@ export default function PageDetailTemplate({
             dangerouslySetInnerHTML={{ __html: processedContent }}
           />
         )}
-
-        {/* Back to home */}
-        <div className="mt-12 pt-8 border-t border-ui-border-base">
-          <Link
-            href="/"
-            className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover transition-colors inline-flex items-center gap-2"
-          >
-            ← Back to Home
-          </Link>
-        </div>
       </article>
+
+      {/* FAQ Block */}
+      {showFaq && (
+        <FAQBlock data={faqBlockData} />
+      )}
+
+      {/* Back to home */}
+      <div className="content-container max-w-7xl mx-auto mt-12 pt-8 border-t border-ui-border-base">
+        <Link
+          href="/"
+          className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover transition-colors inline-flex items-center gap-2"
+        >
+          ← Back to Home
+        </Link>
+      </div>
     </div>
   )
 }
-

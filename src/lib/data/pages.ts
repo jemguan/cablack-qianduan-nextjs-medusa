@@ -4,6 +4,26 @@ import { sdk } from "@lib/config"
 import { getCacheConfig } from "@lib/config/cache"
 import { getCacheOptions } from "./cookies"
 
+export type FAQItem = {
+  id: string
+  question: string
+  answer: string
+}
+
+export type PageLayoutConfig = {
+  faq?: {
+    enabled?: boolean
+    title?: string
+    subtitle?: string
+    showTitle?: boolean
+    showSubtitle?: boolean
+    titleAlign?: "left" | "center" | "right"
+    theme?: "default" | "bordered" | "minimal"
+    allowMultiple?: boolean
+    defaultOpenFirst?: boolean
+  }
+}
+
 export type PageData = {
   id: string
   title: string
@@ -12,7 +32,11 @@ export type PageData = {
   url?: string | null
   meta_title?: string | null
   meta_description?: string | null
-  metadata?: Record<string, any> | null
+  metadata?: {
+    faq?: FAQItem[]
+    [key: string]: any
+  } | null
+  layout_config?: PageLayoutConfig | null
   status: string
   published_at?: string | null
   created_at: string
