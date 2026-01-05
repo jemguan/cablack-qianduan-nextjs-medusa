@@ -47,10 +47,8 @@ export default async function PaginatedProducts({
     queryParams["id"] = productsIds
   }
 
-
-  if (sortBy === "created_at") {
-    queryParams["order"] = "created_at"
-  }
+  // 注意：排序逻辑现在在 listProductsWithSort 中处理
+  // 不再需要在这里设置 order 参数
 
   const region = await getRegion(countryCode)
 
