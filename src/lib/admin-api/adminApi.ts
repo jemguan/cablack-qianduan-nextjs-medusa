@@ -12,8 +12,6 @@ interface AdminApiConfig {
  * 获取配置（客户端和服务端都使用代理路由）
  */
 function getConfig(): AdminApiConfig {
-  const isProduction = process.env.NODE_ENV === 'production';
-  
   // 客户端：使用相对路径的代理路由
   if (typeof window !== 'undefined') {
     return {
@@ -23,21 +21,28 @@ function getConfig(): AdminApiConfig {
   }
 
   // 服务端：也使用代理路由，但需要完整的 URL
-  // 优先使用环境变量
-  let baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  // 优先使用 NEXT_PUBLIC_SITE_URL（生产环境应该设置这个）
+  let baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+                process.env.NEXT_PUBLIC_BASE_URL;
+  
+  // 如果 baseUrl 包含 localhost，在生产环境中跳过
+  if (baseUrl && baseUrl.includes('localhost') && process.env.NODE_ENV === 'production') {
+    baseUrl = undefined;
+  }
   
   if (!baseUrl) {
     // 在 Vercel 等平台上使用 VERCEL_URL
     if (process.env.VERCEL_URL) {
       baseUrl = `https://${process.env.VERCEL_URL}`;
-    } else if (!isProduction) {
-      // 仅在开发环境使用 localhost
+    } else {
+      // 回退到 localhost（开发环境）
       const port = process.env.PORT || '3000';
       baseUrl = `http://localhost:${port}`;
-    } else {
-      throw new Error('NEXT_PUBLIC_BASE_URL or VERCEL_URL is required in production');
     }
   }
+  
+  // 确保 baseUrl 没有尾部斜杠
+  baseUrl = baseUrl.replace(/\/$/, '');
   
   return {
     apiUrl: `${baseUrl}/api/admin-proxy`, // 服务端也使用代理路由

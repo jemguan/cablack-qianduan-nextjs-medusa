@@ -5,8 +5,6 @@ import Medusa from "@medusajs/js-sdk"
  * 优先使用客户端环境变量（NEXT_PUBLIC_*），如果没有则使用服务端环境变量
  */
 function getMedusaBackendUrl(): string {
-  const isProduction = process.env.NODE_ENV === "production"
-  
   if (typeof window !== 'undefined') {
     // 客户端：优先使用从 HTML 注入的 URL（window.__MEDUSA_BACKEND_URL__）
     // 这样可以确保在生产环境中使用正确的 URL，即使构建时环境变量未设置
@@ -28,53 +26,90 @@ function getMedusaBackendUrl(): string {
       return windowUrl
     }
     
-    // 生产环境必须设置环境变量
-    if (isProduction) {
-      throw new Error("NEXT_PUBLIC_MEDUSA_BACKEND_URL is required in production")
-    }
-    
-    // 开发环境使用默认值
+    // 使用环境变量或默认值
     return envUrl || "http://localhost:9000"
   } else {
     // 服务端：可以使用不带 NEXT_PUBLIC_ 前缀的环境变量
-    const serverUrl = process.env.MEDUSA_BACKEND_URL || 
-                      process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
-    
-    if (!serverUrl && isProduction) {
-      throw new Error("MEDUSA_BACKEND_URL is required in production")
-    }
-    
-    return serverUrl || "http://localhost:9000"
+    return process.env.MEDUSA_BACKEND_URL || 
+           process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || 
+           "http://localhost:9000"
   }
 }
 
 // 延迟初始化 SDK，使用运行时获取的 URL
 let sdkInstance: Medusa | null = null
+let sdkInitError: Error | null = null
 
 function getSdk(): Medusa {
+  // 如果之前初始化失败，抛出错误
+  if (sdkInitError) {
+    throw sdkInitError
+  }
+  
   if (!sdkInstance) {
-    const baseUrl = getMedusaBackendUrl()
-    const isServer = typeof window === 'undefined'
-    
-    sdkInstance = new Medusa({
-      baseUrl: baseUrl,
-      debug: process.env.NODE_ENV === "development",
-      publishableKey: process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
-      // 配置认证方式
-      // 服务端使用 "nostore" 避免 localStorage 错误
-      // 客户端使用默认的 localStorage
-      auth: {
-        type: "jwt",
-        jwtTokenStorageMethod: isServer ? "nostore" : "local",
-      },
-    })
+    try {
+      const baseUrl = getMedusaBackendUrl()
+      const isServer = typeof window === 'undefined'
+      
+      sdkInstance = new Medusa({
+        baseUrl: baseUrl,
+        debug: process.env.NODE_ENV === "development",
+        publishableKey: process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
+        // 配置认证方式
+        // 服务端使用 "nostore" 避免 localStorage 错误
+        // 客户端使用默认的 localStorage
+        auth: {
+          type: "jwt",
+          jwtTokenStorageMethod: isServer ? "nostore" : "local",
+        },
+      })
+      
+      // 验证 SDK 初始化成功
+      if (!sdkInstance) {
+        throw new Error("Medusa SDK initialization returned null")
+      }
+    } catch (error: any) {
+      sdkInitError = error
+      throw error
+    }
   }
   return sdkInstance
 }
 
-// 导出 SDK 实例（延迟初始化）
+/**
+ * 创建一个安全的 auth 代理
+ * 当 SDK 未初始化时返回空操作
+ */
+function createSafeAuthProxy() {
+  return new Proxy({} as any, {
+    get(_target, prop) {
+      // 返回一个 async 函数，避免解构错误
+      return async () => {
+        throw new Error("Medusa SDK not initialized. Check MEDUSA_BACKEND_URL configuration.")
+      }
+    }
+  })
+}
+
+// 导出 SDK 实例（延迟初始化，带安全回退）
 export const sdk = new Proxy({} as Medusa, {
   get(_target, prop) {
-    return getSdk()[prop as keyof Medusa]
+    try {
+      const instance = getSdk()
+      const value = instance[prop as keyof Medusa]
+      
+      // 如果 auth 属性为 null，返回安全代理
+      if (prop === 'auth' && !value) {
+        return createSafeAuthProxy()
+      }
+      
+      return value
+    } catch (error) {
+      // 如果初始化失败且请求的是 auth，返回安全代理
+      if (prop === 'auth') {
+        return createSafeAuthProxy()
+      }
+      throw error
+    }
   }
 })

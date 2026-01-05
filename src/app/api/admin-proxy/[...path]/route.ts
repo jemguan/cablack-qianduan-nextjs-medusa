@@ -13,13 +13,8 @@ import {
 
 // 确保 ADMIN_API_URL 包含协议
 function normalizeAdminApiUrl(url: string | undefined): string {
-  const isProduction = process.env.NODE_ENV === 'production';
-  
   if (!url) {
-    // 生产环境必须设置 ADMIN_API_URL
-    if (isProduction) {
-      throw new Error('ADMIN_API_URL is required in production');
-    }
+    // 如果未设置，返回默认值（开发环境）
     return 'http://localhost:3003';
   }
   // 如果已经包含协议，直接返回

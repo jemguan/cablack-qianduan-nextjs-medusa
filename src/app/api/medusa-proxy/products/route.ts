@@ -12,15 +12,9 @@ import {
 
 // 获取 Medusa 后端 URL（服务端）
 function getMedusaBackendUrl(): string {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const url = process.env.MEDUSA_BACKEND_URL || 
-              process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL;
-  
-  if (!url && isProduction) {
-    throw new Error('MEDUSA_BACKEND_URL is required in production');
-  }
-  
-  return url || "http://localhost:9000";
+  return process.env.MEDUSA_BACKEND_URL || 
+         process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || 
+         "http://localhost:9000";
 }
 
 export async function GET(request: NextRequest) {
