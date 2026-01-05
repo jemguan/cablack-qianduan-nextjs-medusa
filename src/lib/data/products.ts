@@ -104,7 +104,8 @@ export const listProducts = async ({
 
 /**
  * This will fetch products and sort them based on the sortBy parameter.
- * For the first page (page === 1), it only fetches the required products to improve LCP.
+ * For the first page (page === 1), it fetches 36 products if total count > 36, otherwise fetches required products.
+ * This provides a better initial experience while maintaining good LCP performance.
  * For subsequent pages, it fetches up to 1000 products for better pagination experience.
  * Note: Products are sorted client-side to support complex sorting logic (price, out-of-stock handling).
  */
@@ -125,14 +126,16 @@ export const listProductsWithSort = async ({
 }> => {
   const limit = queryParams?.limit || 12
   const MAX_PRODUCTS_TO_FETCH = 1000
+  const INITIAL_FETCH_LIMIT = 36 // 首屏获取36个产品
   const isFirstPage = page === 1
 
   // If no countryCode provided, get from cookie
   const resolvedCountryCode = countryCode || await getRegionCountryCode()
 
-  // For first page, only fetch the required products to improve LCP
+  // For first page, fetch 36 products if total count > 36, otherwise fetch required products
+  // This provides better initial experience while maintaining good LCP
   // For subsequent pages, fetch more products for better pagination experience
-  const fetchLimit = isFirstPage ? limit : MAX_PRODUCTS_TO_FETCH
+  const fetchLimit = isFirstPage ? INITIAL_FETCH_LIMIT : MAX_PRODUCTS_TO_FETCH
 
   const {
     response: { products, count },
