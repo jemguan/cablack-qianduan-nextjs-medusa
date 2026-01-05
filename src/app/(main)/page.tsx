@@ -28,19 +28,20 @@ export const metadata: Metadata = {
 export const revalidate = 300
 
 export default async function Home() {
-  const countryCode = await getCountryCode()
-  const region = await getCurrentRegion()
-
-  const categories = await listCategories({
-    fields: "id, handle, name",
-  })
+  // 并行获取基础数据：countryCode、region、categories、config、blogs
+  const [countryCode, region, categories, config, blogResult] = await Promise.all([
+    getCountryCode(),
+    getCurrentRegion(),
+    listCategories({ fields: "id, handle, name" }),
+    getMedusaConfig(),
+    listBlogs({ limit: "100", offset: "0" }).catch(() => ({ posts: [] })),
+  ])
 
   if (!categories || !region) {
     return null
   }
 
-  // 获取 Medusa 配置
-  const config = await getMedusaConfig()
+  const blogArticles = blogResult.posts || []
 
   // 提取 CollageHero blocks 中的产品 ID
   const collageHeroProductIds: string[] = []
@@ -59,7 +60,7 @@ export default async function Home() {
     }
   }
 
-  // 获取 CollageHero 需要的产品数据
+  // 批量获取 CollageHero 需要的产品数据（一次请求获取所有产品）
   let collageHeroProducts: HttpTypes.StoreProduct[] = []
   if (collageHeroProductIds.length > 0) {
     try {
@@ -67,45 +68,30 @@ export default async function Home() {
       const next = await getCacheOptions("products")
       const cacheConfig = getCacheConfig("PRODUCT_LIST")
 
-      const productResponses = await Promise.all(
-        collageHeroProductIds.map((productId) =>
-          sdk.client
-            .fetch<{ products: HttpTypes.StoreProduct[] }>(
-              `/store/products`,
-              {
-                method: "GET",
-                query: {
-                  id: productId,
-                  region_id: region.id,
-                  fields:
-                    "*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.inventory_items.inventory_item_id,*variants.inventory_items.required_quantity,*variants.images.id,*variants.images.url,*variants.images.metadata,+metadata,+tags,",
-                },
-                headers,
-                next,
-                ...cacheConfig,
-              }
-            )
-            .catch(() => ({ products: [] }))
+      // 使用 id 数组参数一次性获取所有产品，而不是逐个请求
+      const response = await sdk.client
+        .fetch<{ products: HttpTypes.StoreProduct[] }>(
+          `/store/products`,
+          {
+            method: "GET",
+            query: {
+              id: collageHeroProductIds, // 批量 ID 查询
+              region_id: region.id,
+              limit: collageHeroProductIds.length,
+              fields:
+                "*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.inventory_items.inventory_item_id,*variants.inventory_items.required_quantity,*variants.images.id,*variants.images.url,*variants.images.metadata,+metadata,+tags,",
+            },
+            headers,
+            next,
+            ...cacheConfig,
+          }
         )
-      )
+        .catch(() => ({ products: [] }))
 
-      collageHeroProducts = productResponses
-        .flatMap((response) => response.products || [])
-        .filter((product, index, self) => 
-          index === self.findIndex((p) => p.id === product.id)
-        )
+      collageHeroProducts = response.products || []
     } catch (error) {
       console.error('[Medusa HomePage] Error fetching CollageHero products:', error)
     }
-  }
-
-  // 获取博客数据（用于 FeaturedBlog blocks）
-  let blogArticles: any[] = []
-  try {
-    const { posts } = await listBlogs({ limit: "100", offset: "0" })
-    blogArticles = posts || []
-  } catch (error) {
-    console.error('[Medusa HomePage] Error fetching blogs:', error)
   }
 
   // 根据 pageLayouts 配置获取首页 blocks

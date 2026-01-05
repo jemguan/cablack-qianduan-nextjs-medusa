@@ -2,6 +2,7 @@
 
 import React, {useState, useEffect, useRef, memo} from 'react';
 import Link from 'next/link';
+import {useRouter} from 'next/navigation';
 import {Button} from '@medusajs/ui';
 
 // 简单的动画组件（不使用 framer-motion）
@@ -114,8 +115,43 @@ export function DesktopCollageHero({
   const rafIdRef = useRef<number | null>(null);
   const backgroundVideoRef = useRef<HTMLVideoElement>(null);
   const componentObserverRef = useRef<IntersectionObserver | null>(null);
+  const router = useRouter();
   
   const headerHeight = useHeaderHeight();
+
+  // 预取所有模块中的链接，提升点击跳转速度
+  useEffect(() => {
+    if (!modules || modules.length === 0) return;
+
+    const linksToPreFetch: string[] = [];
+
+    for (const module of modules) {
+      if (module.type === 'image' && module.link && !module.openInNewTab) {
+        linksToPreFetch.push(module.link);
+      } else if (module.type === 'collection' && module.collectionHandle) {
+        linksToPreFetch.push(`/collections/${module.collectionHandle}`);
+      } else if (module.type === 'text') {
+        if (module.link && !module.openInNewTab) {
+          linksToPreFetch.push(module.link);
+        }
+        if (module.buttonLink && !module.buttonOpenInNewTab) {
+          linksToPreFetch.push(module.buttonLink);
+        }
+      } else if (module.type === 'product' && module.productId) {
+        // 产品链接会在产品详情中跳转
+        const product = containerData.products?.find(p => p.id === module.productId);
+        if (product?.handle) {
+          linksToPreFetch.push(`/products/${product.handle}`);
+        }
+      }
+    }
+
+    // 去重并预取
+    const uniqueLinks = [...new Set(linksToPreFetch)];
+    uniqueLinks.forEach(link => {
+      router.prefetch(link);
+    });
+  }, [modules, containerData.products, router]);
 
   // 使用 Intersection Observer 检测组件是否在视窗内
   useEffect(() => {
