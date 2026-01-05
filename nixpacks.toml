@@ -1,2 +1,7 @@
+# 禁用 Railway 的构建缓存
 [phases.build]
-cmds = ['rm -rf .next node_modules/.cache', 'npm run build']
+cmds = ['npm run build']
+
+# 禁用缓存目录挂载
+[caches]
+enabled = false
