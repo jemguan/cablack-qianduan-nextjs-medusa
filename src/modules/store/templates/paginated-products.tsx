@@ -88,10 +88,12 @@ export default async function PaginatedProducts({
             className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8"
             data-testid="products-list"
           >
-            {products.map((p) => {
+            {products.map((p, index) => {
+              // 首屏产品（前8个）优先加载，其余使用懒加载
+              const isPriority = index < 8 && page === 1
               return (
                 <li key={p.id}>
-                  <ProductPreview product={p} region={region} />
+                  <ProductPreview product={p} region={region} priority={isPriority} />
                 </li>
               )
             })}

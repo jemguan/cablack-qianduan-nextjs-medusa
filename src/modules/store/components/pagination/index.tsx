@@ -2,6 +2,7 @@
 
 import { clx } from "@medusajs/ui"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useCallback, startTransition } from "react"
 import ChevronLeft from "@modules/common/icons/chevron-left"
 import ChevronRight from "@modules/common/icons/chevron-right"
 
@@ -30,18 +31,40 @@ export function Pagination({
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  // 处理页面切换
-  const handlePageChange = (newPage: number) => {
+  // 构建 URL 的辅助函数
+  const buildUrl = useCallback((pageNum: number) => {
     const params = new URLSearchParams(searchParams)
-    params.set("page", newPage.toString())
+    params.set("page", pageNum.toString())
     
     // 如果提供了搜索关键词，保留它
     if (searchTerm) {
       params.set("q", searchTerm)
     }
     
-    router.push(`${pathname}?${params.toString()}`)
+    return `${pathname}?${params.toString()}`
+  }, [pathname, searchParams, searchTerm])
+
+  // 处理页面切换 - 使用 startTransition 优化性能
+  const handlePageChange = (newPage: number) => {
+    startTransition(() => {
+      router.push(buildUrl(newPage))
+    })
   }
+
+  // 预加载后2页的数据
+  useEffect(() => {
+    // 预加载下一页
+    if (page < totalPages) {
+      const nextPageUrl = buildUrl(page + 1)
+      router.prefetch(nextPageUrl)
+    }
+    
+    // 预加载再下一页
+    if (page < totalPages - 1) {
+      const nextNextPageUrl = buildUrl(page + 2)
+      router.prefetch(nextNextPageUrl)
+    }
+  }, [page, totalPages, router, buildUrl])
 
   // 如果只有一页或没有页面，不显示分页
   if (totalPages <= 1) {

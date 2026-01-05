@@ -29,12 +29,14 @@ type ProductPreviewProps = {
   product: HttpTypes.StoreProduct
   isFeatured?: boolean
   region: HttpTypes.StoreRegion
+  priority?: boolean // 是否优先加载图片（用于首屏产品）
 }
 
 const ProductPreview = ({
   product,
   isFeatured,
   region,
+  priority = false,
 }: ProductPreviewProps) => {
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false)
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
@@ -214,6 +216,9 @@ const ProductPreview = ({
                   fill
                   className="object-cover"
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  loading={priority ? "eager" : "lazy"}
+                  priority={priority}
+                  quality={85}
                 />
               </div>
             )
