@@ -12,11 +12,13 @@ const ShippingAddress = ({
   cart,
   checked,
   onChange,
+  onFormDataChange,
 }: {
   customer: HttpTypes.StoreCustomer | null
   cart: HttpTypes.StoreCart | null
   checked: boolean
   onChange: () => void
+  onFormDataChange?: (data: Record<string, any>) => void
 }) => {
   const [formData, setFormData] = useState<Record<string, any>>({
     "shipping_address.first_name": cart?.shipping_address?.first_name || "",
@@ -86,11 +88,24 @@ const ShippingAddress = ({
       HTMLInputElement | HTMLInputElement | HTMLSelectElement
     >
   ) => {
-    setFormData({
+    const newFormData = {
       ...formData,
       [e.target.name]: e.target.value,
-    })
+    }
+    setFormData(newFormData)
+    
+    // 通知父组件表单数据变化
+    if (onFormDataChange) {
+      onFormDataChange(newFormData)
+    }
   }
+
+  // 当表单数据变化时通知父组件
+  useEffect(() => {
+    if (onFormDataChange) {
+      onFormDataChange(formData)
+    }
+  }, [formData, onFormDataChange])
 
   return (
     <>

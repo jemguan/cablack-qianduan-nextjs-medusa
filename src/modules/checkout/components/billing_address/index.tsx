@@ -1,9 +1,15 @@
 import { HttpTypes } from "@medusajs/types"
 import Input from "@modules/common/components/input"
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import CountrySelect from "../country-select"
 
-const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
+const BillingAddress = ({ 
+  cart,
+  onFormDataChange,
+}: { 
+  cart: HttpTypes.StoreCart | null
+  onFormDataChange?: (data: Record<string, any>) => void
+}) => {
   const [formData, setFormData] = useState<any>({
     "billing_address.first_name": cart?.billing_address?.first_name || "",
     "billing_address.last_name": cart?.billing_address?.last_name || "",
@@ -21,11 +27,24 @@ const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
       HTMLInputElement | HTMLInputElement | HTMLSelectElement
     >
   ) => {
-    setFormData({
+    const newFormData = {
       ...formData,
       [e.target.name]: e.target.value,
-    })
+    }
+    setFormData(newFormData)
+    
+    // 通知父组件表单数据变化
+    if (onFormDataChange) {
+      onFormDataChange(newFormData)
+    }
   }
+
+  // 当表单数据变化时通知父组件
+  useEffect(() => {
+    if (onFormDataChange) {
+      onFormDataChange(formData)
+    }
+  }, [formData, onFormDataChange])
 
   return (
     <>

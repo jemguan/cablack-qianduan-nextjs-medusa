@@ -193,6 +193,27 @@ export interface MedusaConfig {
     }>;
   };
   reviewsEnabled?: boolean; // 是否启用评论功能
+  checkoutPageConfig?: {
+    storeBrand: {
+      type: 'logo' | 'text';
+      logo?: {
+        lightLogoUrl: string;
+        darkLogoUrl: string;
+        logoAlt: string;
+        mobileHeightClass?: string;
+        desktopHeightClass?: string;
+      };
+      text?: {
+        storeName: string;
+        textSize?: string;
+        textColor?: string;
+      };
+    };
+    poweredBy: {
+      enabled: boolean;
+      text: string;
+    };
+  };
 }
 
 export interface MedusaCategory {

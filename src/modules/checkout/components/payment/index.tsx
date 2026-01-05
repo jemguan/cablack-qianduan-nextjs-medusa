@@ -27,11 +27,14 @@ const Payment = ({
     (paymentSession: any) => paymentSession.status === "pending"
   )
 
+  // 默认选择第一个可用的支付方式
+  const defaultPaymentMethod = pendingSession?.provider_id ?? availablePaymentMethods?.[0]?.id ?? ""
+
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [stripePaymentComplete, setStripePaymentComplete] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
-    pendingSession?.provider_id ?? ""
+    defaultPaymentMethod
   )
 
   // Now we can use selectedPaymentMethod to find the active session
@@ -90,6 +93,20 @@ const Payment = ({
   useEffect(() => {
     setError(null)
   }, [selectedPaymentMethod])
+
+  // 如果选中的支付方式是 Stripe 或 EMT，但没有对应的支付会话，自动初始化
+  useEffect(() => {
+    if (
+      selectedPaymentMethod && 
+      !activeSession && 
+      !pendingSession &&
+      !isLoading &&
+      (isStripeLike(selectedPaymentMethod) || isEmt(selectedPaymentMethod))
+    ) {
+      setPaymentMethod(selectedPaymentMethod)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // 只在组件挂载时执行一次
 
   // Update selected payment method when activeSession changes, but only if no method is currently selected
   useEffect(() => {

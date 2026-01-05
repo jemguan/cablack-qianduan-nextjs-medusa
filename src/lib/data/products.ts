@@ -103,8 +103,9 @@ export const listProducts = async ({
 }
 
 /**
- * This will fetch 100 products to the Next.js cache and sort them based on the sortBy parameter.
+ * This will fetch up to 1000 products to the Next.js cache and sort them based on the sortBy parameter.
  * It will then return the paginated products based on the page and limit parameters.
+ * Note: Products are sorted client-side to support complex sorting logic (price, out-of-stock handling).
  */
 export const listProductsWithSort = async ({
   page = 0,
@@ -122,6 +123,7 @@ export const listProductsWithSort = async ({
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
 }> => {
   const limit = queryParams?.limit || 12
+  const MAX_PRODUCTS_TO_FETCH = 1000
 
   // If no countryCode provided, get from cookie
   const resolvedCountryCode = countryCode || await getRegionCountryCode()
@@ -132,23 +134,28 @@ export const listProductsWithSort = async ({
     pageParam: 0,
     queryParams: {
       ...queryParams,
-      limit: 100,
+      limit: MAX_PRODUCTS_TO_FETCH,
     },
     countryCode: resolvedCountryCode,
   })
 
   const sortedProducts = sortProducts(products, sortBy)
 
+  // Use the actual number of products fetched, not the total count
+  // This prevents empty pagination dots when total count exceeds fetched products
+  const actualCount = sortedProducts.length
+  const effectiveCount = Math.min(count, actualCount)
+
   const pageParam = (page - 1) * limit
 
-  const nextPage = count > pageParam + limit ? pageParam + limit : null
+  const nextPage = effectiveCount > pageParam + limit ? pageParam + limit : null
 
   const paginatedProducts = sortedProducts.slice(pageParam, pageParam + limit)
 
   return {
     response: {
       products: paginatedProducts,
-      count,
+      count: effectiveCount,
     },
     nextPage,
     queryParams,

@@ -11,12 +11,22 @@ export const metadata: Metadata = {
   description: "Overview of your previous orders.",
 }
 
-export default async function Orders() {
-  const orders = await listOrders()
+interface OrdersPageProps {
+  searchParams: { page?: string }
+}
+
+export default async function Orders({ searchParams }: OrdersPageProps) {
+  const page = Number(searchParams.page) || 1
+  const limit = 4 // 一页4个订单（2行 x 2列）
+  const offset = (page - 1) * limit
+
+  const { orders, count } = await listOrders(limit, offset)
 
   if (!orders) {
     notFound()
   }
+
+  const totalPages = Math.ceil(count / limit)
 
   return (
     <div className="w-full" data-testid="orders-page-wrapper">
@@ -28,7 +38,7 @@ export default async function Orders() {
         </p>
       </div>
       <div>
-        <OrderOverview orders={orders} />
+        <OrderOverview orders={orders} page={page} totalPages={totalPages} />
         <Divider className="my-16" />
         <TransferRequestForm />
       </div>

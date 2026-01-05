@@ -12,7 +12,8 @@ export const metadata: Metadata = {
 
 export default async function OverviewTemplate() {
   const customer = await retrieveCustomer().catch(() => null)
-  const orders = (await listOrders().catch(() => null)) || null
+  const ordersResult = await listOrders(5, 0).catch(() => null)
+  const orders = ordersResult?.orders || null
 
   if (!customer) {
     notFound()

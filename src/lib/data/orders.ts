@@ -36,7 +36,7 @@ export const listOrders = async (
   limit: number = 10,
   offset: number = 0,
   filters?: Record<string, any>
-) => {
+): Promise<{ orders: HttpTypes.StoreOrder[]; count: number }> => {
   const headers = {
     ...(await getAuthHeaders()),
   }
@@ -61,8 +61,14 @@ export const listOrders = async (
       next,
       ...cacheConfig,
     })
-    .then(({ orders }) => orders)
-    .catch((err) => medusaError(err))
+    .then((response) => ({
+      orders: response.orders || [],
+      count: response.count || response.orders?.length || 0,
+    }))
+    .catch((err) => {
+      const error = medusaError(err)
+      return { orders: [], count: 0 }
+    })
 }
 
 export const createTransferRequest = async (

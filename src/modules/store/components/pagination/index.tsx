@@ -82,7 +82,7 @@ export function Pagination({
 
   return (
     <div 
-      className={clx("flex justify-center items-center w-full mt-12", className)}
+      className={clx("flex flex-col justify-center items-center w-full mt-12", className)}
       data-testid={dataTestid}
     >
       <div className="flex items-center gap-8 flex-wrap justify-center max-w-full px-4">
@@ -150,6 +150,10 @@ export function Pagination({
         >
           <ChevronRight size="16" />
         </button>
+      </div>
+      {/* 页数显示 */}
+      <div className="mt-4 text-small-regular text-ui-fg-subtle">
+        Page {page} of {totalPages}
       </div>
     </div>
   )
