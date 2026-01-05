@@ -249,25 +249,23 @@ const ProductPreview = ({
 
         {/* Product Info */}
         <div className="flex flex-col gap-2 flex-1 px-1">
-          {/* Title */}
+          {/* Title - 固定2行高度 */}
           <LocalizedClientLink href={`/products/${product.handle}`}>
             <Text 
-              className="text-sm font-semibold text-foreground line-clamp-2 hover:text-primary transition-colors duration-200"
+              className="text-sm font-semibold text-foreground line-clamp-2 hover:text-primary transition-colors duration-200 h-10"
               data-testid="product-title"
             >
               {product.title}
             </Text>
           </LocalizedClientLink>
 
-          {/* Subtitle */}
-          {product.subtitle && (
-            <Text 
-              className="text-xs text-muted-foreground line-clamp-1"
-              data-testid="product-subtitle"
-            >
-              {product.subtitle}
-            </Text>
-          )}
+          {/* Subtitle - 始终显示，保持布局一致 */}
+          <Text 
+            className="text-xs text-muted-foreground line-clamp-1 h-4"
+            data-testid="product-subtitle"
+          >
+            {product.subtitle || "\u00A0"}
+          </Text>
 
           {/* Product Rating */}
           <ProductRating productId={product.id} size="sm" showCount={true} />

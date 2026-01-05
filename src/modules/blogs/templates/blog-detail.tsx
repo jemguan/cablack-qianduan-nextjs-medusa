@@ -2,6 +2,8 @@ import { BlogPost } from "@lib/data/blogs"
 import Link from "next/link"
 import { getImageUrl } from "@lib/util/image"
 import { sanitizeHtml } from "@lib/util/sanitize"
+import { Button } from "@medusajs/ui"
+import ChevronLeft from "@modules/common/icons/chevron-left"
 
 export default function BlogDetailTemplate({
   post,
@@ -80,12 +82,19 @@ export default function BlogDetailTemplate({
 
         {/* Back to blog list */}
         <div className="mt-12 pt-8 border-t border-ui-border-base">
-          <Link
-            href="/blogs"
-            className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover transition-colors inline-flex items-center gap-2"
+          <Button
+            asChild
+            variant="secondary"
+            className="group inline-flex items-center gap-2"
           >
-            ← Back to Blog
-          </Link>
+            <Link href="/blogs">
+              <ChevronLeft 
+                size="18" 
+                className="transition-transform duration-200 ease-in-out group-hover:-translate-x-1" 
+              />
+              <span>Back to Blog</span>
+            </Link>
+          </Button>
         </div>
       </article>
     </div>

@@ -3,6 +3,8 @@ import Link from "next/link"
 import { getImageUrl } from "@lib/util/image"
 import { sanitizeHtml } from "@lib/util/sanitize"
 import { FAQBlock } from "@modules/home/components/faq-block"
+import ChevronLeft from "@modules/common/icons/chevron-left"
+import { Button } from "@medusajs/ui"
 
 export default function PageDetailTemplate({
   page,
@@ -87,7 +89,7 @@ export default function PageDetailTemplate({
   return (
     <div className="py-12">
       {/* Page content */}
-      <article className="content-container max-w-7xl mx-auto">
+      <article className="content-container mx-auto">
         {/* Title and Subtitle */}
         <header className="mb-8">
           <h1 className="text-3xl-semi mb-4 text-ui-fg-base">{page.title}</h1>
@@ -122,13 +124,20 @@ export default function PageDetailTemplate({
       )}
 
       {/* Back to home */}
-      <div className="content-container max-w-7xl mx-auto mt-12 pt-8 border-t border-ui-border-base">
-        <Link
-          href="/"
-          className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover transition-colors inline-flex items-center gap-2"
+      <div className="content-container mx-auto mt-12 pt-8 border-t border-ui-border-base">
+        <Button
+          asChild
+          variant="secondary"
+          className="group inline-flex items-center gap-2"
         >
-          ← Back to Home
-        </Link>
+          <Link href="/">
+            <ChevronLeft 
+              size="18" 
+              className="transition-transform duration-200 ease-in-out group-hover:-translate-x-1" 
+            />
+            <span>Back to Home</span>
+          </Link>
+        </Button>
       </div>
     </div>
   )

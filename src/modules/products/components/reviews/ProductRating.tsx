@@ -16,6 +16,7 @@ interface ProductRatingProps {
  * 产品评分组件
  * 显示产品的平均评分和评论数量
  * 使用 ReviewStatsContext 来避免重复 API 调用
+ * 如果没有 Context，显示空星星（用于产品列表等场景）
  */
 export default function ProductRating({
   productId,

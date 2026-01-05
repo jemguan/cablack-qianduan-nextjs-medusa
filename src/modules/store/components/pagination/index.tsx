@@ -2,113 +2,155 @@
 
 import { clx } from "@medusajs/ui"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import ChevronLeft from "@modules/common/icons/chevron-left"
+import ChevronRight from "@modules/common/icons/chevron-right"
 
-export function Pagination({
-  page,
-  totalPages,
-  'data-testid': dataTestid
-}: {
+interface DotPaginationProps {
   page: number
   totalPages: number
   'data-testid'?: string
-}) {
+  // 可选：用于搜索页面保留搜索关键词
+  searchTerm?: string
+  // 可选：自定义类名
+  className?: string
+}
+
+/**
+ * 现代点状分页组件
+ * 使用圆点指示器显示分页，当前页的点会更大更亮
+ */
+export function Pagination({
+  page,
+  totalPages,
+  'data-testid': dataTestid,
+  searchTerm,
+  className,
+}: DotPaginationProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  // Helper function to generate an array of numbers within a range
-  const arrayRange = (start: number, stop: number) =>
-    Array.from({ length: stop - start + 1 }, (_, index) => start + index)
-
-  // Function to handle page changes
+  // 处理页面切换
   const handlePageChange = (newPage: number) => {
     const params = new URLSearchParams(searchParams)
     params.set("page", newPage.toString())
+    
+    // 如果提供了搜索关键词，保留它
+    if (searchTerm) {
+      params.set("q", searchTerm)
+    }
+    
     router.push(`${pathname}?${params.toString()}`)
   }
 
-  // Function to render a page button
-  const renderPageButton = (
-    p: number,
-    label: string | number,
-    isCurrent: boolean
-  ) => (
-    <button
-      key={p}
-      className={clx("txt-xlarge-plus text-ui-fg-muted", {
-        "text-ui-fg-base hover:text-ui-fg-subtle": isCurrent,
-      })}
-      disabled={isCurrent}
-      onClick={() => handlePageChange(p)}
-    >
-      {label}
-    </button>
-  )
-
-  // Function to render ellipsis
-  const renderEllipsis = (key: string) => (
-    <span
-      key={key}
-      className="txt-xlarge-plus text-ui-fg-muted items-center cursor-default"
-    >
-      ...
-    </span>
-  )
-
-  // Function to render page buttons based on the current page and total pages
-  const renderPageButtons = () => {
-    const buttons = []
-
-    if (totalPages <= 7) {
-      // Show all pages
-      buttons.push(
-        ...arrayRange(1, totalPages).map((p) =>
-          renderPageButton(p, p, p === page)
-        )
-      )
-    } else {
-      // Handle different cases for displaying pages and ellipses
-      if (page <= 4) {
-        // Show 1, 2, 3, 4, 5, ..., lastpage
-        buttons.push(
-          ...arrayRange(1, 5).map((p) => renderPageButton(p, p, p === page))
-        )
-        buttons.push(renderEllipsis("ellipsis1"))
-        buttons.push(
-          renderPageButton(totalPages, totalPages, totalPages === page)
-        )
-      } else if (page >= totalPages - 3) {
-        // Show 1, ..., lastpage - 4, lastpage - 3, lastpage - 2, lastpage - 1, lastpage
-        buttons.push(renderPageButton(1, 1, 1 === page))
-        buttons.push(renderEllipsis("ellipsis2"))
-        buttons.push(
-          ...arrayRange(totalPages - 4, totalPages).map((p) =>
-            renderPageButton(p, p, p === page)
-          )
-        )
-      } else {
-        // Show 1, ..., page - 1, page, page + 1, ..., lastpage
-        buttons.push(renderPageButton(1, 1, 1 === page))
-        buttons.push(renderEllipsis("ellipsis3"))
-        buttons.push(
-          ...arrayRange(page - 1, page + 1).map((p) =>
-            renderPageButton(p, p, p === page)
-          )
-        )
-        buttons.push(renderEllipsis("ellipsis4"))
-        buttons.push(
-          renderPageButton(totalPages, totalPages, totalPages === page)
-        )
-      }
-    }
-
-    return buttons
+  // 如果只有一页或没有页面，不显示分页
+  if (totalPages <= 1) {
+    return null
   }
 
-  // Render the component
+  // 如果页面太多（超过20页），只显示当前页前后各5页的点
+  const MAX_DOTS = 20
+  const getVisiblePages = () => {
+    if (totalPages <= MAX_DOTS) {
+      // 显示所有页面
+      return Array.from({ length: totalPages }, (_, index) => index + 1)
+    }
+
+    // 计算显示的页面范围
+    const halfRange = Math.floor(MAX_DOTS / 2)
+    let start = Math.max(1, page - halfRange)
+    let end = Math.min(totalPages, page + halfRange)
+
+    // 如果当前页靠近开头，显示前 MAX_DOTS 页
+    if (page <= halfRange) {
+      start = 1
+      end = MAX_DOTS
+    }
+
+    // 如果当前页靠近结尾，显示后 MAX_DOTS 页
+    if (page >= totalPages - halfRange) {
+      start = totalPages - MAX_DOTS + 1
+      end = totalPages
+    }
+
+    return Array.from({ length: end - start + 1 }, (_, index) => start + index)
+  }
+
+  const visiblePages = getVisiblePages()
+  const isFirstPage = page === 1
+  const isLastPage = page === totalPages
+
   return (
-    <div className="flex justify-center w-full mt-12">
-      <div className="flex gap-3 items-end" data-testid={dataTestid}>{renderPageButtons()}</div>
+    <div 
+      className={clx("flex justify-center items-center w-full mt-12", className)}
+      data-testid={dataTestid}
+    >
+      <div className="flex items-center gap-8 flex-wrap justify-center max-w-full px-4">
+        {/* 上一页按钮 */}
+        <button
+          onClick={() => handlePageChange(page - 1)}
+          disabled={isFirstPage}
+          className={clx(
+            "flex items-center justify-center w-8 h-8 rounded-full",
+            "transition-all duration-200 ease-in-out",
+            "focus:outline-none focus:ring-2 focus:ring-ui-fg-interactive focus:ring-offset-2",
+            {
+              "bg-ui-bg-subtle-hover text-ui-fg-base hover:bg-ui-bg-base cursor-pointer": !isFirstPage,
+              "bg-ui-bg-subtle text-ui-fg-muted cursor-not-allowed opacity-50": isFirstPage,
+            }
+          )}
+          aria-label="Go to previous page"
+          aria-disabled={isFirstPage}
+        >
+          <ChevronLeft size="16" />
+        </button>
+
+        {/* 点状分页指示器 */}
+        <div className="flex items-center gap-3">
+          {visiblePages.map((pageNumber) => {
+            const isActive = pageNumber === page
+
+            return (
+              <button
+                key={pageNumber}
+                onClick={() => handlePageChange(pageNumber)}
+                className={clx(
+                  "transition-all duration-300 ease-in-out rounded-full",
+                  "focus:outline-none focus:ring-2 focus:ring-ui-fg-interactive focus:ring-offset-2",
+                  "flex-shrink-0",
+                  {
+                    // 当前页：更大的圆点，更亮的颜色
+                    "w-3 h-3 bg-ui-fg-interactive": isActive,
+                    // 非当前页：较小的圆点，较暗的颜色，hover 时变大
+                    "w-2 h-2 bg-ui-border-base hover:bg-ui-fg-muted hover:w-2.5 hover:h-2.5": !isActive,
+                  }
+                )}
+                aria-label={`Go to page ${pageNumber}`}
+                aria-current={isActive ? "page" : undefined}
+              />
+            )
+          })}
+        </div>
+
+        {/* 下一页按钮 */}
+        <button
+          onClick={() => handlePageChange(page + 1)}
+          disabled={isLastPage}
+          className={clx(
+            "flex items-center justify-center w-8 h-8 rounded-full",
+            "transition-all duration-200 ease-in-out",
+            "focus:outline-none focus:ring-2 focus:ring-ui-fg-interactive focus:ring-offset-2",
+            {
+              "bg-ui-bg-subtle-hover text-ui-fg-base hover:bg-ui-bg-base cursor-pointer": !isLastPage,
+              "bg-ui-bg-subtle text-ui-fg-muted cursor-not-allowed opacity-50": isLastPage,
+            }
+          )}
+          aria-label="Go to next page"
+          aria-disabled={isLastPage}
+        >
+          <ChevronRight size="16" />
+        </button>
+      </div>
     </div>
   )
 }

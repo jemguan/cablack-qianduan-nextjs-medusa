@@ -1,6 +1,6 @@
 import { HttpTypes } from "@medusajs/types"
 import ProductPreview from "@modules/products/components/product-preview"
-import { SearchPagination } from "./search-pagination"
+import { Pagination } from "@modules/store/components/pagination"
 
 const PRODUCT_LIMIT = 12
 
@@ -57,14 +57,12 @@ const SearchResults = ({
             ))}
           </ul>
           {totalPages > 1 && (
-            <div className="mt-8">
-              <SearchPagination
-                data-testid="search-pagination"
-                page={page}
-                totalPages={totalPages}
-                searchTerm={searchTerm}
-              />
-            </div>
+            <Pagination
+              data-testid="search-pagination"
+              page={page}
+              totalPages={totalPages}
+              searchTerm={searchTerm}
+            />
           )}
         </>
       )}
