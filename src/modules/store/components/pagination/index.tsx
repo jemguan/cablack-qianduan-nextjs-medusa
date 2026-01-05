@@ -2,7 +2,7 @@
 
 import { clx } from "@medusajs/ui"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useCallback, startTransition } from "react"
+import { useEffect, useCallback, startTransition, useState } from "react"
 import ChevronLeft from "@modules/common/icons/chevron-left"
 import ChevronRight from "@modules/common/icons/chevron-right"
 
@@ -30,6 +30,18 @@ export function Pagination({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const [isMobile, setIsMobile] = useState(false)
+
+  // 检测是否为手机端
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // 构建 URL 的辅助函数
   const buildUrl = useCallback((pageNum: number) => {
@@ -71,9 +83,13 @@ export function Pagination({
     return null
   }
 
-  // 如果页面太多（超过20页），只显示当前页前后各5页的点
-  const MAX_DOTS = 20
-  const getVisiblePages = () => {
+  // 桌面端最多显示20个点，手机端最多显示7个点
+  const MAX_DOTS_DESKTOP = 20
+  const MAX_DOTS_MOBILE = 7
+  
+  const getVisiblePages = useCallback(() => {
+    const MAX_DOTS = isMobile ? MAX_DOTS_MOBILE : MAX_DOTS_DESKTOP
+    
     if (totalPages <= MAX_DOTS) {
       // 显示所有页面
       return Array.from({ length: totalPages }, (_, index) => index + 1)
@@ -97,7 +113,7 @@ export function Pagination({
     }
 
     return Array.from({ length: end - start + 1 }, (_, index) => start + index)
-  }
+  }, [isMobile, totalPages, page])
 
   const visiblePages = getVisiblePages()
   const isFirstPage = page === 1

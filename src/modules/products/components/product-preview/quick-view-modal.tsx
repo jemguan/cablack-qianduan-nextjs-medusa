@@ -317,7 +317,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                           !isValidVariant
                         }
                         variant="primary"
-                        className="w-full h-10"
+                        className="w-full h-10 bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 text-white border-none !border-2 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700 disabled:!border-ui-border-base !shadow-none"
+                        style={{ borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }}
                         isLoading={isAdding}
                       >
                         {!selectedVariant || !isValidVariant

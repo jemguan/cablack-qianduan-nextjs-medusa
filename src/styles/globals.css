@@ -468,4 +468,37 @@
   .slide-in-from-right-2 {
     animation: slide-in-from-right-2 0.15s ease-out;
   }
+
+  /* Add to Cart 按钮边框颜色强制覆盖 */
+  button[class*="bg-orange-600"]:not(:disabled),
+  button[class*="bg-orange-600"]:not(:disabled):hover,
+  button[class*="bg-orange-600"]:not(:disabled):focus,
+  button[class*="bg-orange-600"]:not(:disabled):active {
+    border-color: rgb(234 88 12) !important;
+    border-width: 2px !important;
+    border-style: solid !important;
+  }
+
+  button[class*="bg-orange-600"]:not(:disabled):hover,
+  button[class*="bg-orange-600"]:not(:disabled):focus {
+    border-color: rgb(194 65 12) !important;
+  }
+
+  /* 覆盖 Medusa UI Button 的 shadow-buttons 样式 */
+  button[class*="shadow-buttons-inverted"][class*="bg-orange-600"]:not(:disabled),
+  button[class*="shadow-buttons-inverted"][class*="bg-orange-600"]:not(:disabled):hover {
+    border-color: rgb(234 88 12) !important;
+    border-width: 2px !important;
+    border-style: solid !important;
+    box-shadow: none !important;
+  }
+
+  button[class*="shadow-buttons-inverted"][class*="bg-orange-600"]:not(:disabled):hover {
+    border-color: rgb(194 65 12) !important;
+  }
+
+  /* 覆盖 disabled 状态的边框 */
+  button[class*="bg-orange-600"]:disabled {
+    border-color: hsl(var(--ui-border-base)) !important;
+  }
 }

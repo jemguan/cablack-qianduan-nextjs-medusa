@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Text } from "@medusajs/ui"
 import type { HttpTypes } from "@medusajs/types"
 import { getReviews } from "@lib/data/reviews"
@@ -28,6 +28,7 @@ export default function MobileReviews({
   const [reviews, setReviews] = useState<Review[]>([])
   const [reviewsCount, setReviewsCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const hasLoadedRef = useRef(false)
 
   const {
     showStats = DEFAULT_REVIEWS_CONFIG.showStats,
@@ -38,7 +39,12 @@ export default function MobileReviews({
   } = config
 
   // 加载评论列表
-  const loadReviews = useCallback(async () => {
+  const loadReviews = useCallback(async (force = false) => {
+    // 如果已经加载过且不是强制刷新，则跳过
+    if (hasLoadedRef.current && !force) {
+      return
+    }
+
     setIsLoading(true)
     try {
       const result = await getReviews({
@@ -51,6 +57,7 @@ export default function MobileReviews({
       })
       setReviews(result.reviews || [])
       setReviewsCount(result.count || 0)
+      hasLoadedRef.current = true
     } catch (error) {
       console.error("Failed to load reviews:", error)
       setReviews([])
@@ -61,8 +68,12 @@ export default function MobileReviews({
   }, [product.id, limit])
 
   useEffect(() => {
-    loadReviews()
-  }, [loadReviews])
+    // 只在首次挂载时加载
+    if (!hasLoadedRef.current) {
+      loadReviews()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // 空依赖数组，确保只执行一次
 
   // 计算统计信息
   const stats = reviews.length > 0
@@ -84,7 +95,7 @@ export default function MobileReviews({
 
   const handleFormSuccess = () => {
     setShowForm(false)
-    loadReviews()
+    loadReviews(true) // 强制刷新
   }
 
   return (
@@ -126,7 +137,7 @@ export default function MobileReviews({
       ) : (
         <ReviewList
           reviews={reviews}
-          onRefresh={loadReviews}
+          onRefresh={() => loadReviews(true)}
           defaultSort={defaultSort}
         />
       )}

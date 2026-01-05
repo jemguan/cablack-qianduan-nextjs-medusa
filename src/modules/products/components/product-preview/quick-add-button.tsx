@@ -152,8 +152,11 @@ const QuickAddButton: React.FC<QuickAddButtonProps> = ({
       className={clx(
         "w-full transition-all duration-200 hover:scale-105 active:scale-95",
         compact ? "h-8 text-xs" : "h-10",
-        isSuccess && "bg-green-600 hover:bg-green-700"
+        isSuccess 
+          ? "bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white border-none !border-2 !border-green-600 hover:!border-green-700 dark:!border-green-600 dark:hover:!border-green-700 disabled:!border-ui-border-base !shadow-none"
+          : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 text-white border-none !border-2 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700 disabled:!border-ui-border-base !shadow-none"
       )}
+      style={{ borderColor: isSuccess ? 'rgb(22 163 74)' : 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }}
       disabled={isAdding || !selectedVariant}
       isLoading={isAdding}
     >

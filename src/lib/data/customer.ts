@@ -14,6 +14,7 @@ import {
   removeAuthToken,
   removeCartId,
   setAuthToken,
+  setCartId,
 } from "./cookies"
 
 export const retrieveCustomer =
@@ -142,10 +143,13 @@ export async function login(_currentState: unknown, formData: FormData) {
     return error.toString()
   }
 
+  // 尝试转移购物车，如果失败不影响登录流程
   try {
     await transferCart()
   } catch (error: any) {
-    return error.toString()
+    // 记录错误但不阻止登录
+    console.error("Failed to transfer cart after login:", error?.message || error)
+    // 不返回错误，让用户登录成功，购物车转移失败会显示 banner
   }
 }
 
@@ -174,10 +178,38 @@ export async function transferCart() {
 
   const headers = await getAuthHeaders()
 
-  await sdk.store.cart.transferCart(cartId, {}, headers)
+  // 检查是否有认证 token（用户必须已登录）
+  if (!headers.authorization) {
+    throw new Error("User must be authenticated to transfer cart")
+  }
 
-  const cartCacheTag = await getCacheTag("carts")
-  revalidateTag(cartCacheTag)
+  try {
+    // 先检查购物车是否已经有 customer_id，如果有则不需要转移
+    const { retrieveCart } = await import("./cart")
+    const cart = await retrieveCart(cartId)
+    
+    if (cart?.customer_id) {
+      // 购物车已经有 customer_id，不需要转移
+      return { cart }
+    }
+
+    // 调用转移 API
+    const result = await sdk.store.cart.transferCart(cartId, {}, headers)
+    
+    // 如果转移成功，更新购物车缓存
+    const cartCacheTag = await getCacheTag("carts")
+    revalidateTag(cartCacheTag)
+    
+    // 如果返回了新的购物车，可能需要更新购物车 ID
+    if (result?.cart?.id && result.cart.id !== cartId) {
+      await setCartId(result.cart.id)
+    }
+    
+    return result
+  } catch (error: any) {
+    // 使用 medusaError 处理错误，提供更友好的错误信息
+    throw medusaError(error)
+  }
 }
 
 /**

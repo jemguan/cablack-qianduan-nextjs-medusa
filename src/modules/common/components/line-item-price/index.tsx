@@ -64,6 +64,9 @@ const LineItemPrice = ({
         shouldShowComparePrice = true
       }
     }
+  } else {
+    // 当显示税前价格时，强制不显示对比价格
+    shouldShowComparePrice = false
   }
 
   const hasReducedPrice = shouldShowComparePrice && currentPrice < originalPrice

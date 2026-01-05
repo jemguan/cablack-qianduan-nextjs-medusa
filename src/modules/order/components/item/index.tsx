@@ -43,13 +43,6 @@ const Item = ({ item, currencyCode }: ItemProps) => {
               showPreTaxPrice={true}
             />
           </span>
-
-          <LineItemPrice
-            item={item}
-            style="tight"
-            currencyCode={currencyCode}
-            showPreTaxPrice={true}
-          />
         </span>
       </Table.Cell>
     </Table.Row>

@@ -15,6 +15,7 @@ import { getImageUrl } from '@lib/util/image';
 import { useVariantSelection } from '@modules/products/contexts/variant-selection-context';
 import { GlassCard } from '@/lib/ui/glass-effect';
 import { isEqual } from 'lodash';
+import X from '@modules/common/icons/x';
 
 type MobileStickyAddToCartProps = {
   /** 产品数据 */
@@ -29,6 +30,8 @@ type MobileStickyAddToCartProps = {
   onAddToCart: () => void;
   /** 是否正在添加 */
   isAdding: boolean;
+  /** 关闭回调函数 */
+  onClose: () => void;
 };
 
 const optionsAsKeymap = (
@@ -50,6 +53,7 @@ export function MobileStickyAddToCart({
   isVisible,
   onAddToCart,
   isAdding,
+  onClose,
 }: MobileStickyAddToCartProps) {
   const { options, selectedVariant, setOptionValue } = useVariantSelection();
 
@@ -134,8 +138,18 @@ export function MobileStickyAddToCart({
       blur="md"
     >
       <div className="px-4 py-3 space-y-3">
-        {/* 第一行：图片、标题、价格 */}
+        {/* 第一行：关闭按钮、图片、标题、价格 */}
         <div className="flex items-center gap-3">
+          {/* 关闭按钮 */}
+          <button
+            onClick={onClose}
+            className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-ui-fg-muted hover:text-ui-fg-base transition-colors rounded-full hover:bg-ui-bg-subtle-hover"
+            aria-label="Close sticky cart"
+            data-testid="close-sticky-cart-button"
+          >
+            <X size={16} />
+          </button>
+
           {/* 产品图片 */}
           {productImage && (
             <div className="flex-shrink-0">
@@ -226,7 +240,8 @@ export function MobileStickyAddToCart({
               !isValidVariant
             }
             variant="primary"
-            className="w-full h-10"
+            className="w-full h-10 bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 text-white border-none !border-2 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700 disabled:!border-ui-border-base !shadow-none"
+            style={{ borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }}
             isLoading={isAdding}
           >
             {!selectedVariant || !isValidVariant

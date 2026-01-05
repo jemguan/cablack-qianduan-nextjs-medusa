@@ -232,17 +232,17 @@ export default async function Footer() {
               </Text>
             ) : null}
 
-            {/* Sitemap Link */}
+            {/* Sitemap Link - 手机端隐藏 */}
             <LocalizedClientLink
               href="/site-map"
-              className="txt-compact-small hover:text-ui-fg-base transition-colors"
+              className="hidden small:inline txt-compact-small hover:text-ui-fg-base transition-colors"
             >
               Sitemap
             </LocalizedClientLink>
 
-            {/* PoweredBy */}
+            {/* PoweredBy - 手机端隐藏 */}
             {footerConfig?.poweredBy?.enabled ? (
-              <Text className="flex gap-x-2 txt-compact-small-plus items-center text-center sm:text-left">
+              <Text className="hidden small:flex gap-x-2 txt-compact-small-plus items-center text-center sm:text-left">
                 {footerConfig.poweredBy.text || "Powered by"}
                 {footerConfig.poweredBy.links && footerConfig.poweredBy.links.length > 0 && (
                   <>

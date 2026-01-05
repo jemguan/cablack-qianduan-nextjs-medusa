@@ -6,7 +6,7 @@ import { useResponsiveRender } from '@lib/hooks/useResponsiveRender';
 import { useVariantSelection } from '@modules/products/contexts/variant-selection-context';
 import { addToCart } from '@lib/data/cart';
 import { useParams } from 'next/navigation';
-import { isElementScrolledOut, isNearPageBottom } from './utils';
+import { isElementScrolledOut } from './utils';
 import { STICKY_ADD_TO_CART_CONFIG } from './config';
 import { DesktopStickyAddToCart } from './DesktopStickyAddToCart';
 import { MobileStickyAddToCart } from './MobileStickyAddToCart';
@@ -16,7 +16,7 @@ import type { StickyAddToCartProps } from './types';
  * 粘性购物栏主组件
  * 当产品信息滚动出视口时显示在屏幕底部
  * 响应式设计：桌面端和移动端不同布局
- * 当页面滚动到底部时自动隐藏，避免遮挡 footer
+ * 支持用户手动关闭，关闭后当前会话中不再显示
  *
  * 优化：只在客户端根据屏幕尺寸渲染对应组件，避免同时渲染两个组件浪费内存
  */
@@ -27,6 +27,7 @@ export function StickyAddToCart({
   mobileTriggerRef,
 }: StickyAddToCartProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const [isClosed, setIsClosed] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const { isDesktop, isHydrated } = useResponsiveRender();
@@ -38,21 +39,27 @@ export function StickyAddToCart({
 
   // 处理滚动事件
   const handleScroll = useCallback(() => {
+    // 如果用户已关闭，不再显示
+    if (isClosed) {
+      setIsVisible(false);
+      return;
+    }
+
     const ref = currentTriggerRef;
     if (ref?.current) {
       // 检查触发元素是否滚动出视口
       const triggerScrolledOut = isElementScrolledOut(ref.current);
 
-      // 检查是否接近页面底部
-      const nearBottom = isNearPageBottom(
-        STICKY_ADD_TO_CART_CONFIG.bottomThreshold,
-      );
-
-      // 只有当触发元素滚出视口且不在页面底部时才显示
-      const shouldShow = triggerScrolledOut && !nearBottom;
-      setIsVisible(shouldShow);
+      // 只有当触发元素滚出视口时才显示（取消触底消失限制）
+      setIsVisible(triggerScrolledOut);
     }
-  }, [currentTriggerRef]);
+  }, [currentTriggerRef, isClosed]);
+
+  // 处理关闭
+  const handleClose = useCallback(() => {
+    setIsClosed(true);
+    setIsVisible(false);
+  }, []);
 
   // 监听滚动事件
   useEffect(() => {
@@ -119,6 +126,7 @@ export function StickyAddToCart({
             isVisible={isVisible}
             onAddToCart={handleAddToCart}
             isAdding={isAdding}
+            onClose={handleClose}
           />
         ) : (
           <MobileStickyAddToCart
@@ -128,6 +136,7 @@ export function StickyAddToCart({
             isVisible={isVisible}
             onAddToCart={handleAddToCart}
             isAdding={isAdding}
+            onClose={handleClose}
           />
         )}
       </div>

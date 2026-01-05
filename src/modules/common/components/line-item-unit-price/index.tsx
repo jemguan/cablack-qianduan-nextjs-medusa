@@ -43,6 +43,7 @@ const LineItemUnitPrice = ({
   }
 
   // 确定原价：优先使用 original_total（Price List 原价），如果没有则使用对比价格
+  // 注意：即使显示税前价格，也显示对比价格（因为都是单价，基准一致）
   let originalUnitPrice = original_total ? original_total / item.quantity : null
   let shouldShowComparePrice = false
 
