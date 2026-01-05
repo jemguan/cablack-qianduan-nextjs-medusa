@@ -4,7 +4,7 @@ import { setAddresses } from "@lib/data/cart"
 import compareAddresses from "@lib/util/compare-addresses"
 import { CheckCircleSolid } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
-import { Heading, Text, useToggleState } from "@medusajs/ui"
+import { Button, Heading, Text, useToggleState } from "@medusajs/ui"
 import Divider from "@modules/common/components/divider"
 import Spinner from "@modules/common/icons/spinner"
 import { useRouter } from "next/navigation"
@@ -23,7 +23,6 @@ const Addresses = ({
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const shippingFormDataRef = useRef<Record<string, any>>({})
   const billingFormDataRef = useRef<Record<string, any>>({})
   const sameAsBillingRef = useRef<boolean>(true)
@@ -73,8 +72,8 @@ const Addresses = ({
     return billingComplete
   }, [])
 
-  // 自动保存地址
-  const autoSaveAddresses = useCallback(async (data: Record<string, any>, sameAsBilling: boolean) => {
+  // 保存地址（手动触发）
+  const saveAddresses = useCallback(async (data: Record<string, any>, sameAsBilling: boolean) => {
     if (!isAddressComplete(data, sameAsBilling)) {
       return
     }
@@ -166,47 +165,35 @@ const Addresses = ({
     }
   }, [isAddressComplete, router])
 
-  // 触发自动保存（debounce）
-  const triggerAutoSave = useCallback(() => {
-    // 清除之前的定时器
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current)
-    }
-
-    // 设置新的 debounce 定时器
-    debounceTimerRef.current = setTimeout(() => {
-      // 合并 shipping 和 billing 数据
-      const mergedData = {
-        ...shippingFormDataRef.current,
-        ...billingFormDataRef.current,
-      }
-      autoSaveAddresses(mergedData, sameAsBillingRef.current)
-    }, 500)
-  }, [autoSaveAddresses])
-
-  // 更新 ref 并在变化时触发自动保存
+  // 更新 ref
   useEffect(() => {
     sameAsBillingRef.current = sameAsBilling
-    // 当 sameAsBilling 改变时，如果地址已完整，触发自动保存
-    if (isAddressComplete(
-      { ...shippingFormDataRef.current, ...billingFormDataRef.current },
-      sameAsBilling
-    )) {
-      triggerAutoSave()
-    }
-  }, [sameAsBilling, isAddressComplete, triggerAutoSave])
+  }, [sameAsBilling])
 
-  // 处理收货地址表单数据变化
+  // 处理收货地址表单数据变化（只更新 ref，不自动保存）
   const handleShippingFormDataChange = useCallback((data: Record<string, any>) => {
     shippingFormDataRef.current = data
-    triggerAutoSave()
-  }, [triggerAutoSave])
+  }, [])
 
-  // 处理账单地址表单数据变化
+  // 处理账单地址表单数据变化（只更新 ref，不自动保存）
   const handleBillingFormDataChange = useCallback((data: Record<string, any>) => {
     billingFormDataRef.current = data
-    triggerAutoSave()
-  }, [triggerAutoSave])
+  }, [])
+
+  // 手动确认并保存地址
+  const handleConfirmAddress = useCallback(async () => {
+    const mergedData = {
+      ...shippingFormDataRef.current,
+      ...billingFormDataRef.current,
+    }
+    
+    if (!isAddressComplete(mergedData, sameAsBillingRef.current)) {
+      setSaveError("请填写所有必填字段")
+      return
+    }
+
+    await saveAddresses(mergedData, sameAsBillingRef.current)
+  }, [saveAddresses, isAddressComplete])
 
   // 初始化表单数据 ref（从 cart 中读取）
   useEffect(() => {
@@ -240,14 +227,6 @@ const Addresses = ({
     }
   }, [cart])
 
-  // 清理定时器
-  useEffect(() => {
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current)
-      }
-    }
-  }, [])
 
   const hasAddress = cart?.shipping_address && cart?.billing_address
 
@@ -364,27 +343,40 @@ const Addresses = ({
                 </div>
               )}
               
-              {/* 保存状态指示器 */}
-              <div className="mt-6 flex items-center gap-2">
-                {isSaving && (
-                  <>
-                    <Spinner className="animate-spin" />
-                    <Text className="text-small-regular text-ui-fg-subtle">
-                      Saving address...
+              {/* 确认按钮和保存状态指示器 */}
+              <div className="mt-6 flex flex-col gap-4">
+                <Button
+                  onClick={handleConfirmAddress}
+                  isLoading={isSaving}
+                  disabled={isSaving}
+                  variant="primary"
+                  className="w-full sm:w-auto"
+                  data-testid="confirm-address-button"
+                >
+                  Confirm Address
+                </Button>
+                
+                <div className="flex items-center gap-2">
+                  {isSaving && (
+                    <>
+                      <Spinner className="animate-spin" />
+                      <Text className="text-small-regular text-ui-fg-subtle">
+                        Saving address...
+                      </Text>
+                    </>
+                  )}
+                  {saveSuccess && !isSaving && (
+                    <Text className="text-small-regular text-green-600 flex items-center gap-2">
+                      <CheckCircleSolid className="w-4 h-4" />
+                      Address saved successfully
                     </Text>
-                  </>
-                )}
-                {saveSuccess && !isSaving && (
-                  <Text className="text-small-regular text-green-600 flex items-center gap-2">
-                    <CheckCircleSolid className="w-4 h-4" />
-                    Address saved successfully
-                  </Text>
-                )}
-                {saveError && !isSaving && (
-                  <Text className="text-small-regular text-red-600">
-                    {saveError}
-                  </Text>
-                )}
+                  )}
+                  {saveError && !isSaving && (
+                    <Text className="text-small-regular text-red-600">
+                      {saveError}
+                    </Text>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -413,27 +405,40 @@ const Addresses = ({
               </div>
             )}
             
-            {/* 保存状态指示器 */}
-            <div className="mt-6 flex items-center gap-2">
-              {isSaving && (
-                <>
-                  <Spinner className="animate-spin" />
-                  <Text className="text-small-regular text-ui-fg-subtle">
-                    Saving address...
+            {/* 确认按钮和保存状态指示器 */}
+            <div className="mt-6 flex flex-col gap-4">
+              <Button
+                onClick={handleConfirmAddress}
+                isLoading={isSaving}
+                disabled={isSaving}
+                variant="primary"
+                className="w-full sm:w-auto"
+                data-testid="confirm-address-button"
+              >
+                Confirm Address
+              </Button>
+              
+              <div className="flex items-center gap-2">
+                {isSaving && (
+                  <>
+                    <Spinner className="animate-spin" />
+                    <Text className="text-small-regular text-ui-fg-subtle">
+                      Saving address...
+                    </Text>
+                  </>
+                )}
+                {saveSuccess && !isSaving && (
+                  <Text className="text-small-regular text-green-600 flex items-center gap-2">
+                    <CheckCircleSolid className="w-4 h-4" />
+                    Address saved successfully
                   </Text>
-                </>
-              )}
-              {saveSuccess && !isSaving && (
-                <Text className="text-small-regular text-green-600 flex items-center gap-2">
-                  <CheckCircleSolid className="w-4 h-4" />
-                  Address saved successfully
-                </Text>
-              )}
-              {saveError && !isSaving && (
-                <Text className="text-small-regular text-red-600">
-                  {saveError}
-                </Text>
-              )}
+                )}
+                {saveError && !isSaving && (
+                  <Text className="text-small-regular text-red-600">
+                    {saveError}
+                  </Text>
+                )}
+              </div>
             </div>
           </div>
         </div>

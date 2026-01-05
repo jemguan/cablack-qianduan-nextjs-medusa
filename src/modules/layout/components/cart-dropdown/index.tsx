@@ -36,10 +36,12 @@ const CartDropdown = ({
       return acc + item.quantity
     }, 0) || 0
 
-  // 计算折扣后的 subtotal：使用 item_subtotal（如果存在），否则使用 subtotal - discount_total
+  // 计算税后 subtotal：item_subtotal + tax_total - discount_total
   const itemSubtotal = cartState?.item_subtotal ?? cartState?.subtotal ?? 0
+  const taxTotal = cartState?.tax_total ?? 0
   const discountTotal = cartState?.discount_total ?? 0
-  const subtotal = itemSubtotal - discountTotal
+  // 税后价格 = 税前价格 + 税费 - 折扣
+  const subtotalWithTax = itemSubtotal + taxTotal - discountTotal
   const itemRef = useRef<number>(totalItems || 0)
 
   const timedOpen = () => {
@@ -177,6 +179,7 @@ const CartDropdown = ({
                                   item={item}
                                   style="tight"
                                   currencyCode={cartState.currency_code}
+                                  showPreTaxPrice={true}
                                 />
                               </div>
                             </div>
@@ -199,15 +202,15 @@ const CartDropdown = ({
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground text-xs">
                       Subtotal{" "}
-                      <span className="text-[10px] italic">(excl. taxes)</span>
+                      <span className="text-[10px] italic">(incl. taxes)</span>
                     </span>
                     <span
                       className="text-base-semi font-bold text-foreground"
                       data-testid="cart-subtotal"
-                      data-value={subtotal}
+                      data-value={subtotalWithTax}
                     >
                       {convertToLocale({
-                        amount: subtotal,
+                        amount: subtotalWithTax,
                         currency_code: cartState.currency_code,
                       })}
                     </span>

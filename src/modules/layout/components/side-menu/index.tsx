@@ -33,9 +33,10 @@ export interface SideMenuProps {
   regions: HttpTypes.StoreRegion[] | null;
   menuItems?: MenuItem[];
   regionId?: string;
+  customer?: HttpTypes.StoreCustomer | null;
 }
 
-const SideMenu = ({ regions, menuItems, regionId }: SideMenuProps) => {
+const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => {
   const toggleState = useToggleState()
   const pathname = usePathname()
 
@@ -188,13 +189,23 @@ const SideMenu = ({ regions, menuItems, regionId }: SideMenuProps) => {
 
                     {/* Footer - Fixed at Bottom */}
                     <div className="flex flex-col gap-y-6 pt-6 border-t border-border shrink-0 mt-auto relative z-10 bg-background">
+                      {/* Login/Account Button */}
+                      <LocalizedClientLink
+                        href="/account"
+                        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors py-3 px-4 rounded-lg text-center font-semibold"
+                        onClick={close}
+                        data-testid="mobile-login-button"
+                      >
+                        {customer ? "Account" : "Login"}
+                      </LocalizedClientLink>
+
                       <div
                         className="flex justify-between items-center group cursor-pointer p-4 rounded-lg bg-muted/30 hover:bg-muted transition-colors"
                         onMouseEnter={toggleState.open}
                         onMouseLeave={toggleState.close}
                       >
                         {regions && (
-                          <div className="flex-1">
+                          <div className="flex-1 min-w-0">
                             <CountrySelect
                               toggleState={toggleState}
                               regions={regions}
@@ -211,7 +222,7 @@ const SideMenu = ({ regions, menuItems, regionId }: SideMenuProps) => {
                       
                       <div className="flex flex-col gap-y-4 px-2">
                         <Text className="text-muted-foreground text-xs uppercase tracking-widest">
-                          © {new Date().getFullYear()} Medusa Store
+                          © {new Date().getFullYear()} Onahole Station
                         </Text>
                       </div>
                     </div>

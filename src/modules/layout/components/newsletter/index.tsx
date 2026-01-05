@@ -108,7 +108,7 @@ export function Newsletter({
 
       {(formState === "idle" || formState === "submitting" || formState === "error") && (
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input
               type="email"
               name="email"
@@ -124,6 +124,7 @@ export function Newsletter({
               type="submit"
               disabled={formState === "submitting"}
               size="default"
+              className="w-full sm:w-auto"
             >
               {formState === "submitting" ? "Subscribing..." : "Subscribe"}
             </Button>

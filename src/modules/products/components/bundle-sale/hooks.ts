@@ -19,7 +19,7 @@ export interface BundleWithProducts {
 /**
  * 获取 Bundle 及其完整产品数据的 Hook
  * 1. 获取包含当前产品作为主产品的 bundle
- * 2. 从 Medusa Store API 获取副产品的完整数据（包括价格、库存等）
+ * 2. 从 Onahole Station API 获取副产品的完整数据（包括价格、库存等）
  */
 export function useBundleProducts(
   productId: string,

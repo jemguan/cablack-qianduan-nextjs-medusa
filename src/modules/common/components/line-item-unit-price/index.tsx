@@ -6,16 +6,28 @@ type LineItemUnitPriceProps = {
   item: HttpTypes.StoreCartLineItem | HttpTypes.StoreOrderLineItem
   style?: "default" | "tight"
   currencyCode: string
+  showPreTaxPrice?: boolean
 }
 
 const LineItemUnitPrice = ({
   item,
   style = "default",
   currencyCode,
+  showPreTaxPrice = false,
 }: LineItemUnitPriceProps) => {
-  const { total, original_total, unit_price } = item
-  // 优先使用 unit_price，如果没有则通过 total / quantity 计算
-  const unitPrice = unit_price || (total / item.quantity)
+  const { total, original_total, unit_price, subtotal, tax_total } = item as any
+  // 如果要求显示税前价格，计算税前单价
+  let unitPrice = unit_price || (total / item.quantity)
+  if (showPreTaxPrice) {
+    if (subtotal !== undefined && subtotal !== null) {
+      unitPrice = subtotal / item.quantity
+    } else if (tax_total !== undefined && tax_total !== null && tax_total > 0) {
+      unitPrice = (total - tax_total) / item.quantity
+    } else {
+      // 如果没有 subtotal 和 tax_total，假设 unit_price 已经是税前价格，或者使用 total（如果 unit_price 不存在）
+      unitPrice = unit_price || (total / item.quantity)
+    }
+  }
   
   // 获取对比价格（从 variant metadata 中）
   let compareAtPriceAmount: number | null = null

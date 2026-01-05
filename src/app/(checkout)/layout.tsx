@@ -17,7 +17,7 @@ export default async function CheckoutLayout({
   const storeBrand = checkoutConfig?.storeBrand || {
     type: 'text' as const,
     text: {
-      storeName: 'Medusa Store',
+      storeName: 'Onahole Station',
       textSize: 'text-xl',
       textColor: 'text-ui-fg-subtle',
     },
@@ -39,7 +39,7 @@ export default async function CheckoutLayout({
         // Fallback to text if no logo
         return (
           <span className="txt-compact-xlarge-plus text-ui-fg-subtle hover:text-ui-fg-base uppercase">
-            {storeBrand.text?.storeName || 'Medusa Store'}
+            {storeBrand.text?.storeName || 'Onahole Station'}
           </span>
         )
       }
@@ -96,7 +96,7 @@ export default async function CheckoutLayout({
         storeBrand.text?.textColor || "text-ui-fg-subtle",
         storeBrand.text?.textSize || "text-xl"
       )}>
-        {storeBrand.text?.storeName || 'Medusa Store'}
+        {storeBrand.text?.storeName || 'Onahole Station'}
       </span>
     )
   }

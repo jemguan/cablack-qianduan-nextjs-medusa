@@ -2,6 +2,7 @@ import { Suspense } from "react"
 
 import { listRegions, getRegion } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
+import { retrieveCustomer } from "@lib/data/customer"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
 import AccountButton from "@modules/layout/components/account-button"
@@ -22,6 +23,9 @@ export default async function Nav() {
   // 获取默认区域 ID（使用第一个区域作为后备）
   const currentRegionId = regions && regions.length > 0 ? regions[0].id : undefined
   
+  // 获取客户信息（用于侧边栏登录按钮）
+  const customer = await retrieveCustomer().catch(() => null)
+  
   // Branding settings
   const brand = headerConfig?.brand
   const logo = headerConfig?.logo
@@ -38,7 +42,7 @@ export default async function Nav() {
           {/* Left: Branding & Mobile Menu */}
           <div className="flex-1 basis-0 h-full flex items-center gap-x-4">
             <div className="h-full flex items-center small:hidden">
-              <SideMenu regions={regions} menuItems={headerMenuItems} regionId={currentRegionId} />
+              <SideMenu regions={regions} menuItems={headerMenuItems} regionId={currentRegionId} customer={customer} />
             </div>
             
             <LocalizedClientLink
@@ -106,7 +110,7 @@ export default async function Nav() {
               {/* Fallback Name if nothing configured */}
               {!hasLightLogo && !hasDarkLogo && !brand?.brandNamePart1 && !brand?.brandNamePart2 && (
                 <span className="txt-compact-xlarge-plus uppercase text-foreground font-bold">
-                  Medusa Store
+                  Onahole Station
                 </span>
               )}
             </LocalizedClientLink>

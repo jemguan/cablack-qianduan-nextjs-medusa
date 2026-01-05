@@ -166,7 +166,7 @@ export interface MedusaConfig {
     };
     copyright?: {
       enabled?: boolean;
-      text?: string; // 例如: "© {year} Medusa Store. All rights reserved."
+      text?: string; // 例如: "© {year} Onahole Station. All rights reserved."
     };
     poweredBy?: {
       enabled?: boolean;

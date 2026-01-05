@@ -12,6 +12,7 @@ import ErrorMessage from "@modules/checkout/components/error-message"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import Input from "@modules/common/components/input"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import GoogleLoginButton from "@modules/account/components/google-login-button"
 import User from "@modules/common/icons/user"
 import { useRouter, useParams } from "next/navigation"
 import { Fragment, useState } from "react"
@@ -76,6 +77,20 @@ const AccountDropdown = () => {
                   <p className="text-center text-base-regular text-ui-fg-base mb-6">
                     Sign in to access an enhanced shopping experience.
                   </p>
+                  
+                  {/* Google 登录按钮 */}
+                  <div className="w-full mb-4">
+                    <GoogleLoginButton />
+                  </div>
+
+                  {/* 分隔线 */}
+                  <div className="w-full flex items-center gap-4 mb-4">
+                    <div className="flex-1 h-px bg-ui-border-base"></div>
+                    <span className="text-small-regular text-ui-fg-muted">OR</span>
+                    <div className="flex-1 h-px bg-ui-border-base"></div>
+                  </div>
+
+                  {/* 邮箱密码登录表单 */}
                   <form className="w-full" action={formAction}>
                     <div className="flex flex-col w-full gap-y-3">
                       <Input

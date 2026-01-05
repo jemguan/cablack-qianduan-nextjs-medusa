@@ -54,8 +54,9 @@ export const setAuthToken = async (token: string) => {
   cookies.set("_medusa_jwt", token, {
     maxAge: 60 * 60 * 24 * 7,
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "lax", // 改为 lax 以确保重定向后 cookie 可用
     secure: process.env.NODE_ENV === "production",
+    path: "/", // 确保 cookie 在所有路径可用
   })
 }
 

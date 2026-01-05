@@ -8,7 +8,6 @@ import ErrorMessage from "@modules/checkout/components/error-message"
 import DeleteButton from "@modules/common/components/delete-button"
 import LineItemOptions from "@modules/common/components/line-item-options"
 import LineItemPrice from "@modules/common/components/line-item-price"
-import LineItemUnitPrice from "@modules/common/components/line-item-unit-price"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Spinner from "@modules/common/icons/spinner"
 import Thumbnail from "@modules/products/components/thumbnail"
@@ -82,6 +81,7 @@ const Item = ({ item, type = "full", currencyCode, isMobile = false }: ItemProps
                   item={item}
                   style="tight"
                   currencyCode={currencyCode}
+                  showPreTaxPrice={true}
                 />
               </div>
             </div>
@@ -185,42 +185,15 @@ const Item = ({ item, type = "full", currencyCode, isMobile = false }: ItemProps
         </Table.Cell>
       )}
 
-      {type === "full" && (
-        <Table.Cell className="hidden small:table-cell text-right px-4 font-medium text-foreground">
-          <LineItemUnitPrice
+      <Table.Cell className="text-right px-4">
+        <div className="text-foreground font-bold text-lg">
+          <LineItemPrice
             item={item}
             style="tight"
             currencyCode={currencyCode}
+            showPreTaxPrice={true}
           />
-        </Table.Cell>
-      )}
-
-      <Table.Cell className="text-right px-4">
-        <span
-          className={clx({
-            "flex flex-col items-end h-full justify-center": type === "preview",
-          })}
-        >
-          {type === "preview" && (
-            <span className="flex gap-x-1 ">
-              <Text className="text-muted-foreground">{item.quantity}x </Text>
-              <div className="text-muted-foreground">
-                <LineItemUnitPrice
-                  item={item}
-                  style="tight"
-                  currencyCode={currencyCode}
-                />
-              </div>
-            </span>
-          )}
-          <div className="text-foreground font-bold text-lg">
-            <LineItemPrice
-              item={item}
-              style="tight"
-              currencyCode={currencyCode}
-            />
-          </div>
-        </span>
+        </div>
       </Table.Cell>
     </Table.Row>
   )

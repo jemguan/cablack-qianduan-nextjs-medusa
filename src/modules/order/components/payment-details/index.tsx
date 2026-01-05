@@ -93,11 +93,6 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
                       currency_code: order.currency_code,
                     })} paid at {new Date(payment.created_at ?? "").toLocaleString()}
                   </Text>
-                  {stripeInfo.paymentIntentId && (
-                    <Text className="txt-small text-ui-fg-muted font-mono" data-testid="payment-id">
-                      Ref: {stripeInfo.paymentIntentId}
-                    </Text>
-                  )}
                 </div>
               )}
               

@@ -177,7 +177,7 @@ export default async function Footer() {
                 )}
               </>
             )}
-            
+
             {/* Newsletter 和 SocialShare 区域 */}
             <div className="flex flex-col gap-y-4">
               {/* Newsletter 组件 */}
@@ -219,19 +219,19 @@ export default async function Footer() {
               )}
           </div>
         </div>
-        <div className="flex w-full mb-0 pt-[15px] pb-[15px] justify-between items-center text-ui-fg-muted">
-          {/* Copyright - 左侧 */}
-          <div className="flex items-center gap-x-4">
+        <div className="flex flex-col items-center small:items-start w-full mb-0 pt-[12px] pb-[12px] gap-y-2 text-ui-fg-muted">
+          {/* 版权信息、Sitemap 和 PoweredBy - 桌面端同一行 */}
+          <div className="flex flex-col sm:flex-row items-center gap-x-4 gap-y-1">
             {footerConfig?.copyright?.enabled && footerConfig.copyright.text ? (
-              <Text className="txt-compact-small">
+              <Text className="txt-compact-small text-center sm:text-left">
                 {footerConfig.copyright.text.replace('{year}', new Date().getFullYear().toString())}
               </Text>
             ) : !footerConfig?.copyright?.enabled && !footerConfig?.poweredBy?.enabled ? (
-              <Text className="txt-compact-small">
-                © {new Date().getFullYear()} Medusa Store. All rights reserved.
+              <Text className="txt-compact-small text-center sm:text-left">
+                © {new Date().getFullYear()} Onahole Station. All rights reserved.
               </Text>
             ) : null}
-            
+
             {/* Sitemap Link */}
             <LocalizedClientLink
               href="/site-map"
@@ -239,32 +239,37 @@ export default async function Footer() {
             >
               Sitemap
             </LocalizedClientLink>
+
+            {/* PoweredBy */}
+            {footerConfig?.poweredBy?.enabled ? (
+              <Text className="flex gap-x-2 txt-compact-small-plus items-center text-center sm:text-left">
+                {footerConfig.poweredBy.text || "Powered by"}
+                {footerConfig.poweredBy.links && footerConfig.poweredBy.links.length > 0 && (
+                  <>
+                    {footerConfig.poweredBy.links.map((link, index) => (
+                      <span key={index}>
+                        {index > 0 && " & "}
+                        <a
+                          href={link.url}
+                          target={link.openInNewTab ? "_blank" : "_self"}
+                          rel={link.openInNewTab ? "noreferrer" : undefined}
+                          className="hover:text-ui-fg-base transition-colors"
+                        >
+                          {link.text}
+                        </a>
+                      </span>
+                    ))}
+                  </>
+                )}
+              </Text>
+            ) : null}
           </div>
-          
-          {/* PoweredBy - 右侧 */}
-          {footerConfig?.poweredBy?.enabled ? (
-            <Text className="flex gap-x-2 txt-compact-small-plus items-center">
-              {footerConfig.poweredBy.text || "Powered by"}
-              {footerConfig.poweredBy.links && footerConfig.poweredBy.links.length > 0 && (
-                <>
-                  {footerConfig.poweredBy.links.map((link, index) => (
-                    <span key={index}>
-                      {index > 0 && " & "}
-                      <a
-                        href={link.url}
-                        target={link.openInNewTab ? "_blank" : "_self"}
-                        rel={link.openInNewTab ? "noreferrer" : undefined}
-                        className="hover:text-ui-fg-base transition-colors"
-                      >
-                        {link.text}
-                      </a>
-                    </span>
-                  ))}
-                </>
-              )}
-            </Text>
-          ) : !footerConfig?.copyright?.enabled && !footerConfig?.poweredBy?.enabled ? (
-            <MedusaCTA />
+
+          {/* MedusaCTA - 仅在没有任何配置时显示 */}
+          {!footerConfig?.copyright?.enabled && !footerConfig?.poweredBy?.enabled ? (
+            <div className="flex justify-center">
+              <MedusaCTA />
+            </div>
           ) : null}
         </div>
       </div>

@@ -12,6 +12,12 @@ const LineItemOptions = ({
   "data-testid": dataTestid,
   "data-value": dataValue,
 }: LineItemOptionsProps) => {
+  // 如果产品只有一个变体，不显示 Variant 信息
+  const variantsCount = variant?.product?.variants?.length ?? 0
+  if (variantsCount <= 1) {
+    return null
+  }
+
   return (
     <Text
       data-testid={dataTestid}

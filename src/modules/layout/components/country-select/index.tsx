@@ -73,47 +73,51 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
   const handleChange = async (option: CountryOption) => {
     close()
     
+    // Update local state first
+    setCurrentCountryCode(option.country)
+    setCurrent(option)
+    
     // Update the region (this updates cart and sets cookie on server)
     await updateRegion(option.country)
-    
-    // Update local state
-    setCurrentCountryCode(option.country)
     
     // Refresh the page to reload data with new region
     router.refresh()
   }
 
+  const selectedOption = current || (currentCountryCode ? options?.find((o) => o?.country === currentCountryCode) : undefined)
+
   return (
-    <div>
+    <div className="w-full min-w-0">
       <Listbox
         as="span"
+        value={selectedOption}
         onChange={handleChange}
-        defaultValue={
-          currentCountryCode
-            ? options?.find((o) => o?.country === currentCountryCode)
-            : undefined
-        }
       >
-        <ListboxButton className="py-1 w-full">
-          <div className="txt-compact-small flex items-start gap-x-2">
-            <span>Shipping to:</span>
-            {current && (
-              <span className="txt-compact-small flex items-center gap-x-2">
+        <ListboxButton className="py-1 w-full text-left focus:outline-none focus:ring-0 border-none bg-transparent">
+          <div className="txt-compact-small flex items-center gap-x-2 min-w-0">
+            <span className="shrink-0">Shipping to:</span>
+            {selectedOption ? (
+              <span className="txt-compact-small flex items-center gap-x-2 min-w-0 font-medium">
                 {/* @ts-ignore */}
                 <ReactCountryFlag
                   svg
                   style={{
                     width: "16px",
                     height: "16px",
+                    flexShrink: 0,
                   }}
-                  countryCode={current.country ?? ""}
+                  countryCode={selectedOption.country ?? ""}
                 />
-                {current.label}
+                <span className="truncate normal-case">{selectedOption.label}</span>
+              </span>
+            ) : (
+              <span className="txt-compact-small text-muted-foreground">
+                Select country
               </span>
             )}
           </div>
         </ListboxButton>
-        <div className="flex relative w-full min-w-[320px]">
+        <div className="flex relative w-full">
           <Transition
             show={state}
             as={Fragment}
@@ -122,7 +126,7 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
             leaveTo="opacity-0"
           >
             <ListboxOptions
-              className="absolute -bottom-[calc(100%-36px)] left-0 xsmall:left-auto xsmall:right-0 max-h-[442px] overflow-y-scroll z-[900] bg-white drop-shadow-md text-small-regular uppercase text-black no-scrollbar rounded-rounded w-full"
+              className="absolute top-full left-0 mt-1 xsmall:left-auto xsmall:right-0 max-h-[442px] overflow-y-scroll z-[900] bg-white drop-shadow-md text-small-regular normal-case text-black no-scrollbar rounded-rounded w-full max-w-[calc(100vw-2rem)] sm:max-w-[400px]"
               static
             >
               {options?.map((o, index) => {
@@ -130,7 +134,7 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
                   <ListboxOption
                     key={index}
                     value={o}
-                    className="py-2 hover:bg-gray-200 px-3 cursor-pointer flex items-center gap-x-2"
+                    className="py-2 hover:bg-gray-200 px-3 cursor-pointer flex items-center gap-x-2 normal-case"
                   >
                     {/* @ts-ignore */}
                     <ReactCountryFlag
@@ -140,8 +144,8 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
                         height: "16px",
                       }}
                       countryCode={o?.country ?? ""}
-                    />{" "}
-                    {o?.label}
+                    />
+                    <span>{o?.label}</span>
                   </ListboxOption>
                 )
               })}

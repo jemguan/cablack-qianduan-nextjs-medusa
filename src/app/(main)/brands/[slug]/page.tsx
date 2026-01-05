@@ -42,8 +42,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     }
 
     // 使用元标题和元描述，如果为空则使用默认值
-    const metaTitle = brand.meta_title || `${brand.name} | Medusa Store`
-    const metaDescription = brand.meta_description || `Shop ${brand.name} products at Medusa Store`
+    const metaTitle = brand.meta_title || `${brand.name} | Onahole Station`
+    const metaDescription = brand.meta_description || `Shop ${brand.name} products at Onahole Station`
 
     const metadata = {
       title: metaTitle,

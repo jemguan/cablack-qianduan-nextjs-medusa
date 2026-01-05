@@ -1,5 +1,5 @@
 /**
- * Medusa Store API 代理路由
+ * Onahole Station API 代理路由
  * 用于避免客户端直接调用 Medusa API 时的 CORS 问题
  */
 

@@ -7,15 +7,25 @@ type LineItemPriceProps = {
   item: HttpTypes.StoreCartLineItem | HttpTypes.StoreOrderLineItem
   style?: "default" | "tight"
   currencyCode: string
+  showPreTaxPrice?: boolean
 }
 
 const LineItemPrice = ({
   item,
   style = "default",
   currencyCode,
+  showPreTaxPrice = false,
 }: LineItemPriceProps) => {
-  const { total, original_total } = item
-  const currentPrice = total
+  const { total, original_total, subtotal, tax_total } = item as any
+  // 如果要求显示税前价格，优先使用 subtotal，否则从 total 中减去税费
+  let currentPrice = total
+  if (showPreTaxPrice) {
+    if (subtotal !== undefined && subtotal !== null) {
+      currentPrice = subtotal
+    } else if (tax_total !== undefined && tax_total !== null) {
+      currentPrice = total - tax_total
+    }
+  }
   
   // 获取对比价格（从 variant metadata 中）
   let compareAtPriceAmount: number | null = null
@@ -31,24 +41,28 @@ const LineItemPrice = ({
   }
 
   // 确定原价：优先使用 original_total（Price List 原价），如果没有则使用对比价格
+  // 注意：如果显示税前价格，不显示对比价格（因为价格基准不同）
   let originalPrice = original_total
   let shouldShowComparePrice = false
 
-  // 如果 original_total 存在且大于 currentPrice，说明有 Price List 促销价格
-  if (original_total && original_total > currentPrice) {
-    originalPrice = original_total
-    shouldShowComparePrice = true
-  } 
-  // 如果没有 Price List 原价，但有对比价格，且现价低于对比价格，使用对比价格
-  else if (compareAtPriceAmount !== null) {
-    // 对比价格存储为分（单价），需要转换为元，然后乘以数量得到总价
-    const compareAtPricePerUnitInDollars = compareAtPriceAmount / 100
-    const compareAtPriceTotal = compareAtPricePerUnitInDollars * item.quantity
-    
-    // currentPrice 是总价（元），compareAtPriceTotal 也是总价（元）
-    if (compareAtPriceTotal > currentPrice) {
-      originalPrice = compareAtPriceTotal
+  // 只有在不显示税前价格时才显示对比价格
+  if (!showPreTaxPrice) {
+    // 如果 original_total 存在且大于 currentPrice，说明有 Price List 促销价格
+    if (original_total && original_total > currentPrice) {
+      originalPrice = original_total
       shouldShowComparePrice = true
+    } 
+    // 如果没有 Price List 原价，但有对比价格，且现价低于对比价格，使用对比价格
+    else if (compareAtPriceAmount !== null) {
+      // 对比价格存储为分（单价），需要转换为元，然后乘以数量得到总价
+      const compareAtPricePerUnitInDollars = compareAtPriceAmount / 100
+      const compareAtPriceTotal = compareAtPricePerUnitInDollars * item.quantity
+      
+      // currentPrice 是总价（元），compareAtPriceTotal 也是总价（元）
+      if (compareAtPriceTotal > currentPrice) {
+        originalPrice = compareAtPriceTotal
+        shouldShowComparePrice = true
+      }
     }
   }
 

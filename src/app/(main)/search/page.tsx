@@ -13,7 +13,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const searchTerm = searchParams.q || ""
 
   return {
-    title: searchTerm ? `Search: ${searchTerm} | Medusa Store` : "Search | Medusa Store",
+    title: searchTerm ? `Search: ${searchTerm} | Onahole Station` : "Search | Onahole Station",
     description: searchTerm
       ? `Search results for "${searchTerm}"`
       : "Search products",

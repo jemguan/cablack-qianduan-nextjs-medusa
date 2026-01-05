@@ -23,7 +23,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     }
   }
 
-  const metaTitle = page.meta_title || `${page.title} | Medusa Store`
+  const metaTitle = page.meta_title || `${page.title} | Onahole Station`
   const metaDescription =
     page.meta_description || page.subtitle || "Read more about us"
 
