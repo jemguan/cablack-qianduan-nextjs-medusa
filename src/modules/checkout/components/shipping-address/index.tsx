@@ -104,7 +104,7 @@ const ShippingAddress = ({
   useEffect(() => {
     if (onFormDataChange) {
       onFormDataChange(formData)
-    }
+  }
   }, [formData, onFormDataChange])
 
   return (

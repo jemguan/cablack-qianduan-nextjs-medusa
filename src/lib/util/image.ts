@@ -30,3 +30,19 @@ export function getImageUrl(url: string | null | undefined): string | null {
   return `${baseUrl}${imagePath}`
 }
 
+/**
+ * Generate a blur placeholder data URL for images
+ * This is a 10x10 pixel light gray image encoded as base64
+ * Used to prevent layout shift while images are loading
+ * Next.js will automatically blur this placeholder
+ * Uses a neutral light gray color (#E5E7EB) that matches typical UI backgrounds
+ */
+export function generateBlurPlaceholder(): string {
+  // 10x10 pixel light gray PNG encoded as base64
+  // Color: RGB(229, 231, 235) - neutral light gray (#E5E7EB)
+  // This creates a neutral placeholder that prevents layout shift
+  // Next.js Image component will blur this automatically
+  // Pre-encoded base64 of a 10x10 gray PNG
+  return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFklEQVQYV2NkYGD4Twzw6FjzQEhISBkMBQAADgoCBTkCqQAAAABJRU5ErkJggg=='
+}
+

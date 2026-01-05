@@ -130,9 +130,9 @@ export default async function CheckoutLayout({
       </div>
       <div className="relative" data-testid="checkout-container">{children}</div>
       {poweredBy.enabled && (
-        <div className="py-4 w-full flex items-center justify-center">
+      <div className="py-4 w-full flex items-center justify-center">
           <MedusaCTA text={poweredBy.text} />
-        </div>
+      </div>
       )}
     </div>
   )

@@ -18,10 +18,10 @@ const OrderOverview = ({ orders, page, totalPages }: OrderOverviewProps) => {
     return (
       <>
         <div className="grid grid-cols-1 small:grid-cols-2 gap-4 w-full">
-          {orders.map((o) => (
+        {orders.map((o) => (
             <OrderCard key={o.id} order={o} />
-          ))}
-        </div>
+        ))}
+      </div>
         <Pagination page={page} totalPages={totalPages} data-testid="orders-pagination" />
       </>
     )

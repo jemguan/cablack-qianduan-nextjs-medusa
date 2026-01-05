@@ -93,7 +93,7 @@ export default function BlogDetailTemplate({
                 className="transition-transform duration-200 ease-in-out group-hover:-translate-x-1" 
               />
               <span>Back to Blog</span>
-            </Link>
+          </Link>
           </Button>
         </div>
       </article>

@@ -43,7 +43,7 @@ const BillingAddress = ({
   useEffect(() => {
     if (onFormDataChange) {
       onFormDataChange(formData)
-    }
+  }
   }, [formData, onFormDataChange])
 
   return (

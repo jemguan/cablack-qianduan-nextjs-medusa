@@ -32,7 +32,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
           <LocalizedClientLink href="/account/orders">
             <XMark size={16} />
             <span>Back to overview</span>
-          </LocalizedClientLink>
+        </LocalizedClientLink>
         </Button>
       </div>
       <div

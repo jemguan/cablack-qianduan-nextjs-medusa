@@ -89,8 +89,8 @@ export default async function PaginatedProducts({
             data-testid="products-list"
           >
             {products.map((p, index) => {
-              // 首屏产品（前8个）优先加载，其余使用懒加载
-              const isPriority = index < 8 && page === 1
+              // 首屏前4个产品优先加载以提升 LCP，其余使用懒加载
+              const isPriority = index < 4 && page === 1
               return (
                 <li key={p.id}>
                   <ProductPreview product={p} region={region} priority={isPriority} />

@@ -58,11 +58,11 @@ const SearchResults = ({
           </ul>
           {totalPages > 1 && (
             <Pagination
-              data-testid="search-pagination"
-              page={page}
-              totalPages={totalPages}
-              searchTerm={searchTerm}
-            />
+                data-testid="search-pagination"
+                page={page}
+                totalPages={totalPages}
+                searchTerm={searchTerm}
+              />
           )}
         </>
       )}

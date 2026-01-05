@@ -121,9 +121,9 @@ export default function PageDetailTemplate({
       {/* FAQ Block */}
       {showFaq && (
         <FAQBlock data={faqBlockData} />
-      )}
+        )}
 
-      {/* Back to home */}
+        {/* Back to home */}
       <div className="content-container mx-auto mt-12 pt-8 border-t border-ui-border-base">
         <Button
           asChild
@@ -138,7 +138,7 @@ export default function PageDetailTemplate({
             <span>Back to Home</span>
           </Link>
         </Button>
-      </div>
+        </div>
     </div>
   )
 }

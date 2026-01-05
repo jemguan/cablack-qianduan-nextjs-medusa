@@ -103,8 +103,9 @@ export const listProducts = async ({
 }
 
 /**
- * This will fetch up to 1000 products to the Next.js cache and sort them based on the sortBy parameter.
- * It will then return the paginated products based on the page and limit parameters.
+ * This will fetch products and sort them based on the sortBy parameter.
+ * For the first page (page === 1), it only fetches the required products to improve LCP.
+ * For subsequent pages, it fetches up to 1000 products for better pagination experience.
  * Note: Products are sorted client-side to support complex sorting logic (price, out-of-stock handling).
  */
 export const listProductsWithSort = async ({
@@ -124,9 +125,14 @@ export const listProductsWithSort = async ({
 }> => {
   const limit = queryParams?.limit || 12
   const MAX_PRODUCTS_TO_FETCH = 1000
+  const isFirstPage = page === 1
 
   // If no countryCode provided, get from cookie
   const resolvedCountryCode = countryCode || await getRegionCountryCode()
+
+  // For first page, only fetch the required products to improve LCP
+  // For subsequent pages, fetch more products for better pagination experience
+  const fetchLimit = isFirstPage ? limit : MAX_PRODUCTS_TO_FETCH
 
   const {
     response: { products, count },
@@ -134,17 +140,19 @@ export const listProductsWithSort = async ({
     pageParam: 0,
     queryParams: {
       ...queryParams,
-      limit: MAX_PRODUCTS_TO_FETCH,
+      limit: fetchLimit,
     },
     countryCode: resolvedCountryCode,
   })
 
   const sortedProducts = sortProducts(products, sortBy)
 
-  // Use the actual number of products fetched, not the total count
-  // This prevents empty pagination dots when total count exceeds fetched products
+  // For first page, use the API's total count for pagination calculation
+  // For subsequent pages, use the effective count to prevent empty pagination dots
   const actualCount = sortedProducts.length
-  const effectiveCount = Math.min(count, actualCount)
+  const effectiveCount = isFirstPage 
+    ? count // Use API's total count for first page to show correct pagination
+    : Math.min(count, actualCount) // For other pages, limit to fetched products
 
   const pageParam = (page - 1) * limit
 
