@@ -152,6 +152,9 @@ const StripePaymentButton = ({
         onClick={handlePayment}
         size="large"
         isLoading={submitting}
+        variant="primary"
+        className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 text-white border-none !border-2 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700 disabled:!border-ui-border-base !shadow-none"
+        style={{ borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }}
         data-testid={dataTestId}
       >
         Place order
@@ -196,6 +199,9 @@ const ManualTestPaymentButton = ({ notReady, "data-testid": dataTestId }: { notR
         isLoading={submitting}
         onClick={handlePayment}
         size="large"
+        variant="primary"
+        className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 text-white border-none !border-2 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700 disabled:!border-ui-border-base !shadow-none"
+        style={{ borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }}
         data-testid="submit-order-button"
       >
         Place order
@@ -240,6 +246,9 @@ const EmtPaymentButton = ({ notReady, "data-testid": dataTestId }: { notReady: b
         isLoading={submitting}
         onClick={handlePayment}
         size="large"
+        variant="primary"
+        className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 text-white border-none !border-2 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700 disabled:!border-ui-border-base !shadow-none"
+        style={{ borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }}
         data-testid={dataTestId}
       >
         Place order

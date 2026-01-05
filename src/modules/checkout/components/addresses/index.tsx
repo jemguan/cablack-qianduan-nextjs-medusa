@@ -7,6 +7,8 @@ import { HttpTypes } from "@medusajs/types"
 import { Button, Heading, Text, useToggleState } from "@medusajs/ui"
 import Divider from "@modules/common/components/divider"
 import Spinner from "@modules/common/icons/spinner"
+import ChevronDown from "@modules/common/icons/chevron-down"
+import ChevronUp from "@modules/common/icons/chevron-up"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useCallback, useState } from "react"
 import BillingAddress from "../billing_address"
@@ -23,6 +25,7 @@ const Addresses = ({
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [isBillingExpanded, setIsBillingExpanded] = useState(false)
   const shippingFormDataRef = useRef<Record<string, any>>({})
   const billingFormDataRef = useRef<Record<string, any>>({})
   const sameAsBillingRef = useRef<boolean>(true)
@@ -244,10 +247,12 @@ const Addresses = ({
       {hasAddress ? (
         <div>
           <div className="text-small-regular">
-            <div className="flex items-start gap-x-8">
-              <div className="flex items-start gap-x-1 w-full">
+            {/* 手机端：一行2个，Billing Address 折叠到第二行 */}
+            <div className="flex flex-wrap items-start gap-x-4 gap-y-4 small:gap-x-8">
+              {/* 第一行：Shipping Address 和 Contact */}
+              <div className="flex flex-wrap items-start gap-x-4 gap-y-4 w-full small:w-auto">
                 <div
-                  className="flex flex-col w-1/3"
+                  className="flex flex-col w-[calc(50%-0.5rem)] small:w-1/3"
                   data-testid="shipping-address-summary"
                 >
                   <Text className="txt-medium-plus text-ui-fg-base mb-1">
@@ -271,7 +276,7 @@ const Addresses = ({
                 </div>
 
                 <div
-                  className="flex flex-col w-1/3 "
+                  className="flex flex-col w-[calc(50%-0.5rem)] small:w-1/3"
                   data-testid="shipping-contact-summary"
                 >
                   <Text className="txt-medium-plus text-ui-fg-base mb-1">
@@ -284,15 +289,38 @@ const Addresses = ({
                     {cart.email}
                   </Text>
                 </div>
+              </div>
 
-                <div
-                  className="flex flex-col w-1/3"
-                  data-testid="billing-address-summary"
+              {/* 第二行：Billing Address（手机端折叠，桌面端始终显示） */}
+              <div
+                className="flex flex-col w-full small:w-1/3"
+                data-testid="billing-address-summary"
+              >
+                {/* 手机端：可折叠的标题 */}
+                <button
+                  onClick={() => setIsBillingExpanded(!isBillingExpanded)}
+                  className="small:hidden flex items-center justify-between w-full mb-1"
+                  aria-expanded={isBillingExpanded}
                 >
-                  <Text className="txt-medium-plus text-ui-fg-base mb-1">
+                  <Text className="txt-medium-plus text-ui-fg-base">
                     Billing Address
                   </Text>
+                  {isBillingExpanded ? (
+                    <ChevronUp size={16} className="text-ui-fg-muted" />
+                  ) : (
+                    <ChevronDown size={16} className="text-ui-fg-muted" />
+                  )}
+                </button>
 
+                {/* 桌面端：普通标题 */}
+                <Text className="hidden small:block txt-medium-plus text-ui-fg-base mb-1">
+                  Billing Address
+                </Text>
+
+                {/* 内容区域 - 手机端可折叠，桌面端始终显示 */}
+                <div
+                  className={isBillingExpanded ? "block" : "hidden small:block"}
+                >
                   {sameAsBilling ? (
                     <Text className="txt-medium text-ui-fg-subtle">
                       Billing and delivery address are the same.
@@ -350,7 +378,8 @@ const Addresses = ({
                   isLoading={isSaving}
                   disabled={isSaving}
                   variant="primary"
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 text-white border-none !border-2 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700 disabled:!border-ui-border-base !shadow-none"
+                  style={{ borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }}
                   data-testid="confirm-address-button"
                 >
                   Confirm Address
@@ -412,7 +441,8 @@ const Addresses = ({
                 isLoading={isSaving}
                 disabled={isSaving}
                 variant="primary"
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 text-white border-none !border-2 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700 disabled:!border-ui-border-base !shadow-none"
+                style={{ borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }}
                 data-testid="confirm-address-button"
               >
                 Confirm Address
