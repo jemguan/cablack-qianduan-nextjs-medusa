@@ -212,16 +212,27 @@ export async function deleteLineItem(lineId: string) {
     ...(await getAuthHeaders()),
   }
 
-  await sdk.store.cart
-    .deleteLineItem(cartId, lineId, {}, headers)
-    .then(async () => {
-      const cartCacheTag = await getCacheTag("carts")
-      revalidateTag(cartCacheTag)
+  try {
+    await sdk.store.cart
+      .deleteLineItem(cartId, lineId, {}, headers)
+      .then(async () => {
+        const cartCacheTag = await getCacheTag("carts")
+        revalidateTag(cartCacheTag)
 
-      const fulfillmentCacheTag = await getCacheTag("fulfillment")
-      revalidateTag(fulfillmentCacheTag)
+        const fulfillmentCacheTag = await getCacheTag("fulfillment")
+        revalidateTag(fulfillmentCacheTag)
+      })
+  } catch (error: any) {
+    // 记录详细错误信息以便调试
+    console.error("[deleteLineItem] Error details:", {
+      cartId,
+      lineId,
+      error: error?.message || error,
+      response: error?.response?.data,
+      status: error?.response?.status,
     })
-    .catch(medusaError)
+    throw medusaError(error)
+  }
 }
 
 export async function setShippingMethod({

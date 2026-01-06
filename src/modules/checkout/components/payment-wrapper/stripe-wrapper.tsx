@@ -74,8 +74,47 @@ const StripeWrapper: React.FC<StripeWrapperProps> = ({
     },
   }
 
+  const clientSecret = paymentSession!.data?.client_secret as string | undefined
+
+  // 验证 client secret 格式
+  if (clientSecret) {
+    const isTestSecret = clientSecret.includes("_test_") || clientSecret.startsWith("pi_test_")
+    const isLiveSecret = clientSecret.includes("_live_") || clientSecret.startsWith("pi_live_")
+    const isPublishableKeyTest = stripeKey?.startsWith("pk_test_")
+    const isPublishableKeyLive = stripeKey?.startsWith("pk_live_")
+
+    // 检查环境匹配
+    if (isTestSecret && isPublishableKeyLive) {
+      console.error(
+        "[Stripe] 环境不匹配：Payment Intent 是测试环境，但 Publishable Key 是生产环境。",
+        "请确保前端和后端使用相同的 Stripe 环境（都是 test 或都是 live）"
+      )
+    }
+    if (isLiveSecret && isPublishableKeyTest) {
+      console.error(
+        "[Stripe] 环境不匹配：Payment Intent 是生产环境，但 Publishable Key 是测试环境。",
+        "请确保前端和后端使用相同的 Stripe 环境（都是 test 或都是 live）"
+      )
+    }
+
+    // 检查密钥账户匹配（通过密钥前缀）
+    if (stripeKey && clientSecret) {
+      const stripeKeyAccountId = stripeKey.split("_")[2] // pk_live_51S... -> 51S...
+      const clientSecretAccountId = clientSecret.split("_")[2] // pi_live_51S... -> 51S...
+      
+      if (stripeKeyAccountId && clientSecretAccountId && stripeKeyAccountId !== clientSecretAccountId) {
+        console.error(
+          "[Stripe] 密钥账户不匹配：",
+          `Publishable Key 账户: ${stripeKeyAccountId.substring(0, 10)}...`,
+          `Payment Intent 账户: ${clientSecretAccountId.substring(0, 10)}...`,
+          "请确保前端 Publishable Key 和后端 Secret Key 来自同一个 Stripe 账户"
+        )
+      }
+    }
+  }
+
   const options: StripeElementsOptions = {
-    clientSecret: paymentSession!.data?.client_secret as string | undefined,
+    clientSecret,
     appearance,
   }
 
@@ -91,7 +130,7 @@ const StripeWrapper: React.FC<StripeWrapperProps> = ({
     )
   }
 
-  if (!paymentSession?.data?.client_secret) {
+  if (!clientSecret) {
     throw new Error(
       "Stripe client secret is missing. Cannot initialize Stripe."
     )

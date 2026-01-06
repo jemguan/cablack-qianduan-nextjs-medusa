@@ -23,11 +23,20 @@ const DeleteButton = ({
       await deleteLineItem(id)
       
       // 如果删除的是捆绑包产品，同步折扣
+      // 即使同步失败也不阻止删除操作
       if (item?.metadata?.bundle_id) {
-        await syncBundlePromotions()
+        try {
+          await syncBundlePromotions()
+        } catch (syncError) {
+          console.error("Failed to sync bundle promotions after delete:", syncError)
+          // 不抛出错误，允许删除操作完成
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
+      console.error("Failed to delete cart item:", err)
       setIsDeleting(false)
+      // 显示错误提示给用户
+      alert(err?.message || "Failed to delete item. Please try again.")
     }
   }
 
