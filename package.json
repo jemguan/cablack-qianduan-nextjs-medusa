@@ -24,6 +24,7 @@
     "@stripe/stripe-js": "^8.2.0",
     "@tailwindcss/typography": "^0.5.19",
     "clsx": "^2.1.1",
+    "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "lodash": "^4.17.21",
     "next": "15.3.8",

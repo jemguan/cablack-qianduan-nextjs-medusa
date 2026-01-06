@@ -60,6 +60,7 @@ export const CACHE_STRATEGIES = {
   REVIEW: isDevelopment ? DEV_CACHE_CONFIG : SHORT_CACHE_CONFIG,
 
   // ==================== 静态数据 - 长期缓存 ====================
+  ANNOUNCEMENT: isDevelopment ? DEV_CACHE_CONFIG : LONG_CACHE_CONFIG,
   STATIC: isDevelopment ? DEV_CACHE_CONFIG : VERY_LONG_CACHE_CONFIG,
 } as const
 

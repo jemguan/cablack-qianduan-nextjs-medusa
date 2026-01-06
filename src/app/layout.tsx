@@ -4,6 +4,8 @@ import "styles/globals.css"
 import { ThemeProvider } from "@modules/common/components/theme-toggle"
 import { ScrollToTop } from "@components/ScrollToTop"
 import { getPageTitleConfig } from "@lib/data/page-title-config"
+import { listAnnouncements } from "@lib/data/announcements"
+import AnnouncementBar from "@modules/layout/components/announcement-bar"
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = await getPageTitleConfig()
@@ -30,8 +32,9 @@ function getMedusaBackendUrl(): string {
          "http://localhost:9000"
 }
 
-export default function RootLayout(props: { children: React.ReactNode }) {
+export default async function RootLayout(props: { children: React.ReactNode }) {
   const medusaBackendUrl = getMedusaBackendUrl()
+  const announcements = await listAnnouncements()
   
   return (
     <html lang="en" suppressHydrationWarning>
@@ -51,6 +54,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       <body suppressHydrationWarning>
         <ThemeProvider>
           <ScrollToTop />
+          {announcements.length > 0 && <AnnouncementBar announcements={announcements} />}
           <main className="relative">{props.children}</main>
         </ThemeProvider>
       </body>
