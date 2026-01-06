@@ -4,6 +4,7 @@ import { listCategories } from "@lib/data/categories"
 import { listCollections } from "@lib/data/collections"
 import { listBrands } from "@lib/data/brands"
 import { listBlogs } from "@lib/data/blogs"
+import { listPages } from "@lib/data/pages"
 import { sdk } from "@lib/config"
 
 // Default region for sitemap generation
@@ -292,6 +293,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     } catch (error) {
       console.error("Error generating blog URLs:", error)
+    }
+
+    // ==================== Pages 页面 ====================
+    try {
+      const { pages } = await listPages({
+        limit: "1000",
+        offset: "0",
+      })
+
+      if (pages && pages.length > 0) {
+        const publishedPages = pages.filter(
+          (page) => page.status === "published" && page.url
+        )
+
+        for (const page of publishedPages) {
+          if (!page.url) continue
+
+          sitemapEntries.push({
+            url: `${baseUrl}/pages/${encodeURIComponent(page.url)}`,
+            lastModified: page.updated_at
+              ? new Date(page.updated_at)
+              : page.created_at
+                ? new Date(page.created_at)
+                : now,
+          })
+        }
+      }
+    } catch (error) {
+      console.error("Error generating page URLs:", error)
     }
   } catch (error) {
     console.error("Error generating sitemap:", error)

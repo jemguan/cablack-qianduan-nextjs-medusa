@@ -232,14 +232,6 @@ export default async function Footer() {
               </Text>
             ) : null}
 
-            {/* Sitemap Link - 手机端隐藏 */}
-            <LocalizedClientLink
-              href="/site-map"
-              className="hidden small:inline txt-compact-small hover:text-ui-fg-base transition-colors"
-            >
-              Sitemap
-            </LocalizedClientLink>
-
             {/* PoweredBy - 手机端隐藏 */}
             {footerConfig?.poweredBy?.enabled ? (
               <Text className="hidden small:flex gap-x-2 txt-compact-small-plus items-center text-center sm:text-left">

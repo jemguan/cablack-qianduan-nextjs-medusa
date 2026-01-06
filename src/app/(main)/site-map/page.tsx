@@ -5,6 +5,7 @@ import { listCategories } from "@lib/data/categories"
 import { listCollections } from "@lib/data/collections"
 import { listBrands } from "@lib/data/brands"
 import { listBlogs } from "@lib/data/blogs"
+import { listPages } from "@lib/data/pages"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 import Link from "next/link"
 
@@ -21,11 +22,12 @@ export default async function SitemapPage() {
   const countryCode = await getCountryCode()
 
   // Fetch all data
-  const [categories, collections, brands, blogs] = await Promise.all([
+  const [categories, collections, brands, blogs, pages] = await Promise.all([
     listCategories({ limit: 1000 }).catch(() => []),
     listCollections({ limit: "1000", offset: "0" }).catch(() => ({ collections: [] })),
     listBrands({ limit: "1000", offset: "0" }).catch(() => ({ brands: [] })),
     listBlogs({ limit: "1000", offset: "0" }).catch(() => ({ posts: [] })),
+    listPages({ limit: "1000", offset: "0" }).catch(() => ({ pages: [] })),
   ])
 
   // Get products (limit to first 500 for performance)
@@ -47,6 +49,11 @@ export default async function SitemapPage() {
   // Filter published blogs
   const publishedBlogs = blogs.posts?.filter(
     (post) => post.status === "published" && post.url
+  ) || []
+
+  // Filter published pages
+  const publishedPages = pages.pages?.filter(
+    (page) => page.status === "published" && page.url
   ) || []
 
   // Build category paths helper
@@ -280,6 +287,29 @@ export default async function SitemapPage() {
                 </ul>
               ) : (
                 <p className="text-ui-fg-subtle text-sm">No blog posts available</p>
+              )}
+            </section>
+
+            {/* Pages */}
+            <section>
+              <h2 className="text-xl-semi mb-4 text-ui-fg-base">
+                Pages ({publishedPages.length})
+              </h2>
+              {publishedPages.length > 0 ? (
+                <ul className="space-y-2 max-h-96 overflow-y-auto">
+                  {publishedPages.map((page) => (
+                    <li key={page.id}>
+                      <Link
+                        href={`/pages/${encodeURIComponent(page.url!)}`}
+                        className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover hover:underline"
+                      >
+                        {page.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-ui-fg-subtle text-sm">No pages available</p>
               )}
             </section>
           </div>
