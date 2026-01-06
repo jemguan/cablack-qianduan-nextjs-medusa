@@ -8,6 +8,8 @@ import { StoreCollection } from "@medusajs/types"
 import CollectionTemplate from "@modules/collections/templates"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import Schema from "@modules/common/components/seo/Schema"
+import { getBaseURL } from "@lib/util/env"
 
 type Props = {
   params: Promise<{ handle: string }>
@@ -42,14 +44,22 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
 
-  const title = await getPageTitle("collection", { title: collection.title })
+  const metadata = collection.metadata || {}
+  const title = (metadata.seo_title as string) || (await getPageTitle("collection", { title: collection.title }))
+  const description = (metadata.seo_description as string) || `${collection.title} collection`
 
-  const metadata = {
+  return {
     title,
-    description: `${collection.title} collection`,
-  } as Metadata
-
-  return metadata
+    description,
+    alternates: {
+      canonical: `${getBaseURL()}/collections/${params.handle}`,
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${getBaseURL()}/collections/${params.handle}`,
+    }
+  }
 }
 
 export default async function CollectionPage(props: Props) {
@@ -67,13 +77,20 @@ export default async function CollectionPage(props: Props) {
   }
 
   const breadcrumbItems = [
-    { label: "Home", href: "/" },
-    { label: "Collections", href: "/collections" },
-    { label: collection.title },
+    { label: "Home", href: "/", name: "Home", url: "/" },
+    { label: "Collections", href: "/collections", name: "Collections", url: "/collections" },
+    { label: collection.title, href: `/collections/${params.handle}`, name: collection.title, url: `/collections/${params.handle}` },
   ]
+
+  const schemaBreadcrumbs = breadcrumbItems.map(item => ({
+    name: item.name,
+    url: item.url
+  }))
 
   return (
     <>
+      <Schema type="BreadcrumbList" data={schemaBreadcrumbs} />
+
       {/* Breadcrumb container below header */}
       <div className="border-b border-ui-border-base bg-background">
         <div className="content-container py-2">

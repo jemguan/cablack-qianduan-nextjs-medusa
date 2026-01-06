@@ -9,6 +9,8 @@ import ProductTemplate from "@modules/products/templates"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 import { ReviewStatsProvider } from "@modules/products/components/reviews/ReviewStatsContext"
 import { HttpTypes } from "@medusajs/types"
+import Schema from "@modules/common/components/seo/Schema"
+import { getBaseURL } from "@lib/util/env"
 
 type Props = {
   params: Promise<{ handle: string }>
@@ -21,17 +23,17 @@ type Props = {
  * 避免重复的 API 调用
  */
 const getProductByHandle = cache(async (handle: string, includeCategories: boolean = false) => {
-  const fields = includeCategories 
+  const fields = includeCategories
     ? "+*categories,+*categories.parent_category,+*categories.parent_category.parent_category"
     : undefined
-    
+
   const { response } = await listProducts({
     queryParams: {
       handle,
       ...(fields && { fields }),
     },
   })
-  
+
   return response.products[0] || null
 })
 
@@ -49,8 +51,7 @@ export async function generateStaticParams() {
       }))
   } catch (error) {
     console.error(
-      `Failed to generate static paths for product pages: ${
-        error instanceof Error ? error.message : "Unknown error"
+      `Failed to generate static paths for product pages: ${error instanceof Error ? error.message : "Unknown error"
       }.`
     )
     return []
@@ -90,15 +91,22 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
 
-  const title = await getPageTitle("product", { title: product.title })
+  // 优先使用 Metadata 中的 SEO 配置，否则使用默认逻辑
+  const metadata = product.metadata || {}
+  const seoTitle = (metadata.seo_title as string) || (await getPageTitle("product", { title: product.title }))
+  const seoDescription = (metadata.seo_description as string) || product.subtitle || product.description || `${product.title} - Cablack`
 
   return {
-    title,
-    description: `${product.title}`,
+    title: seoTitle,
+    description: seoDescription,
     openGraph: {
-      title,
-      description: `${product.title}`,
+      title: seoTitle,
+      description: seoDescription,
       images: product.thumbnail ? [product.thumbnail] : [],
+      url: `${getBaseURL()}/products/${handle}`,
+    },
+    alternates: {
+      canonical: `${getBaseURL()}/products/${handle}`,
     },
   }
 }
@@ -129,37 +137,54 @@ export default async function ProductPage(props: Props) {
 
   // Build breadcrumb items
   const breadcrumbItems = [
-    { label: "Home", href: "/" },
+    { label: "Home", href: "/", name: "Home", url: "/" },
   ]
 
   // Add category to breadcrumb if product has a category
   if (pricedProduct.categories && pricedProduct.categories.length > 0) {
     const category = pricedProduct.categories[0]
-    
+
     // Build category path (handle parent categories)
     const categoryPath: string[] = []
     let currentCategory: HttpTypes.StoreProductCategory | null = category
-    
+
     while (currentCategory) {
       if (currentCategory.handle) {
         categoryPath.unshift(currentCategory.handle)
       }
       currentCategory = currentCategory.parent_category || null
     }
-    
+
     if (categoryPath.length > 0) {
       breadcrumbItems.push({
         label: category.name || "Category",
         href: `/categories/${categoryPath.join("/")}`,
+        name: category.name || "Category",
+        url: `/categories/${categoryPath.join("/")}`
       })
     }
   }
 
   // Add product title (current page)
-  breadcrumbItems.push({ label: pricedProduct.title, href: `/products/${params.handle}` })
+  breadcrumbItems.push({
+    label: pricedProduct.title,
+    href: `/products/${params.handle}`,
+    name: pricedProduct.title,
+    url: `/products/${params.handle}`
+  })
+
+  // Prepare simple breadcrumb list for Schema (name, url pair matching standard)
+  const schemaBreadcrumbs = breadcrumbItems.map(item => ({
+    name: item.name,
+    url: item.url
+  }))
 
   return (
     <ReviewStatsProvider>
+      {/* Structural Data for SEO */}
+      <Schema type="Product" data={pricedProduct} />
+      <Schema type="BreadcrumbList" data={schemaBreadcrumbs} />
+
       {/* Breadcrumb container below header */}
       <div className="border-b border-ui-border-base bg-background">
         <div className="content-container py-2">

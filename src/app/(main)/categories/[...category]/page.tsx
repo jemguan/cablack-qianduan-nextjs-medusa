@@ -8,6 +8,8 @@ import { HttpTypes } from "@medusajs/types"
 import CategoryTemplate from "@modules/categories/templates"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import Schema from "@modules/common/components/seo/Schema"
+import { getBaseURL } from "@lib/util/env"
 
 type Props = {
   params: Promise<{ category: string[] }>
@@ -35,16 +37,21 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   try {
     const productCategory = await getCategoryByHandle(params.category)
 
-    const title = await getPageTitle("category", { name: productCategory.name, title: productCategory.name })
-
-    const description = productCategory.description ?? `${productCategory.name} category.`
+    const metadata = productCategory.metadata || {}
+    const title = (metadata.seo_title as string) || (await getPageTitle("category", { name: productCategory.name, title: productCategory.name }))
+    const description = (metadata.seo_description as string) || productCategory.description || `${productCategory.name} category.`
 
     return {
       title,
       description,
       alternates: {
-        canonical: `${params.category.join("/")}`,
+        canonical: `${getBaseURL()}/categories/${params.category.join("/")}`,
       },
+      openGraph: {
+        title,
+        description,
+        url: `${getBaseURL()}/categories/${params.category.join("/")}`,
+      }
     }
   } catch (error) {
     notFound()
@@ -65,7 +72,7 @@ export default async function CategoryPage(props: Props) {
 
   // Build breadcrumb items with parent categories
   const breadcrumbItems = [
-    { label: "Home", href: "/" },
+    { label: "Home", href: "/", name: "Home", url: "/" },
   ]
 
   // Collect all parent categories in order (from root to direct parent)
@@ -82,14 +89,14 @@ export default async function CategoryPage(props: Props) {
   const buildCategoryPath = (category: HttpTypes.StoreProductCategory): string[] => {
     const path: string[] = []
     let current: HttpTypes.StoreProductCategory | null = category
-    
+
     while (current) {
       if (current.handle) {
         path.unshift(current.handle)
       }
       current = current.parent_category || null
     }
-    
+
     return path
   }
 
@@ -100,15 +107,32 @@ export default async function CategoryPage(props: Props) {
       breadcrumbItems.push({
         label: parent.name,
         href: `/categories/${categoryPath.join("/")}`,
+        name: parent.name,
+        url: `/categories/${categoryPath.join("/")}`
       })
     }
   })
 
   // Add current category
-  breadcrumbItems.push({ label: productCategory.name })
+  const currentCategoryPath = buildCategoryPath(productCategory)
+  breadcrumbItems.push({
+    label: productCategory.name,
+    // Href is not clickable for the last item usually but good for schema
+    href: `/categories/${currentCategoryPath.join("/")}`,
+    name: productCategory.name,
+    url: `/categories/${currentCategoryPath.join("/")}`
+  })
+
+  // Prepare Schema Breadcrumbs
+  const schemaBreadcrumbs = breadcrumbItems.map(item => ({
+    name: item.name,
+    url: item.url
+  }))
 
   return (
     <>
+      <Schema type="BreadcrumbList" data={schemaBreadcrumbs} />
+
       {/* Breadcrumb container below header */}
       <div className="border-b border-ui-border-base bg-background">
         <div className="content-container py-2">

@@ -6,6 +6,7 @@ import ChevronDown from '@modules/common/icons/chevron-down'
 import type { FAQBlockProps, FAQItem } from './types'
 import { parseFAQMetadata, filterFAQItems } from './utils'
 import { sanitizeHtml } from '@lib/util/sanitize'
+import Schema from '@modules/common/components/seo/Schema'
 
 // 搜索图标组件
 const SearchIcon = () => (
@@ -126,14 +127,12 @@ export function FAQBlock({ data }: FAQBlockProps) {
         return (
           <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center relative">
             <div
-              className={`w-4 h-0.5 bg-current transition-transform duration-200 ${
-                isOpen ? 'rotate-90' : ''
-              }`}
+              className={`w-4 h-0.5 bg-current transition-transform duration-200 ${isOpen ? 'rotate-90' : ''
+                }`}
             />
             <div
-              className={`absolute w-4 h-0.5 bg-current transition-opacity duration-200 ${
-                isOpen ? 'opacity-0' : 'opacity-100'
-              }`}
+              className={`absolute w-4 h-0.5 bg-current transition-opacity duration-200 ${isOpen ? 'opacity-0' : 'opacity-100'
+                }`}
             />
           </div>
         )
@@ -141,9 +140,8 @@ export function FAQBlock({ data }: FAQBlockProps) {
         return (
           <ChevronDown
             size="20"
-            className={`flex-shrink-0 transition-transform duration-200 ${
-              isOpen ? 'rotate-180' : ''
-            }`}
+            className={`flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''
+              }`}
           />
         )
       case 'chevron':
@@ -151,9 +149,8 @@ export function FAQBlock({ data }: FAQBlockProps) {
         return (
           <ChevronDown
             size="20"
-            className={`flex-shrink-0 transition-transform duration-200 ${
-              isOpen ? 'rotate-180' : ''
-            }`}
+            className={`flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''
+              }`}
           />
         )
     }
@@ -172,6 +169,9 @@ export function FAQBlock({ data }: FAQBlockProps) {
 
   return (
     <div className="content-container py-8">
+      {/* 注入 FAQ Schema Structured Data */}
+      <Schema type="FAQPage" data={filteredItems} />
+
       {/* 标题和副标题 */}
       {((showTitle && title) || (showSubtitle && subtitle)) && (
         <div className={`mb-6 ${titleAlignClass}`}>

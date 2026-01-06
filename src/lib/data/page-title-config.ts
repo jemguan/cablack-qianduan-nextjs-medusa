@@ -8,6 +8,13 @@ export type PageTitleConfig = {
   logo_url?: string | null
   title_templates?: Record<string, string> | null
   default_template?: string | null
+  homepage_seo_title?: string | null
+  homepage_seo_description?: string | null
+  organization_name?: string | null
+  organization_logo_url?: string | null
+  organization_social_links?: string[] | null
+  website_name?: string | null
+  website_search_url?: string | null
 }
 
 const DEFAULT_CONFIG: PageTitleConfig = {
@@ -15,6 +22,13 @@ const DEFAULT_CONFIG: PageTitleConfig = {
   logo_url: null,
   title_templates: {},
   default_template: "{siteName} - {title}",
+  homepage_seo_title: null,
+  homepage_seo_description: null,
+  organization_name: null,
+  organization_logo_url: null,
+  organization_social_links: null,
+  website_name: null,
+  website_search_url: null,
 }
 
 /**

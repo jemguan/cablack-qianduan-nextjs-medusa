@@ -16,15 +16,29 @@ import { listBlogs } from "@lib/data/blogs"
 import { sdk } from "@lib/config"
 import { getAuthHeaders, getCacheOptions } from "@lib/data/cookies"
 import { getCacheConfig } from "@lib/config/cache"
-import { getPageTitle } from "@lib/data/page-title-config"
+import { getPageTitle, getPageTitleConfig } from "@lib/data/page-title-config"
 import type { HttpTypes } from "@medusajs/types"
+import Schema from "@modules/common/components/seo/Schema"
+import { getBaseURL } from "@lib/util/env"
 
 export async function generateMetadata(): Promise<Metadata> {
-  const title = await getPageTitle("home", { title: "Home" })
+  const config = await getPageTitleConfig()
+
+  const title = config.homepage_seo_title || await getPageTitle("home", { title: "Home" })
+  const description = config.homepage_seo_description || "Shop the best products at Cablack. Your premium destination for ..."
+
   return {
     title,
-    description:
-      "A performant frontend ecommerce starter template with Next.js 15 and Medusa.",
+    description: description,
+    alternates: {
+      canonical: getBaseURL(),
+    },
+    openGraph: {
+      title,
+      description,
+      url: getBaseURL(),
+      type: 'website',
+    }
   }
 }
 
@@ -50,12 +64,12 @@ export default async function Home() {
   // 提取 CollageHero blocks 中的产品 ID
   const collageHeroProductIds: string[] = []
   const blocks = getPageLayoutBlocks(config, 'home')
-  
+
   for (const block of blocks) {
     if (block.type === 'collageHero' && block.enabled !== false) {
       const blockConfig = config?.blockConfigs?.['collageHero']?.[block.id] || block.config || {}
       const modules = blockConfig.modules || []
-      
+
       for (const module of modules) {
         if (module.type === 'product' && module.productId) {
           collageHeroProductIds.push(module.productId)
@@ -101,6 +115,9 @@ export default async function Home() {
   // 根据 pageLayouts 配置获取首页 blocks
   const pageBlocks = await getHomePageLayoutBlocks(config, categories, region, collageHeroProducts, blogArticles)
 
+  // 获取页面标题配置（用于 Schema）
+  const pageTitleConfig = await getPageTitleConfig()
+
   // 组件映射
   const componentMap: Record<string, React.ComponentType<any>> = {
     FeaturedCollections,
@@ -115,6 +132,9 @@ export default async function Home() {
 
   return (
     <>
+      <Schema type="Organization" data={pageTitleConfig} />
+      <Schema type="WebSite" data={pageTitleConfig} />
+
       {/* 根据配置动态渲染 blocks */}
       {pageBlocks.map((blockConfig) => {
         if (!blockConfig.enabled || !blockConfig.componentName) {
