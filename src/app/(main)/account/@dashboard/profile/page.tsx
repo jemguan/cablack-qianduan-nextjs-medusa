@@ -9,10 +9,14 @@ import ProfilePassword from "@modules/account/components/profile-password"
 import { notFound } from "next/navigation"
 import { listRegions } from "@lib/data/regions"
 import { retrieveCustomer } from "@lib/data/customer"
+import { getPageTitle } from "@lib/data/page-title-config"
 
-export const metadata: Metadata = {
-  title: "Profile",
-  description: "View and edit your Onahole Station profile.",
+export async function generateMetadata(): Promise<Metadata> {
+  const title = await getPageTitle("account_profile", { title: "Profile" })
+  return {
+    title,
+    description: "View and edit your Onahole Station profile.",
+  }
 }
 
 export default async function Profile() {

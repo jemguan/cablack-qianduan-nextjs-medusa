@@ -16,12 +16,16 @@ import { listBlogs } from "@lib/data/blogs"
 import { sdk } from "@lib/config"
 import { getAuthHeaders, getCacheOptions } from "@lib/data/cookies"
 import { getCacheConfig } from "@lib/config/cache"
+import { getPageTitle } from "@lib/data/page-title-config"
 import type { HttpTypes } from "@medusajs/types"
 
-export const metadata: Metadata = {
-  title: "Medusa Next.js Starter Template",
-  description:
-    "A performant frontend ecommerce starter template with Next.js 15 and Medusa.",
+export async function generateMetadata(): Promise<Metadata> {
+  const title = await getPageTitle("home", { title: "Home" })
+  return {
+    title,
+    description:
+      "A performant frontend ecommerce starter template with Next.js 15 and Medusa.",
+  }
 }
 
 // 首页缓存 5 分钟，确保 FeaturedBlog 等组件定期更新

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 
 import { getPageByUrl } from "@lib/data/pages"
 import { getCountryCode } from "@lib/data/regions"
+import { getPageTitle } from "@lib/data/page-title-config"
 import PageDetailTemplate from "@modules/pages/templates/page-detail"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 
@@ -23,7 +24,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     }
   }
 
-  const metaTitle = page.meta_title || `${page.title} | Onahole Station`
+  const title = await getPageTitle("page", { title: page.title })
+  const metaTitle = page.meta_title || title
   const metaDescription =
     page.meta_description || page.subtitle || "Read more about us"
 

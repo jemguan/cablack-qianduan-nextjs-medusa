@@ -3,9 +3,24 @@ import { Metadata } from "next"
 import "styles/globals.css"
 import { ThemeProvider } from "@modules/common/components/theme-toggle"
 import { ScrollToTop } from "@components/ScrollToTop"
+import { getPageTitleConfig } from "@lib/data/page-title-config"
 
-export const metadata: Metadata = {
-  metadataBase: new URL(getBaseURL()),
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await getPageTitleConfig()
+  const metadata: Metadata = {
+    metadataBase: new URL(getBaseURL()),
+  }
+
+  // 如果配置了 logo_url，设置 favicon
+  if (config.logo_url) {
+    metadata.icons = {
+      icon: config.logo_url,
+      shortcut: config.logo_url,
+      apple: config.logo_url,
+    }
+  }
+
+  return metadata
 }
 
 // 获取 Medusa 后端 URL（服务端）

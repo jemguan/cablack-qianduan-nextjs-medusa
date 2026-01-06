@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 
 import { getCollectionByHandle, listCollections } from "@lib/data/collections"
 import { getCountryCode } from "@lib/data/regions"
+import { getPageTitle } from "@lib/data/page-title-config"
 import { StoreCollection } from "@medusajs/types"
 import CollectionTemplate from "@modules/collections/templates"
 import Breadcrumb from "@modules/common/components/breadcrumb"
@@ -41,8 +42,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
 
+  const title = await getPageTitle("collection", { title: collection.title })
+
   const metadata = {
-    title: `${collection.title} | Onahole Station`,
+    title,
     description: `${collection.title} collection`,
   } as Metadata
 

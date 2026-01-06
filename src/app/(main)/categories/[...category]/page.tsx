@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 
 import { getCategoryByHandle, listCategories } from "@lib/data/categories"
 import { getCountryCode } from "@lib/data/regions"
+import { getPageTitle } from "@lib/data/page-title-config"
 import { HttpTypes } from "@medusajs/types"
 import CategoryTemplate from "@modules/categories/templates"
 import Breadcrumb from "@modules/common/components/breadcrumb"
@@ -34,12 +35,12 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   try {
     const productCategory = await getCategoryByHandle(params.category)
 
-    const title = productCategory.name + " | Onahole Station"
+    const title = await getPageTitle("category", { name: productCategory.name, title: productCategory.name })
 
-    const description = productCategory.description ?? `${title} category.`
+    const description = productCategory.description ?? `${productCategory.name} category.`
 
     return {
-      title: `${title} | Onahole Station`,
+      title,
       description,
       alternates: {
         canonical: `${params.category.join("/")}`,

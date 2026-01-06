@@ -2,15 +2,19 @@ import { Metadata } from "next"
 
 import { listBlogs } from "@lib/data/blogs"
 import { getCountryCode } from "@lib/data/regions"
+import { getPageTitle } from "@lib/data/page-title-config"
 import BlogsListTemplate from "@modules/blogs/templates/blogs-list"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 
 // 设置页面级别的 revalidate 为 5 分钟（300 秒），确保缓存及时更新
 export const revalidate = 300
 
-export const metadata: Metadata = {
-  title: "Blog",
-  description: "Read our latest blog articles and updates.",
+export async function generateMetadata(): Promise<Metadata> {
+  const title = await getPageTitle("blog_list", { title: "Blog" })
+  return {
+    title,
+    description: "Read our latest blog articles and updates.",
+  }
 }
 
 type Params = {

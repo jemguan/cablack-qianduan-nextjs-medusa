@@ -2,6 +2,7 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { searchProducts } from "@lib/data/search"
 import { getCurrentRegion, getCountryCode } from "@lib/data/regions"
+import { getPageTitle } from "@lib/data/page-title-config"
 import SearchResults from "@modules/search/templates/search-results"
 
 type Props = {
@@ -12,8 +13,13 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const searchParams = await props.searchParams
   const searchTerm = searchParams.q || ""
 
+  const title = await getPageTitle("search", {
+    term: searchTerm || "Search",
+    title: searchTerm ? `Search: ${searchTerm}` : "Search",
+  })
+
   return {
-    title: searchTerm ? `Search: ${searchTerm} | Onahole Station` : "Search | Onahole Station",
+    title,
     description: searchTerm
       ? `Search results for "${searchTerm}"`
       : "Search products",

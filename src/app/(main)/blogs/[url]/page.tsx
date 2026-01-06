@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 
 import { getBlogByUrl } from "@lib/data/blogs"
 import { getCountryCode } from "@lib/data/regions"
+import { getPageTitle } from "@lib/data/page-title-config"
 import BlogDetailTemplate from "@modules/blogs/templates/blog-detail"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 
@@ -23,7 +24,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     }
   }
 
-  const metaTitle = post.meta_title || `${post.title} | Onahole Station`
+  const title = await getPageTitle("blog_detail", { title: post.title })
+  const metaTitle = post.meta_title || title
   const metaDescription =
     post.meta_description || "Read our blog articles"
 

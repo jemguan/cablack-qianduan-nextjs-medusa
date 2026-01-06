@@ -4,10 +4,14 @@ import Overview from "@modules/account/components/overview"
 import { notFound } from "next/navigation"
 import { retrieveCustomer } from "@lib/data/customer"
 import { listOrders } from "@lib/data/orders"
+import { getPageTitle } from "@lib/data/page-title-config"
 
-export const metadata: Metadata = {
-  title: "Account",
-  description: "Overview of your account activity.",
+export async function generateMetadata(): Promise<Metadata> {
+  const title = await getPageTitle("account", { title: "Account" })
+  return {
+    title,
+    description: "Overview of your account activity.",
+  }
 }
 
 export default async function OverviewTemplate() {

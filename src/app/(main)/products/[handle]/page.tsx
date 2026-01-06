@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { listProducts } from "@lib/data/products"
 import { getCurrentRegion, getCountryCode } from "@lib/data/regions"
 import { getProductHtmlDescription } from "@lib/data/product-html-description"
+import { getPageTitle } from "@lib/data/page-title-config"
 import ProductTemplate from "@modules/products/templates"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 import { ReviewStatsProvider } from "@modules/products/components/reviews/ReviewStatsContext"
@@ -71,11 +72,13 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
 
+  const title = await getPageTitle("product", { title: product.title })
+
   return {
-    title: `${product.title} | Onahole Station`,
+    title,
     description: `${product.title}`,
     openGraph: {
-      title: `${product.title} | Onahole Station`,
+      title,
       description: `${product.title}`,
       images: product.thumbnail ? [product.thumbnail] : [],
     },

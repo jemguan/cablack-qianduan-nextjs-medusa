@@ -1,11 +1,15 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { getCurrentRegion } from "@lib/data/regions"
+import { getPageTitle } from "@lib/data/page-title-config"
 import WishlistOverview from "@modules/wishlist/templates/wishlist-overview"
 
-export const metadata: Metadata = {
-  title: "Wishlist",
-  description: "View and manage your wishlist items.",
+export async function generateMetadata(): Promise<Metadata> {
+  const title = await getPageTitle("account_wishlist", { title: "Wishlist" })
+  return {
+    title,
+    description: "View and manage your wishlist items.",
+  }
 }
 
 export default async function WishlistPage() {
