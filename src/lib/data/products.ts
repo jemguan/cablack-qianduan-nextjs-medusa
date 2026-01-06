@@ -8,6 +8,11 @@ import { unstable_cache } from "next/cache"
 import { getAuthHeaders, getCacheOptions, getRegionCountryCode } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 
+// 用于排序的超精简字段（只包含排序所需的最小字段）
+// 包含：ID、创建时间、价格计算、库存信息
+const SORT_ONLY_FIELDS =
+  "id,created_at,*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder"
+
 // 用于列表视图的精简字段（只包含必要的显示信息）
 // 包含：价格计算、库存信息、变体选项、变体图片、产品选项
 const LIST_VIEW_FIELDS =
@@ -100,10 +105,19 @@ export const listProducts = async ({
   const cacheConfig = getCacheConfig("PRODUCT_LIST")
 
   // 根据使用场景选择字段
+  // 如果 queryParams.fields 以 "=" 开头，表示完全替换默认字段
+  const shouldReplaceFields = queryParams?.fields?.startsWith("=")
+  const fieldsToUse = shouldReplaceFields 
+    ? queryParams.fields.substring(1) // 移除 "=" 前缀
+    : undefined
+  
   const defaultFields = useListViewFields ? LIST_VIEW_FIELDS : FULL_FIELDS
 
   // If custom fields are provided, merge them with default fields using + prefix
-  const fields = queryParams?.fields
+  // 如果 fieldsToUse 存在，完全替换；否则按原逻辑合并
+  const fields = fieldsToUse
+    ? fieldsToUse
+    : queryParams?.fields
     ? queryParams.fields.startsWith("+") || queryParams.fields.startsWith("-")
       ? `${defaultFields}${queryParams.fields}`
       : `${defaultFields}+${queryParams.fields}`
@@ -145,7 +159,12 @@ export const listProducts = async ({
 
 /**
  * 获取所有产品并按指定规则排序（使用缓存）
- * 缓存 60 秒以避免频繁请求所有产品
+ * 缓存 5 分钟（300秒）以显著提升性能，减少对700+产品的频繁查询
+ * 
+ * 优化策略：
+ * - 使用超精简字段集（SORT_ONLY_FIELDS）减少数据传输量
+ * - 增加批量大小到200，减少请求次数
+ * - 延长缓存时间到5分钟，平衡实时性和性能
  * 
  * 所有排序都会将缺货产品放到最后
  */
@@ -154,16 +173,30 @@ const getSortedProductIds = async (
   sortBy: SortOptions,
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
 ): Promise<{ sortedIds: string[]; totalCount: number }> => {
-  // 创建缓存 key
-  const cacheKey = `sorted-${countryCode}-${sortBy}-${JSON.stringify(queryParams || {})}`
+  // 创建稳定的缓存 key（排序 queryParams 确保一致性）
+  const normalizedQueryParams = queryParams 
+    ? Object.keys(queryParams)
+        .sort()
+        .reduce((acc, key) => {
+          const value = queryParams[key as keyof typeof queryParams]
+          if (value !== undefined && value !== null) {
+            acc[key] = Array.isArray(value) ? [...value].sort() : value
+          }
+          return acc
+        }, {} as Record<string, any>)
+    : {}
+  
+  const cacheKey = `sorted-${countryCode}-${sortBy}-${JSON.stringify(normalizedQueryParams)}`
   
   // 使用 unstable_cache 缓存排序结果
   const getCachedSortedIds = unstable_cache(
     async () => {
-      // 获取所有产品的 ID 和排序信息（使用精简字段）
+      const startTime = Date.now()
+      
+      // 获取所有产品的 ID 和排序信息（使用超精简字段）
       const allProducts: HttpTypes.StoreProduct[] = []
       let offset = 0
-      const batchSize = 100
+      const batchSize = 200 // 增加批量大小，减少请求次数
       let totalCount = 0
 
       // 分批获取所有产品
@@ -174,9 +207,10 @@ const getSortedProductIds = async (
             ...queryParams,
             limit: batchSize,
             offset,
+            fields: `=${SORT_ONLY_FIELDS}`, // 使用 "=" 前缀完全替换默认字段，使用超精简字段集
           } as any,
           countryCode,
-          useListViewFields: true,
+          useListViewFields: false, // 不使用 LIST_VIEW_FIELDS，使用自定义字段
         })
 
         allProducts.push(...response.products)
@@ -215,6 +249,11 @@ const getSortedProductIds = async (
         }
       })
 
+      const duration = Date.now() - startTime
+      if (process.env.NODE_ENV === "development") {
+        console.log(`[Product Sort] Fetched ${totalCount} products in ${duration}ms`)
+      }
+
       return {
         sortedIds: productsWithMeta.map((p) => p.id),
         totalCount,
@@ -222,8 +261,8 @@ const getSortedProductIds = async (
     },
     [cacheKey],
     {
-      revalidate: 60, // 缓存 60 秒
-      tags: ["products", "sort"],
+      revalidate: 300, // 缓存 5 分钟（300秒），显著提升性能
+      tags: ["products", "sort", `products-sort-${countryCode}`],
     }
   )
 
@@ -236,7 +275,7 @@ const getSortedProductIds = async (
  * 优化策略：
  * - 使用缓存的排序 ID 列表，确保缺货产品全局排在最后
  * - 分页时只获取当前页的产品详情
- * - 缓存 60 秒，平衡性能和实时性
+ * - 缓存 5 分钟（300秒），显著提升性能，减少对700+产品的频繁查询
  */
 export const listProductsWithSort = async ({
   page = 1,
