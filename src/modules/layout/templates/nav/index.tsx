@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+import Image from "next/image"
 
 import { listRegions, getRegion } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
@@ -50,40 +51,58 @@ export default async function Nav() {
               className="flex items-center gap-x-2 transition-opacity hover:opacity-80"
               data-testid="nav-store-link"
             >
-              {/* Logo */}
+              {/* Logo - 使用 Next.js Image 组件优化加载 */}
               {hasLightLogo && (
-                <img
-                  src={logo.lightLogoUrl}
-                  alt={logo.logoAlt || "Logo"}
-                  className={clx(
-                    "w-auto object-contain dark:hidden",
-                    logo.mobileHeightClass && logo.mobileHeightClass.trim() ? logo.mobileHeightClass : "h-8",
-                    logo.desktopHeightClass && logo.desktopHeightClass.trim() ? logo.desktopHeightClass : "small:h-10"
-                  )}
-                />
+                <div className={clx(
+                  "relative w-auto dark:hidden",
+                  logo.mobileHeightClass && logo.mobileHeightClass.trim() ? logo.mobileHeightClass : "h-8",
+                  logo.desktopHeightClass && logo.desktopHeightClass.trim() ? logo.desktopHeightClass : "small:h-10"
+                )}>
+                  <Image
+                    src={logo.lightLogoUrl!}
+                    alt={logo.logoAlt || "Logo"}
+                    width={120}
+                    height={40}
+                    priority
+                    className="w-auto h-full object-contain"
+                    sizes="120px"
+                  />
+                </div>
               )}
               {hasDarkLogo && (
-                <img
-                  src={logo.darkLogoUrl}
-                  alt={logo.logoAlt || "Logo"}
-                  className={clx(
-                    "w-auto object-contain hidden dark:block",
-                    logo.mobileHeightClass && logo.mobileHeightClass.trim() ? logo.mobileHeightClass : "h-8",
-                    logo.desktopHeightClass && logo.desktopHeightClass.trim() ? logo.desktopHeightClass : "small:h-10"
-                  )}
-                />
+                <div className={clx(
+                  "relative w-auto hidden dark:block",
+                  logo.mobileHeightClass && logo.mobileHeightClass.trim() ? logo.mobileHeightClass : "h-8",
+                  logo.desktopHeightClass && logo.desktopHeightClass.trim() ? logo.desktopHeightClass : "small:h-10"
+                )}>
+                  <Image
+                    src={logo.darkLogoUrl!}
+                    alt={logo.logoAlt || "Logo"}
+                    width={120}
+                    height={40}
+                    priority
+                    className="w-auto h-full object-contain"
+                    sizes="120px"
+                  />
+                </div>
               )}
               {/* Fallback: Use light logo for dark mode if dark logo not available */}
               {hasLightLogo && !hasDarkLogo && (
-                <img
-                  src={logo.lightLogoUrl}
-                  alt={logo.logoAlt || "Logo"}
-                  className={clx(
-                    "w-auto object-contain hidden dark:block",
-                    logo.mobileHeightClass && logo.mobileHeightClass.trim() ? logo.mobileHeightClass : "h-8",
-                    logo.desktopHeightClass && logo.desktopHeightClass.trim() ? logo.desktopHeightClass : "small:h-10"
-                  )}
-                />
+                <div className={clx(
+                  "relative w-auto hidden dark:block",
+                  logo.mobileHeightClass && logo.mobileHeightClass.trim() ? logo.mobileHeightClass : "h-8",
+                  logo.desktopHeightClass && logo.desktopHeightClass.trim() ? logo.desktopHeightClass : "small:h-10"
+                )}>
+                  <Image
+                    src={logo.lightLogoUrl!}
+                    alt={logo.logoAlt || "Logo"}
+                    width={120}
+                    height={40}
+                    priority
+                    className="w-auto h-full object-contain"
+                    sizes="120px"
+                  />
+                </div>
               )}
               
               {/* Brand Name */}

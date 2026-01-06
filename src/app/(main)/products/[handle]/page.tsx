@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { cache } from "react"
 import { listProducts } from "@lib/data/products"
 import { getCurrentRegion, getCountryCode } from "@lib/data/regions"
 import { getProductHtmlDescription } from "@lib/data/product-html-description"
@@ -13,6 +14,26 @@ type Props = {
   params: Promise<{ handle: string }>
   searchParams: Promise<{ v_id?: string }>
 }
+
+/**
+ * 使用 React cache() 去重产品获取请求
+ * generateMetadata 和 ProductPage 会在同一请求周期内共享缓存
+ * 避免重复的 API 调用
+ */
+const getProductByHandle = cache(async (handle: string, includeCategories: boolean = false) => {
+  const fields = includeCategories 
+    ? "+*categories,+*categories.parent_category,+*categories.parent_category.parent_category"
+    : undefined
+    
+  const { response } = await listProducts({
+    queryParams: {
+      handle,
+      ...(fields && { fields }),
+    },
+  })
+  
+  return response.products[0] || null
+})
 
 export async function generateStaticParams() {
   try {
@@ -62,11 +83,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
 
-  const product = await listProducts({
-    queryParams: { 
-      handle,
-    },
-  }).then(({ response }) => response.products[0])
+  // 使用缓存的产品获取函数（与 ProductPage 共享缓存）
+  const product = await getProductByHandle(handle, true)
 
   if (!product) {
     notFound()
@@ -97,18 +115,14 @@ export default async function ProductPage(props: Props) {
     notFound()
   }
 
-  const pricedProduct = await listProducts({
-    queryParams: {
-      handle: params.handle,
-      fields: "+*categories,+*categories.parent_category,+*categories.parent_category.parent_category",
-    },
-  }).then(({ response }) => response.products[0])
-
-  const images = getImagesForVariant(pricedProduct, selectedVariantId)
+  // 使用缓存的产品获取函数（与 generateMetadata 共享缓存）
+  const pricedProduct = await getProductByHandle(params.handle, true)
 
   if (!pricedProduct) {
     notFound()
   }
+
+  const images = getImagesForVariant(pricedProduct, selectedVariantId)
 
   // 获取产品 HTML 描述
   const htmlDescription = await getProductHtmlDescription(pricedProduct.id)
@@ -142,7 +156,7 @@ export default async function ProductPage(props: Props) {
   }
 
   // Add product title (current page)
-  breadcrumbItems.push({ label: pricedProduct.title })
+  breadcrumbItems.push({ label: pricedProduct.title, href: `/products/${params.handle}` })
 
   return (
     <ReviewStatsProvider>
@@ -158,7 +172,7 @@ export default async function ProductPage(props: Props) {
         product={pricedProduct}
         region={region}
         countryCode={countryCode}
-        images={images}
+        images={images || []}
         initialVariantId={selectedVariantId}
         htmlDescription={htmlDescription}
       />
