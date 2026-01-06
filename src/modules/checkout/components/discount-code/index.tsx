@@ -30,7 +30,6 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
       // 刷新页面以更新购物车数据
       router.refresh()
     } catch (error) {
-      console.error("Error removing promotion:", error)
       setErrorMessage(error instanceof Error ? error.message : "Failed to remove promotion")
     }
   }

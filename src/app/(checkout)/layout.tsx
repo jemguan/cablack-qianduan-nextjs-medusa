@@ -128,7 +128,7 @@ export default async function CheckoutLayout({
           <div className="flex-1 basis-0" />
         </nav>
       </div>
-      <div className="relative" data-testid="checkout-container">{children}</div>
+      <div className="relative min-h-[calc(100vh-4rem)]" data-testid="checkout-container">{children}</div>
       {poweredBy.enabled && (
       <div className="py-4 w-full flex items-center justify-center">
           <MedusaCTA text={poweredBy.text} />

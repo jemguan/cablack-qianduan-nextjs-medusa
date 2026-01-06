@@ -1,9 +1,7 @@
-import repeat from "@lib/util/repeat"
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Table } from "@medusajs/ui"
 
 import Item from "@modules/cart/components/item"
-import SkeletonLineItem from "@modules/skeletons/components/skeleton-line-item"
 
 type ItemsTemplateProps = {
   cart?: HttpTypes.StoreCart
@@ -24,54 +22,50 @@ const ItemsTemplate = ({ cart }: ItemsTemplateProps) => {
       </div>
       
       {/* Mobile: Card Layout */}
-      <div className="small:hidden flex flex-col gap-4">
-        {sortedItems.length > 0
-          ? sortedItems.map((item) => {
-              return (
-                <Item
-                  key={item.id}
-                  item={item}
-                  currencyCode={cart?.currency_code}
-                  isMobile={true}
-                />
-              )
-            })
-          : repeat(5).map((i) => {
-              return <SkeletonLineItem key={i} />
-            })}
-      </div>
+      {sortedItems.length > 0 && (
+        <div className="small:hidden flex flex-col gap-4">
+          {sortedItems.map((item) => {
+            return (
+              <Item
+                key={item.id}
+                item={item}
+                currencyCode={cart?.currency_code}
+                isMobile={true}
+              />
+            )
+          })}
+        </div>
+      )}
 
       {/* Desktop: Table Layout */}
-      <div className="hidden small:block w-full overflow-x-auto overflow-y-hidden no-scrollbar">
-        <Table className="text-foreground w-full table-fixed">
-          <Table.Header className="border-t-0 border-b border-border">
-            <Table.Row className="text-muted-foreground txt-medium-plus">
-              <Table.HeaderCell className="px-4 w-[15%]">Item</Table.HeaderCell>
-              <Table.HeaderCell className="px-4 w-[35%]"></Table.HeaderCell>
-              <Table.HeaderCell className="px-4 w-[20%]">Quantity</Table.HeaderCell>
-              <Table.HeaderCell className="text-right px-4 w-[15%]">
-                Price
-              </Table.HeaderCell>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {sortedItems.length > 0
-              ? sortedItems.map((item) => {
-                  return (
-                    <Item
-                      key={item.id}
-                      item={item}
-                      currencyCode={cart?.currency_code}
-                      isMobile={false}
-                    />
-                  )
-                })
-              : repeat(5).map((i) => {
-                  return <SkeletonLineItem key={i} />
-                })}
-          </Table.Body>
-        </Table>
-      </div>
+      {sortedItems.length > 0 && (
+        <div className="hidden small:block w-full overflow-x-auto overflow-y-hidden no-scrollbar">
+          <Table className="text-foreground w-full table-fixed">
+            <Table.Header className="border-t-0 border-b border-border">
+              <Table.Row className="text-muted-foreground txt-medium-plus">
+                <Table.HeaderCell className="px-4 w-[15%]">Item</Table.HeaderCell>
+                <Table.HeaderCell className="px-4 w-[35%]"></Table.HeaderCell>
+                <Table.HeaderCell className="px-4 w-[20%]">Quantity</Table.HeaderCell>
+                <Table.HeaderCell className="text-right px-4 w-[15%]">
+                  Price
+                </Table.HeaderCell>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {sortedItems.map((item) => {
+                return (
+                  <Item
+                    key={item.id}
+                    item={item}
+                    currencyCode={cart?.currency_code}
+                    isMobile={false}
+                  />
+                )
+              })}
+            </Table.Body>
+          </Table>
+        </div>
+      )}
     </div>
   )
 }

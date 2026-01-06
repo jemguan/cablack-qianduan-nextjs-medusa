@@ -49,16 +49,17 @@ const DeleteButton = ({
   return (
     <div
       className={clx(
-        "flex items-center justify-between text-small-regular",
+        "flex items-center justify-center text-small-regular shrink-0",
         className
       )}
     >
       <button
-        className="flex gap-x-1 text-ui-fg-subtle hover:text-ui-fg-base cursor-pointer"
+        className="flex items-center justify-center gap-x-1 text-ui-fg-subtle hover:text-ui-fg-base cursor-pointer shrink-0 min-w-[44px] min-h-[44px] p-2"
         onClick={() => handleDelete(id)}
+        aria-label="Delete item"
       >
-        {isDeleting ? <Spinner className="animate-spin" /> : <Trash />}
-        <span>{children}</span>
+        {isDeleting ? <Spinner className="animate-spin w-5 h-5" /> : <Trash className="w-5 h-5" />}
+        {children && <span className="sr-only">{children}</span>}
       </button>
     </div>
   )

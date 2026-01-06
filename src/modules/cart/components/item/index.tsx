@@ -76,21 +76,29 @@ const Item = ({ item, type = "full", currencyCode, isMobile = false }: ItemProps
               <div className="text-muted-foreground text-xs mb-2">
                 <LineItemOptions variant={item.variant} data-testid="product-variant" />
               </div>
-              <div className="text-foreground font-bold text-lg">
-                <LineItemPrice
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-foreground font-bold text-lg">
+                  <LineItemPrice
+                    item={item}
+                    style="tight"
+                    currencyCode={currencyCode}
+                    showPreTaxPrice={true}
+                  />
+                </div>
+                <DeleteButton 
+                  id={item.id}
                   item={item}
-                  style="tight"
-                  currencyCode={currencyCode}
-                  showPreTaxPrice={true}
+                  data-testid="product-delete-button" 
+                  className="text-muted-foreground hover:text-destructive transition-colors shrink-0 p-2 min-w-[44px] flex items-center justify-center" 
                 />
               </div>
             </div>
 
             {/* Quantity Controls */}
-            <div className="flex items-center justify-between pt-2 border-t border-border">
-              <div className="flex items-center gap-2 relative z-0">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">Quantity:</span>
-                <div className="relative z-10">
+            <div className="flex items-center justify-between pt-2 border-t border-border gap-2">
+              <div className="flex items-center gap-2 relative z-0 min-w-0 flex-1">
+                <span className="text-sm text-muted-foreground whitespace-nowrap shrink-0">Quantity:</span>
+                <div className="relative z-10 shrink-0">
                   <CartItemSelect
                     value={item.quantity}
                     onChange={(value) => changeQuantity(parseInt(value.target.value))}
@@ -109,14 +117,8 @@ const Item = ({ item, type = "full", currencyCode, isMobile = false }: ItemProps
                   )}
                   </CartItemSelect>
                 </div>
-                {updating && <Spinner className="w-4 h-4 text-primary animate-spin ml-1" />}
+                {updating && <Spinner className="w-4 h-4 text-primary animate-spin ml-1 shrink-0" />}
               </div>
-              <DeleteButton 
-                id={item.id}
-                item={item}
-                data-testid="product-delete-button" 
-                className="text-muted-foreground hover:text-destructive transition-colors shrink-0 p-2" 
-              />
             </div>
             <ErrorMessage error={error} data-testid="product-error-message" className="mt-1 text-xs" />
           </div>
