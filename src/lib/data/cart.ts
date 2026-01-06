@@ -300,54 +300,97 @@ export async function initiatePaymentSession(
       throw new Error("Cart ID is missing. Please refresh the page and try again.")
     }
 
+    // 只传递必要的字段，避免序列化问题
+    // 创建一个最小化的购物车对象，只包含 API 需要的字段
+    const minimalCart = {
+      id: cartObj.id,
+      region_id: cartObj.region_id,
+      // 如果 payment_collection 存在，也传递它（但只传递必要的字段）
+      ...(cartObj.payment_collection && {
+        payment_collection: {
+          id: cartObj.payment_collection.id,
+        },
+      }),
+    }
+
     const resp = await sdk.store.payment.initiatePaymentSession(
-      cartObj,
+      minimalCart as HttpTypes.StoreCart,
       data,
       {},
       headers
     )
     const cartCacheTag = await getCacheTag("carts")
     revalidateTag(cartCacheTag)
+    
+    // 确保返回值可以被序列化（Next.js Server Actions 要求）
+    // 只返回必要的字段，避免包含不可序列化的内容
+    if (resp && typeof resp === 'object') {
+      // 返回一个可序列化的对象
+      return JSON.parse(JSON.stringify(resp))
+    }
+    
     return resp
   } catch (error: any) {
     // 提取友好的错误信息
     let errorMessage = "Failed to initialize payment session"
     
-    if (error?.response) {
-      // 处理 HTTP 响应错误
-      const status = error.response.status
-      const responseData = error.response.data
-      
-      if (status === 500) {
-        errorMessage = "Payment service is temporarily unavailable. Please try again in a moment or contact support."
-      } else if (status === 401 || status === 403) {
-        errorMessage = "Authentication failed. Please refresh the page and try again."
-      } else if (status === 404) {
-        errorMessage = "Payment method not found. Please refresh the page and try again."
-      } else if (responseData?.message) {
-        errorMessage = typeof responseData.message === "string" 
-          ? responseData.message 
-          : JSON.stringify(responseData.message)
-      } else if (responseData) {
-        errorMessage = typeof responseData === "string" 
-          ? responseData 
-          : "Payment initialization failed. Please try again."
+    // 记录错误日志（生产环境也记录，但不暴露敏感信息）
+    try {
+      if (error?.response) {
+        // 处理 HTTP 响应错误
+        const status = error.response.status
+        const responseData = error.response.data
+        
+        // 记录详细错误信息
+        console.error("initiatePaymentSession error:", {
+          status,
+          url: error?.config?.url,
+          method: error?.config?.method,
+          responseData: typeof responseData === "object" 
+            ? JSON.stringify(responseData).substring(0, 500)
+            : String(responseData).substring(0, 500),
+        })
+        
+        if (status === 500) {
+          errorMessage = "Payment service is temporarily unavailable. Please try again in a moment or contact support."
+        } else if (status === 401 || status === 403) {
+          errorMessage = "Authentication failed. Please refresh the page and try again."
+        } else if (status === 404) {
+          errorMessage = "Payment method not found. Please refresh the page and try again."
+        } else if (responseData?.message) {
+          const msg = typeof responseData.message === "string" 
+            ? responseData.message 
+            : JSON.stringify(responseData.message)
+          errorMessage = msg.substring(0, 200) // 限制长度避免序列化问题
+        } else if (responseData) {
+          errorMessage = typeof responseData === "string" 
+            ? responseData.substring(0, 200)
+            : "Payment initialization failed. Please try again."
+        }
+      } else if (error?.message) {
+        errorMessage = String(error.message).substring(0, 200)
+        console.error("initiatePaymentSession error:", {
+          message: errorMessage,
+          errorType: error?.name || "Unknown",
+          ...(process.env.NODE_ENV === "development" && error?.stack 
+            ? { stack: error.stack.substring(0, 500) }
+            : {}),
+        })
+      } else {
+        errorMessage = String(error).substring(0, 200)
+        console.error("initiatePaymentSession error:", {
+          error: errorMessage,
+          type: typeof error,
+        })
       }
-    } else if (error?.message) {
-      errorMessage = error.message
+    } catch (logError) {
+      // 如果记录日志时出错，至少记录基本信息
+      console.error("initiatePaymentSession: Failed to log error details", logError)
+      errorMessage = "An unexpected error occurred. Please try again."
     }
     
-    // 仅在开发环境输出详细调试信息
-    if (process.env.NODE_ENV === "development") {
-      console.error("initiatePaymentSession error:", {
-        message: errorMessage,
-        originalError: error?.message,
-        status: error?.response?.status,
-        data: error?.response?.data
-      })
-    }
-    
-    // 抛出友好的错误信息
+    // 抛出友好的错误信息（确保错误可以被序列化）
+    // 只抛出纯字符串错误，避免序列化问题
     throw new Error(errorMessage)
   }
 }
