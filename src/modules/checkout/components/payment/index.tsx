@@ -90,6 +90,8 @@ const Payment = ({
           // 处理常见的服务器错误
           if (err.message.includes("500") || err.message.includes("Internal Server Error")) {
             errorMessage = "Payment service is temporarily unavailable. Please try again in a moment or contact support."
+          } else if (err.message.includes("No such customer") || err.message.includes("customer") || err.message.includes("Payment account error")) {
+            errorMessage = "Payment account error detected. Please refresh the page and try again. If the problem persists, please contact support."
           } else if (err.message.includes("401") || err.message.includes("Unauthorized")) {
             errorMessage = "Authentication failed. Please refresh the page and try again."
           } else if (err.message.includes("404") || err.message.includes("Not Found")) {

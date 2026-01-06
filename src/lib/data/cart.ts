@@ -352,7 +352,16 @@ export async function initiatePaymentSession(
         })
         
         if (status === 500) {
-          errorMessage = "Payment service is temporarily unavailable. Please try again in a moment or contact support."
+          // 检查是否是 Stripe 客户不存在错误
+          const responseStr = typeof responseData === "string" 
+            ? responseData 
+            : JSON.stringify(responseData)
+          
+          if (responseStr.includes("No such customer") || responseStr.includes("customer")) {
+            errorMessage = "Payment account error detected. Please refresh the page and try again. If the problem persists, please contact support."
+          } else {
+            errorMessage = "Payment service is temporarily unavailable. Please try again in a moment or contact support."
+          }
         } else if (status === 401 || status === 403) {
           errorMessage = "Authentication failed. Please refresh the page and try again."
         } else if (status === 404) {
@@ -368,7 +377,13 @@ export async function initiatePaymentSession(
             : "Payment initialization failed. Please try again."
         }
       } else if (error?.message) {
-        errorMessage = String(error.message).substring(0, 200)
+        const errorMsg = String(error.message)
+        // 检查是否是 Stripe 客户不存在错误
+        if (errorMsg.includes("No such customer") || errorMsg.includes("customer")) {
+          errorMessage = "Payment account error detected. Please refresh the page and try again. If the problem persists, please contact support."
+        } else {
+          errorMessage = errorMsg.substring(0, 200)
+        }
         console.error("initiatePaymentSession error:", {
           message: errorMessage,
           errorType: error?.name || "Unknown",
