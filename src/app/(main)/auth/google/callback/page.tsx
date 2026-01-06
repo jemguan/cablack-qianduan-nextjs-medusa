@@ -151,6 +151,22 @@ export default function GoogleCallbackPage() {
         // 步骤 3: 如果客户不存在且没有 customer_id key，创建客户
         if (shouldCreateCustomer) {
           const email = decodedToken.user_metadata?.email as string
+          const userMetadata = decodedToken.user_metadata || {}
+          
+          // 从 Google 用户信息中提取名字
+          const fullName = (userMetadata.name as string) || ""
+          const givenName = (userMetadata.given_name as string) || ""
+          const familyName = (userMetadata.family_name as string) || ""
+          
+          // 解析名字：优先使用 given_name/family_name，否则从 name 中解析
+          let firstName = givenName
+          let lastName = familyName
+          
+          if (!firstName && !lastName && fullName) {
+            const nameParts = fullName.trim().split(" ")
+            firstName = nameParts[0] || ""
+            lastName = nameParts.slice(1).join(" ") || ""
+          }
           
           if (!email) {
             setError("Unable to retrieve email from Google authentication")
@@ -160,8 +176,15 @@ export default function GoogleCallbackPage() {
 
           try {
             // 创建客户（token 已经在 SDK 中，会自动附加到请求）
+            // 提供完整的客户数据，避免 Medusa Admin 渲染错误
             await sdk.store.customer.create({
               email: email,
+              first_name: firstName || undefined,
+              last_name: lastName || undefined,
+              // 初始化空数组字段，避免 Medusa Admin 的 reduce 错误
+              metadata: {
+                created_via: "google_oauth",
+              },
             })
 
             // 步骤 4: 刷新 token 以获取新的客户 token，并更新 cookie

@@ -200,7 +200,7 @@ function FreeShippingPopup({
   return (
     <div
       className={clx(
-        "fixed bottom-5 right-5 flex flex-col items-end gap-2 transition-all duration-500 ease-in-out z-10",
+        "fixed bottom-4 right-4 small:bottom-5 small:right-5 flex flex-col items-end gap-2 transition-all duration-500 ease-in-out z-10",
         {
           "opacity-0 invisible delay-1000": price.target_reached,
           "opacity-0 invisible": isClosed,
@@ -217,10 +217,10 @@ function FreeShippingPopup({
         </Button>
       </div>
 
-      <div className="w-[400px] bg-black text-white p-6 rounded-lg ">
-        <div className="pb-4">
-          <div className="space-y-3">
-            <div className="flex justify-between text-[15px] text-neutral-400">
+      <div className="w-[calc(100vw-2rem)] max-w-[400px] bg-black text-white p-4 small:p-6 rounded-lg">
+        <div className="pb-3 small:pb-4">
+          <div className="space-y-2 small:space-y-3">
+            <div className="flex flex-col small:flex-row small:justify-between gap-1.5 small:gap-0 text-sm small:text-[15px] text-neutral-400">
               <div>
                 {price.target_reached ? (
                   <div className="flex items-center gap-1.5">
@@ -262,16 +262,16 @@ function FreeShippingPopup({
           </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-col small:flex-row gap-2 small:gap-3">
           <LocalizedClientLink
-            className="rounded-2xl bg-transparent shadow-none outline-none border-[1px] border-white text-[15px] py-2.5 px-4"
+            className="rounded-2xl bg-transparent shadow-none outline-none border-[1px] border-white text-sm small:text-[15px] py-2 small:py-2.5 px-4 text-center"
             href="/cart"
           >
             View cart
           </LocalizedClientLink>
 
           <LocalizedClientLink
-            className="flex-grow rounded-2xl bg-white text-neutral-950 shadow-none outline-none border-[1px] border-white text-[15px] py-2.5 px-4 text-center"
+            className="rounded-2xl bg-white text-neutral-950 shadow-none outline-none border-[1px] border-white text-sm small:text-[15px] py-2 small:py-2.5 px-4 text-center"
             href="/store"
           >
             View products
