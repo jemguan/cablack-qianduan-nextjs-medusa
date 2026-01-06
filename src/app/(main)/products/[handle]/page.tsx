@@ -11,6 +11,7 @@ import { ReviewStatsProvider } from "@modules/products/components/reviews/Review
 import { HttpTypes } from "@medusajs/types"
 import Schema from "@modules/common/components/seo/Schema"
 import { getBaseURL } from "@lib/util/env"
+import { getProductBrand } from "@lib/data/brands"
 
 type Props = {
   params: Promise<{ handle: string }>
@@ -179,10 +180,19 @@ export default async function ProductPage(props: Props) {
     url: item.url
   }))
 
+  // Fetch brand information for SEO
+  const brand = await getProductBrand(pricedProduct.id)
+
   return (
     <ReviewStatsProvider>
       {/* Structural Data for SEO */}
-      <Schema type="Product" data={pricedProduct} />
+      <Schema
+        type="Product"
+        data={{
+          ...pricedProduct,
+          brand: brand ? { name: brand.name } : undefined
+        }}
+      />
       <Schema type="BreadcrumbList" data={schemaBreadcrumbs} />
 
       {/* Breadcrumb container below header */}

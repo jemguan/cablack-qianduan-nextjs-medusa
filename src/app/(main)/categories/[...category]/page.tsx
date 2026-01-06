@@ -51,6 +51,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         title,
         description,
         url: `${getBaseURL()}/categories/${params.category.join("/")}`,
+        images: productCategory.metadata?.image ? [productCategory.metadata.image as string] : [],
       }
     }
   } catch (error) {
@@ -132,6 +133,15 @@ export default async function CategoryPage(props: Props) {
   return (
     <>
       <Schema type="BreadcrumbList" data={schemaBreadcrumbs} />
+      <Schema
+        type="CollectionPage"
+        data={{
+          name: productCategory.name,
+          description: productCategory.description,
+          url: `/categories/${currentCategoryPath.join("/")}`,
+          image: productCategory.metadata?.image as string | undefined
+        }}
+      />
 
       {/* Breadcrumb container below header */}
       <div className="border-b border-ui-border-base bg-background">

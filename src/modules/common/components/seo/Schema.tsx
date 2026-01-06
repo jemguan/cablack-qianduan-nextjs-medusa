@@ -1,6 +1,6 @@
 import { HttpTypes } from "@medusajs/types"
 
-type SchemaType = "Product" | "BreadcrumbList" | "Organization" | "Article" | "FAQPage" | "WebSite"
+type SchemaType = "Product" | "BreadcrumbList" | "Organization" | "Article" | "FAQPage" | "WebSite" | "CollectionPage"
 
 type SchemaProps = {
   type: SchemaType
@@ -19,7 +19,7 @@ const Schema = ({ type, data, baseUrl }: SchemaProps) => {
 
   if (type === "Product") {
     // ... Product schema logic (unchanged)
-    const product = data as HttpTypes.StoreProduct
+    const product = data as HttpTypes.StoreProduct & { brand?: { name: string }, aggregateRating?: any, reviewCount?: number }
     const cheapestPrice = product.variants?.reduce((lowest: any, variant: any) => {
       const price = variant.calculated_price?.calculated_amount
       if (!lowest || (price && price < lowest)) return price
@@ -35,7 +35,7 @@ const Schema = ({ type, data, baseUrl }: SchemaProps) => {
       sku: product.variants?.[0]?.sku || product.handle,
       brand: {
         "@type": "Brand",
-        name: "Cablack",
+        name: product.brand?.name || "Cablack",
       },
       offers: {
         "@type": "Offer",
@@ -46,6 +46,14 @@ const Schema = ({ type, data, baseUrl }: SchemaProps) => {
           : "https://schema.org/OutOfStock",
         url: `${siteUrl}/products/${product.handle}`,
       },
+      // Add aggregateRating if review data is available
+      ...(product.aggregateRating && product.reviewCount && product.reviewCount > 0 && {
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: product.aggregateRating,
+          reviewCount: product.reviewCount
+        }
+      })
     }
   } else if (type === "BreadcrumbList") {
     schemaData = {
@@ -81,6 +89,15 @@ const Schema = ({ type, data, baseUrl }: SchemaProps) => {
       url: siteUrl,
       logo: data?.organization_logo_url || `${siteUrl}/logo.png`,
       sameAs: data?.organization_social_links || []
+    }
+  } else if (type === "CollectionPage") {
+    schemaData = {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: data.name,
+      description: data.description || "",
+      url: data.url ? (data.url.startsWith("http") ? data.url : `${siteUrl}${data.url}`) : siteUrl,
+      ...(data.image && { image: data.image })
     }
   } else if (type === "FAQPage") {
     schemaData = {
