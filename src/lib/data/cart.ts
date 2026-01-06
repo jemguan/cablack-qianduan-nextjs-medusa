@@ -397,7 +397,7 @@ export async function initiatePaymentSession(
           error: errorMessage,
           type: typeof error,
         })
-      }
+    }
     } catch (logError) {
       // 如果记录日志时出错，至少记录基本信息
       console.error("initiatePaymentSession: Failed to log error details", logError)

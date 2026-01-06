@@ -77,12 +77,12 @@ const Item = ({ item, type = "full", currencyCode, isMobile = false }: ItemProps
                 <LineItemOptions variant={item.variant} data-testid="product-variant" />
               </div>
               <div className="flex items-center justify-between gap-2">
-                <div className="text-foreground font-bold text-lg">
-                  <LineItemPrice
-                    item={item}
-                    style="tight"
-                    currencyCode={currencyCode}
-                    showPreTaxPrice={true}
+              <div className="text-foreground font-bold text-lg">
+                <LineItemPrice
+                  item={item}
+                  style="tight"
+                  currencyCode={currencyCode}
+                  showPreTaxPrice={true}
                   />
                 </div>
                 <DeleteButton 
