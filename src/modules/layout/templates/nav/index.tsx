@@ -38,7 +38,7 @@ export default async function Nav() {
 
   return (
     <div className="sticky top-0 inset-x-0 z-50">
-      <header className="relative h-16 mx-auto border-b duration-200 bg-background/90 backdrop-blur-xl border-border overflow-visible">
+      <header className="relative h-16 mx-auto border-b duration-200 bg-background/90 backdrop-blur-xl border-border overflow-visible z-50">
         <nav className="content-container flex items-center justify-between w-full h-full text-foreground overflow-visible relative">
           {/* Left: Branding & Mobile Menu */}
           <div className="flex-1 basis-0 h-full flex items-center gap-x-4">
@@ -137,7 +137,7 @@ export default async function Nav() {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-x-4 h-full flex-1 basis-0 justify-end">
-            <div className="hidden small:flex items-center gap-x-4 h-full">
+            <div className="hidden small:flex items-center gap-x-4 h-full relative">
               <Suspense fallback={
                 <div className="p-2">
                   <User size="20" />

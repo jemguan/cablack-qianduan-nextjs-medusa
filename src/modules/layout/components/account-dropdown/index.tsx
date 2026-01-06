@@ -67,7 +67,7 @@ const AccountDropdown = () => {
         >
           <PopoverPanel
             static
-            className="hidden small:block absolute top-[calc(100%+1px)] right-0 bg-card border border-border w-[380px] text-foreground shadow-xl rounded-b-lg overflow-hidden"
+            className="hidden small:block absolute top-[calc(100%+1px)] right-0 bg-card border border-border w-[380px] text-foreground shadow-xl rounded-b-lg overflow-hidden z-[60]"
             data-testid="nav-account-dropdown"
           >
             <div className="p-6">
