@@ -76,52 +76,24 @@ const StripeWrapper: React.FC<StripeWrapperProps> = ({
 
   const clientSecret = paymentSession!.data?.client_secret as string | undefined
 
-  // 验证 client secret 格式
-  if (clientSecret) {
-    const isTestSecret = clientSecret.includes("_test_") || clientSecret.startsWith("pi_test_")
-    const isLiveSecret = clientSecret.includes("_live_") || clientSecret.startsWith("pi_live_")
-    const isPublishableKeyTest = stripeKey?.startsWith("pk_test_")
-    const isPublishableKeyLive = stripeKey?.startsWith("pk_live_")
+  // 验证 client secret 格式和环境匹配
+  if (clientSecret && stripeKey) {
+    const isPublishableKeyTest = stripeKey.startsWith("pk_test_")
+    const isPublishableKeyLive = stripeKey.startsWith("pk_live_")
 
-    // 检查环境匹配
-    if (isTestSecret && isPublishableKeyLive) {
-      console.error(
-        "[Stripe] 环境不匹配：Payment Intent 是测试环境，但 Publishable Key 是生产环境。",
-        "请确保前端和后端使用相同的 Stripe 环境（都是 test 或都是 live）"
-      )
-    }
-    if (isLiveSecret && isPublishableKeyTest) {
-      console.error(
-        "[Stripe] 环境不匹配：Payment Intent 是生产环境，但 Publishable Key 是测试环境。",
-        "请确保前端和后端使用相同的 Stripe 环境（都是 test 或都是 live）"
-      )
-    }
-
-    // 检查密钥账户匹配（通过密钥前缀）
-    if (stripeKey && clientSecret) {
-      try {
-        const stripeKeyParts = stripeKey.split("_")
-        const clientSecretParts = clientSecret.split("_")
-        
-        // 确保格式正确：pk_live_51S... 或 pk_test_51S...
-        if (stripeKeyParts.length >= 3 && clientSecretParts.length >= 3) {
-          const stripeKeyAccountId = stripeKeyParts[2] // pk_live_51S... -> 51S...
-          const clientSecretAccountId = clientSecretParts[2] // pi_live_51S... -> 51S...
-          
-          if (stripeKeyAccountId && clientSecretAccountId && stripeKeyAccountId !== clientSecretAccountId) {
-            const errorMsg = `[Stripe] 密钥账户不匹配：前端 Publishable Key 账户 (${stripeKeyAccountId.substring(0, 10)}...) 和后端 Secret Key 账户 (${clientSecretAccountId.substring(0, 10)}...) 来自不同的 Stripe 账户。请检查环境变量 NEXT_PUBLIC_STRIPE_KEY 和后端 STRIPE_API_KEY 是否来自同一个 Stripe 账户。`
-            console.error(errorMsg)
-            
-            // 在生产环境，这会导致支付失败，所以抛出错误
-            // 但在开发环境，只显示警告
-            if (process.env.NODE_ENV === "production") {
-              throw new Error("Stripe account mismatch detected. Please contact support.")
-            }
-          }
-        }
-      } catch (error: any) {
-        // 如果解析失败，记录但不阻止支付流程
-        console.warn("[Stripe] Error checking account match:", error.message)
+    // Payment Intent ID 格式检查（clientSecret 格式：pi_<id>_secret_<secret>）
+    // 注意：Payment Intent ID 不包含账户 ID，所以无法从前端验证账户匹配
+    // 账户匹配验证应该在后端进行
+    
+    // 仅在开发环境显示环境匹配警告
+    if (process.env.NODE_ENV === "development") {
+      // Payment Intent ID 格式：pi_<timestamp>_<random>
+      // 无法从 Payment Intent ID 判断环境，但可以通过后端返回的数据判断
+      // 这里只检查 Publishable Key 的环境
+      if (isPublishableKeyTest) {
+        // 测试环境 - 正常
+      } else if (isPublishableKeyLive) {
+        // 生产环境 - 正常
       }
     }
   }
