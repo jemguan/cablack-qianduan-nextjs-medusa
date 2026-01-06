@@ -47,20 +47,44 @@ export const retrieveCustomer =
         })
       return response.customer
     } catch (error: any) {
+      // 检查是否是客户被删除的情况
+      // 这里的 error 结构可能不同，视 SDK 版本而定
+      const status = error?.response?.status || error?.status
+      if (status === 404) {
+        try {
+          const errorData = error?.response?.data || error?.data || await error?.response?.json().catch(() => ({}))
+          if (errorData?.deleted === true) {
+            console.warn("[Server Action] Customer was deleted, clearing auth token")
+            await removeAuthToken()
+            return null
+          }
+        } catch (e) {
+          console.error("[Server Action] Failed to parse 404 error response:", e)
+        }
+      }
+      
       // 如果带 fields 的请求失败（可能是 401），回退到不带 fields 的请求
-      // 这对于 Google OAuth 登录后的 token 特别重要
       try {
         const response = await sdk.client
           .fetch<{ customer: HttpTypes.StoreCustomer }>(`/store/customers/me`, {
             method: "GET",
-            // 不传递 fields 参数
             headers,
             next,
             ...cacheConfig,
           })
         return response.customer
-      } catch (fallbackError) {
-        // 如果两个请求都失败，返回 null
+      } catch (fallbackError: any) {
+        const fallbackStatus = fallbackError?.response?.status || fallbackError?.status
+        if (fallbackStatus === 404) {
+          try {
+            const errorData = fallbackError?.response?.data || fallbackError?.data || await fallbackError?.response?.json().catch(() => ({}))
+            if (errorData?.deleted === true) {
+              console.warn("[Server Action] Customer was deleted (fallback), clearing auth token")
+              await removeAuthToken()
+              return null
+            }
+          } catch (e) {}
+        }
         return null
       }
     }

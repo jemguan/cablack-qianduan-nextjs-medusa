@@ -23,6 +23,81 @@ async function setTokenToCookie(token: string): Promise<boolean> {
   }
 }
 
+// 辅助函数：获取 Medusa 后端 URL
+function getMedusaBackendUrl(): string {
+  if (typeof window !== "undefined") {
+    // 客户端：优先使用从 HTML 注入的 URL
+    const windowUrl = (window as any).__MEDUSA_BACKEND_URL__
+    const envUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
+    
+    if (windowUrl && !windowUrl.includes("localhost")) {
+      return windowUrl
+    }
+    
+    if (envUrl && !envUrl.includes("localhost")) {
+      return envUrl
+    }
+    
+    if (windowUrl) {
+      return windowUrl
+    }
+    
+    return envUrl || "http://localhost:9000"
+  }
+  
+  return process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
+}
+
+// 辅助函数：清除所有可能的 Medusa 认证 token
+async function clearAllMedusaTokens() {
+  if (typeof window === "undefined") return
+  
+  console.warn("[Auth] Clearing all Medusa tokens and session data")
+  
+  // 1. 清除 localStorage 中的所有可能 key
+  const keysToRemove = [
+    "_medusa_jwt", 
+    "_medusa_refresh_token",
+    "medusa_auth_token",
+    "medusa_refresh_token",
+    "medusa_jwt",
+    "jwt",
+    "refresh_token"
+  ]
+  
+  // 遍历所有 key，清除包含 medusa 或 auth 的项
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key && (
+      key.toLowerCase().includes("medusa") || 
+      key.toLowerCase().includes("auth") || 
+      key.toLowerCase().includes("jwt") ||
+      key.toLowerCase().includes("token")
+    )) {
+      keysToRemove.push(key)
+    }
+  }
+  
+  keysToRemove.forEach(key => {
+    try {
+      localStorage.removeItem(key)
+    } catch (e) {}
+  })
+  
+  // 2. 清除服务端 cookie
+  try {
+    await fetch("/api/auth/clear-token", { 
+      method: "POST", 
+      credentials: "include" 
+    })
+  } catch (e) {
+    console.error("[Auth] Failed to clear server cookie:", e)
+  }
+  
+  // 3. 给浏览器一点时间处理存储更新
+  await new Promise(resolve => setTimeout(resolve, 100))
+}
+
 // 辅助函数：从 localStorage 获取 JWT token
 // 注意：只查找精确的 JWT token key，避免匹配其他数据
 function getLatestTokenFromStorage(): string | null {
@@ -209,15 +284,64 @@ export default function GoogleCallbackPage() {
         // 如果初始 token 中已有 actor_id，先尝试直接验证
         if (decodedToken.actor_id) {
           try {
-            const testResponse = await sdk.client.fetch<{ customer: HttpTypes.StoreCustomer }>(
-              "/store/customers/me",
-              { method: "GET" }
-            )
-            if (testResponse?.customer) {
-              tokenValid = true
+            // 使用原生 fetch 来检查响应，以便正确捕获 deleted 标志
+            const baseUrl = getMedusaBackendUrl()
+            const token = getLatestTokenFromStorage()
+            const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+            
+            if (token) {
+              const headers: Record<string, string> = {
+                "Authorization": `Bearer ${token}`,
+              }
+              
+              if (publishableKey) {
+                headers["x-publishable-api-key"] = publishableKey
+              }
+              
+              const response = await fetch(`${baseUrl}/store/customers/me`, {
+                method: "GET",
+                headers,
+              })
+              
+              if (response.ok) {
+                const data = await response.json()
+                if (data?.customer) {
+                  tokenValid = true
+                }
+              } else if (response.status === 404) {
+                // 检查是否是客户被删除的情况
+                try {
+                  const errorData = await response.json()
+                  console.log("[OAuth Callback] 404 response data:", errorData)
+                  if (errorData?.deleted === true) {
+                    // 客户已被删除，清除 token 并重新登录
+                    console.warn("[OAuth Callback] Customer was deleted, clearing token and re-authenticating")
+                    await clearAllMedusaTokens()
+                    
+                    // 检查是否已经尝试过重新登录，避免死循环
+                    const reauthCount = parseInt(sessionStorage.getItem("medusa_reauth_count") || "0")
+                    if (reauthCount >= 2) {
+                      console.error("[OAuth Callback] Re-authentication loop detected")
+                      setError("Your account was deleted and we couldn't recreate it automatically after multiple attempts. Please try logging out and logging in again manually.")
+                      setLoading(false)
+                      sessionStorage.removeItem("medusa_reauth_count")
+                      return
+                    }
+                    sessionStorage.setItem("medusa_reauth_count", (reauthCount + 1).toString())
+
+                    // 使用 replace 重新触发 OAuth 登录
+                    window.location.replace("/auth/customer/google?prompt=select_account")
+                    return
+                  }
+                } catch (parseError) {
+                  // JSON 解析失败，继续执行刷新逻辑
+                  console.warn("[OAuth Callback] Failed to parse 404 response:", parseError)
+                }
+              }
             }
-          } catch (testError) {
+          } catch (testError: any) {
             // 如果直接验证失败，继续执行刷新逻辑
+            console.warn("Failed to verify customer:", testError)
           }
         }
 
@@ -236,18 +360,62 @@ export default function GoogleCallbackPage() {
               await setTokenToCookie(refreshedToken)
             }
             
-            // 直接通过 API 调用验证 token 是否有效
+            // 直接通过原生 fetch 验证 token 是否有效
             try {
-              const testResponse = await sdk.client.fetch<{ customer: HttpTypes.StoreCustomer }>(
-                "/store/customers/me",
-                { method: "GET" }
-              )
-              if (testResponse?.customer) {
-                tokenValid = true
-                break
+              const baseUrl = getMedusaBackendUrl()
+              const currentToken = refreshedToken || getLatestTokenFromStorage()
+              const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+              
+              if (currentToken) {
+                const headers: Record<string, string> = {
+                  "Authorization": `Bearer ${currentToken}`,
+                }
+                
+                if (publishableKey) {
+                  headers["x-publishable-api-key"] = publishableKey
+                }
+                
+                const response = await fetch(`${baseUrl}/store/customers/me`, {
+                  method: "GET",
+                  headers,
+                })
+                
+                if (response.ok) {
+                  const data = await response.json()
+                  if (data?.customer) {
+                    tokenValid = true
+                    break
+                  }
+                } else if (response.status === 404) {
+                  // 检查是否是客户被删除的情况
+                  try {
+                    const errorData = await response.json()
+                    console.log("[OAuth Callback] 404 response data (after refresh):", errorData)
+                    if (errorData?.deleted === true) {
+                      console.warn("[OAuth Callback] Customer was deleted, clearing token and re-authenticating")
+                      await clearAllMedusaTokens()
+                      
+                      const reauthCount = parseInt(sessionStorage.getItem("medusa_reauth_count") || "0")
+                      if (reauthCount >= 2) {
+                        setError("Account recreation failed after multiple attempts. Please contact support.")
+                        setLoading(false)
+                        sessionStorage.removeItem("medusa_reauth_count")
+                        return
+                      }
+                      sessionStorage.setItem("medusa_reauth_count", (reauthCount + 1).toString())
+
+                      window.location.replace("/auth/customer/google?prompt=select_account")
+                      return
+                    }
+                  } catch (parseError) {
+                    // JSON 解析失败，继续尝试刷新
+                    console.warn("[OAuth Callback] Failed to parse 404 response (after refresh):", parseError)
+                  }
+                }
               }
-            } catch {
+            } catch (testError: any) {
               // API 调用失败，继续尝试刷新
+              console.warn("Failed to verify customer after refresh:", testError)
             }
           } catch {
             // 刷新失败，继续重试
@@ -265,19 +433,63 @@ export default function GoogleCallbackPage() {
           await setTokenToCookie(latestValidToken)
         }
         
-        // 如果 token 有效，尝试获取客户信息
+        // 如果成功获取到客户信息，清除重试计数
         if (tokenValid) {
+          sessionStorage.removeItem("medusa_reauth_count")
           try {
-            const customerResponse = await sdk.client.fetch<{ customer: HttpTypes.StoreCustomer }>(
-              "/store/customers/me",
-              { method: "GET" }
-            )
+            const baseUrl = getMedusaBackendUrl()
+            const token = latestValidToken || getLatestTokenFromStorage()
+            const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
             
-            if (customerResponse?.customer) {
-              setCustomer(customerResponse.customer)
+            if (token) {
+              const headers: Record<string, string> = {
+                "Authorization": `Bearer ${token}`,
+              }
+              
+              if (publishableKey) {
+                headers["x-publishable-api-key"] = publishableKey
+              }
+              
+              const response = await fetch(`${baseUrl}/store/customers/me`, {
+                method: "GET",
+                headers,
+              })
+              
+              if (response.ok) {
+                const data = await response.json()
+                if (data?.customer) {
+                  setCustomer(data.customer)
+                }
+              } else if (response.status === 404) {
+                // 检查是否是客户被删除的情况
+                try {
+                  const errorData = await response.json()
+                  console.log("[OAuth Callback] 404 response data (final check):", errorData)
+                  if (errorData?.deleted === true) {
+                    console.warn("[OAuth Callback] Customer was deleted, clearing token and re-authenticating")
+                    await clearAllMedusaTokens()
+                    
+                    const reauthCount = parseInt(sessionStorage.getItem("medusa_reauth_count") || "0")
+                    if (reauthCount >= 2) {
+                      setError("Account recreation failed. Please contact support.")
+                      setLoading(false)
+                      sessionStorage.removeItem("medusa_reauth_count")
+                      return
+                    }
+                    sessionStorage.setItem("medusa_reauth_count", (reauthCount + 1).toString())
+
+                    window.location.replace("/auth/customer/google?prompt=select_account")
+                    return
+                  }
+                } catch (parseError) {
+                  // JSON 解析失败，继续重定向
+                  console.warn("[OAuth Callback] Failed to parse 404 response (final check):", parseError)
+                }
+              }
             }
-          } catch {
+          } catch (customerError: any) {
             // 获取客户信息失败，继续重定向
+            console.warn("Failed to get customer info:", customerError)
           }
         }
         
