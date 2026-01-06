@@ -22,6 +22,14 @@ export type PageLayoutConfig = {
     allowMultiple?: boolean
     defaultOpenFirst?: boolean
   }
+  contactForm?: {
+    enabled?: boolean
+    title?: string
+    subtitle?: string
+    recipientEmail?: string
+    showTitle?: boolean
+    showSubtitle?: boolean
+  }
 }
 
 export type PageData = {

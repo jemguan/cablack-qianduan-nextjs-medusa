@@ -3,6 +3,7 @@ import Link from "next/link"
 import { getImageUrl } from "@lib/util/image"
 import { sanitizeHtml } from "@lib/util/sanitize"
 import { FAQBlock } from "@modules/home/components/faq-block"
+import { ContactForm } from "@modules/pages/components/contact-form"
 import ChevronLeft from "@modules/common/icons/chevron-left"
 import { Button } from "@medusajs/ui"
 
@@ -68,6 +69,10 @@ export default function PageDetailTemplate({
   // 默认启用（如果 layout_config 不存在或 faq.enabled 未设置）
   const showFaq = faqConfig.enabled !== false && faqData.length > 0
 
+  // 联系表单配置
+  const contactConfig = layoutConfig.contactForm || {}
+  const showContactForm = contactConfig.enabled === true
+
   // 合并 FAQ 配置，使用现有组件的数据格式
   const faqBlockData = {
     dataMode: 'direct' as const,
@@ -121,9 +126,20 @@ export default function PageDetailTemplate({
       {/* FAQ Block */}
       {showFaq && (
         <FAQBlock data={faqBlockData} />
-        )}
+      )}
 
-        {/* Back to home */}
+      {/* Contact Form */}
+      {showContactForm && (
+        <ContactForm 
+          title={contactConfig.title}
+          subtitle={contactConfig.subtitle}
+          recipientEmail={contactConfig.recipientEmail}
+          showTitle={contactConfig.showTitle}
+          showSubtitle={contactConfig.showSubtitle}
+        />
+      )}
+
+      {/* Back to home */}
       <div className="content-container mx-auto mt-12 pt-8 border-t border-ui-border-base">
         <Button
           asChild
