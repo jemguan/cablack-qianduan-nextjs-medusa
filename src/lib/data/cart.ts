@@ -632,20 +632,47 @@ export async function placeOrder(cartId?: string) {
       throw new Error("Payment session is required")
     }
 
-    // 检查支付会话是否已授权
-    const authorizedPaymentSession = currentCart.payment_collection.payment_sessions.find(
-      (session) => session.status === "authorized" || session.status === "requires_more"
+    // 检查支付会话状态 - 放宽检查条件
+    // Stripe 支付成功后，状态可能是 "authorized", "requires_more", "pending" (如果 webhook 还未处理)
+    // 只要不是 "error" 或 "canceled"，都允许继续
+    const paymentSessions = currentCart.payment_collection.payment_sessions
+    const validPaymentSession = paymentSessions.find(
+      (session) => {
+        const status = session.status?.toLowerCase()
+        // 允许的状态：authorized, requires_more, pending (Stripe 支付成功后可能还是 pending，等待 webhook)
+        // 不允许的状态：error, canceled, null/undefined
+        return status && 
+          status !== "error" && 
+          status !== "canceled" &&
+          (status === "authorized" || 
+           status === "requires_more" || 
+           status === "pending" ||
+           status === "requires_action")
+      }
     )
 
-    if (!authorizedPaymentSession) {
-      throw new Error("Payment session is not authorized. Please complete the payment first.")
+    if (!validPaymentSession) {
+      // 检查是否有 Stripe 支付会话
+      const stripeSession = paymentSessions.find(s => s.provider_id === "stripe")
+      if (stripeSession) {
+        // 对于 Stripe，如果状态是 pending，可能是 webhook 还未处理，允许继续尝试
+        // Medusa 会在 complete 时验证支付状态
+        if (stripeSession.status === "pending") {
+          // 允许继续，Medusa 会在 complete 时验证
+        } else {
+          throw new Error(`Payment session status is ${stripeSession.status}. Please complete the payment first.`)
+        }
+      } else {
+        throw new Error("No valid payment session found. Please complete the payment first.")
+      }
     }
   } catch (error: any) {
     // 如果是验证错误，直接抛出
     if (error.message && (
       error.message.includes("required") ||
       error.message.includes("not authorized") ||
-      error.message.includes("not found")
+      error.message.includes("not found") ||
+      error.message.includes("Payment session")
     )) {
       throw error
     }
@@ -662,9 +689,28 @@ export async function placeOrder(cartId?: string) {
     })
     .catch((error: any) => {
       // 提供更友好的错误信息
-      if (error?.message?.includes("shipping profiles") || error?.message?.includes("shipping methods")) {
+      const errorMessage = error?.message || ""
+      
+      if (errorMessage.includes("shipping profiles") || errorMessage.includes("shipping methods")) {
         throw new Error("The selected shipping method is no longer valid for the items in your cart. Please go back and select a different shipping method.")
       }
+      
+      // 处理支付会话删除错误 - 这通常不影响订单完成
+      if (errorMessage.includes("Could not delete all payment sessions") || 
+          errorMessage.includes("delete.*payment.*session")) {
+        // 这个错误通常不影响订单完成，Medusa 可能已经创建了订单
+        // 尝试重新获取购物车状态，检查订单是否已创建
+        console.warn("Payment session deletion warning (may not affect order completion):", errorMessage)
+        // 继续抛出错误，让调用者决定如何处理
+      }
+      
+      // 处理支付授权错误
+      if (errorMessage.includes("not authorized") || 
+          errorMessage.includes("Payment session") ||
+          errorMessage.includes("payment.*authorized")) {
+        throw new Error("Payment verification failed. Please ensure payment was completed successfully and try again.")
+      }
+      
       throw medusaError(error)
     })
 

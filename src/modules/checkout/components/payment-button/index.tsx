@@ -64,14 +64,40 @@ const StripePaymentButton = ({
 
   const onPaymentCompleted = async () => {
     try {
-      // 等待一小段时间，确保支付状态已同步
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // 等待更长时间，确保支付状态已同步到后端
+      // Stripe webhook 可能需要时间处理
+      await new Promise(resolve => setTimeout(resolve, 1500))
       
-      const result = await placeOrder()
-      // If placeOrder returns an order, redirect manually
-      if (result && typeof result === 'object' && 'type' in result && result.type === 'order' && result.order?.id) {
-        router.push(result.redirectUrl || `/order/${result.order.id}/confirmed`)
-        return
+      // 最多重试 3 次
+      let lastError: any = null
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const result = await placeOrder()
+          // If placeOrder returns an order, redirect manually
+          if (result && typeof result === 'object' && 'type' in result && result.type === 'order' && result.order?.id) {
+            router.push(result.redirectUrl || `/order/${result.order.id}/confirmed`)
+            return
+          }
+          // 如果没有订单，可能是其他问题
+          break
+        } catch (err: any) {
+          lastError = err
+          // 如果是支付会话未授权错误，等待后重试
+          if (err?.message?.includes("Payment session") || err?.message?.includes("not authorized")) {
+            if (attempt < 2) {
+              // 等待更长时间后重试
+              await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
+              continue
+            }
+          }
+          // 其他错误直接抛出
+          throw err
+        }
+      }
+      
+      // 如果所有重试都失败
+      if (lastError) {
+        throw lastError
       }
     } catch (err: any) {
       // 提供更友好的错误信息
@@ -79,8 +105,11 @@ const StripePaymentButton = ({
       
       if (errorMsg.includes("shipping method") || errorMsg.includes("shipping profiles")) {
         errorMsg = "Shipping method issue detected. Please refresh the page and try again, or select a different shipping method."
-      } else if (errorMsg.includes("not authorized") || errorMsg.includes("Payment session")) {
-        errorMsg = "Payment verification failed. Please try again or contact support if the issue persists."
+      } else if (errorMsg.includes("not authorized") || errorMsg.includes("Payment session") || errorMsg.includes("Payment verification")) {
+        errorMsg = "Payment verification is taking longer than expected. Please wait a moment and refresh the page, or contact support if the issue persists."
+      } else if (errorMsg.includes("Could not delete all payment sessions")) {
+        // 这个错误通常不影响订单，但用户可能需要刷新页面查看订单状态
+        errorMsg = "Order may have been created successfully. Please check your order history or refresh the page."
       }
       
       setErrorMessage(errorMsg)
