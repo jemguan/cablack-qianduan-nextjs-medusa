@@ -14,6 +14,7 @@ const BillingAddress = ({
     "billing_address.first_name": cart?.billing_address?.first_name || "",
     "billing_address.last_name": cart?.billing_address?.last_name || "",
     "billing_address.address_1": cart?.billing_address?.address_1 || "",
+    "billing_address.address_2": cart?.billing_address?.address_2 || "",
     "billing_address.company": cart?.billing_address?.company || "",
     "billing_address.postal_code": cart?.billing_address?.postal_code || "",
     "billing_address.city": cart?.billing_address?.city || "",
@@ -77,6 +78,14 @@ const BillingAddress = ({
           data-testid="billing-address-input"
         />
         <Input
+          label="Address Line 2 (Optional)"
+          name="billing_address.address_2"
+          autoComplete="address-line2"
+          value={formData["billing_address.address_2"]}
+          onChange={handleChange}
+          data-testid="billing-address-2-input"
+        />
+        <Input
           label="Company"
           name="billing_address.company"
           value={formData["billing_address.company"]}
@@ -115,6 +124,7 @@ const BillingAddress = ({
           autoComplete="address-level1"
           value={formData["billing_address.province"]}
           onChange={handleChange}
+          required
           data-testid="billing-province-input"
         />
         <Input

@@ -26,9 +26,14 @@ const Addresses = ({
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [isBillingExpanded, setIsBillingExpanded] = useState(false)
+  const [isEditingAddress, setIsEditingAddress] = useState(false)
+  const [shippingFormData, setShippingFormData] = useState<Record<string, any>>({})
+  const [billingFormData, setBillingFormData] = useState<Record<string, any>>({})
   const shippingFormDataRef = useRef<Record<string, any>>({})
   const billingFormDataRef = useRef<Record<string, any>>({})
   const sameAsBillingRef = useRef<boolean>(true)
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const hasAutoSavedRef = useRef<boolean>(false)
 
   const { state: sameAsBilling, toggle: toggleSameAsBilling } = useToggleState(
     cart?.shipping_address && cart?.billing_address
@@ -45,6 +50,7 @@ const Addresses = ({
       "shipping_address.postal_code",
       "shipping_address.city",
       "shipping_address.country_code",
+      "shipping_address.province",
       "email",
     ]
 
@@ -55,6 +61,7 @@ const Addresses = ({
       "billing_address.postal_code",
       "billing_address.city",
       "billing_address.country_code",
+      "billing_address.province",
     ]
 
     // 检查必填字段
@@ -93,6 +100,7 @@ const Addresses = ({
       formData.append("shipping_address.first_name", data["shipping_address.first_name"] || "")
       formData.append("shipping_address.last_name", data["shipping_address.last_name"] || "")
       formData.append("shipping_address.address_1", data["shipping_address.address_1"] || "")
+      formData.append("shipping_address.address_2", data["shipping_address.address_2"] || "")
       formData.append("shipping_address.company", data["shipping_address.company"] || "")
       formData.append("shipping_address.postal_code", data["shipping_address.postal_code"] || "")
       formData.append("shipping_address.city", data["shipping_address.city"] || "")
@@ -108,6 +116,7 @@ const Addresses = ({
         formData.append("billing_address.first_name", data["billing_address.first_name"] || "")
         formData.append("billing_address.last_name", data["billing_address.last_name"] || "")
         formData.append("billing_address.address_1", data["billing_address.address_1"] || "")
+        formData.append("billing_address.address_2", data["billing_address.address_2"] || "")
         formData.append("billing_address.company", data["billing_address.company"] || "")
         formData.append("billing_address.postal_code", data["billing_address.postal_code"] || "")
         formData.append("billing_address.city", data["billing_address.city"] || "")
@@ -132,6 +141,12 @@ const Addresses = ({
               } else {
                 setSaveError(null)
                 setSaveSuccess(true)
+                setIsEditingAddress(false)
+                // 清除自动保存定时器
+                if (autoSaveTimeoutRef.current) {
+                  clearTimeout(autoSaveTimeoutRef.current)
+                  autoSaveTimeoutRef.current = null
+                }
                 setTimeout(() => {
                   router.refresh()
                 }, 500)
@@ -147,6 +162,13 @@ const Addresses = ({
       } else {
         setSaveError(null)
         setSaveSuccess(true)
+        // 保存成功后隐藏表单
+        setIsEditingAddress(false)
+        // 清除自动保存定时器
+        if (autoSaveTimeoutRef.current) {
+          clearTimeout(autoSaveTimeoutRef.current)
+          autoSaveTimeoutRef.current = null
+        }
         // 延迟刷新页面，让用户看到成功提示
         setTimeout(() => {
           router.refresh()
@@ -173,14 +195,16 @@ const Addresses = ({
     sameAsBillingRef.current = sameAsBilling
   }, [sameAsBilling])
 
-  // 处理收货地址表单数据变化（只更新 ref，不自动保存）
+  // 处理收货地址表单数据变化
   const handleShippingFormDataChange = useCallback((data: Record<string, any>) => {
     shippingFormDataRef.current = data
+    setShippingFormData(data)
   }, [])
 
-  // 处理账单地址表单数据变化（只更新 ref，不自动保存）
+  // 处理账单地址表单数据变化
   const handleBillingFormDataChange = useCallback((data: Record<string, any>) => {
     billingFormDataRef.current = data
+    setBillingFormData(data)
   }, [])
 
   // 手动确认并保存地址
@@ -201,11 +225,11 @@ const Addresses = ({
   // 初始化表单数据 ref（从 cart 中读取）
   useEffect(() => {
     if (cart) {
-      // 初始化 shipping 地址数据
-      shippingFormDataRef.current = {
+      const initialShippingData = {
         "shipping_address.first_name": cart.shipping_address?.first_name || "",
         "shipping_address.last_name": cart.shipping_address?.last_name || "",
         "shipping_address.address_1": cart.shipping_address?.address_1 || "",
+        "shipping_address.address_2": cart.shipping_address?.address_2 || "",
         "shipping_address.company": cart.shipping_address?.company || "",
         "shipping_address.postal_code": cart.shipping_address?.postal_code || "",
         "shipping_address.city": cart.shipping_address?.city || "",
@@ -214,12 +238,12 @@ const Addresses = ({
         "shipping_address.phone": cart.shipping_address?.phone || "",
         email: cart.email || "",
       }
-
-      // 初始化 billing 地址数据
-      billingFormDataRef.current = {
+      
+      const initialBillingData = {
         "billing_address.first_name": cart.billing_address?.first_name || "",
         "billing_address.last_name": cart.billing_address?.last_name || "",
         "billing_address.address_1": cart.billing_address?.address_1 || "",
+        "billing_address.address_2": cart.billing_address?.address_2 || "",
         "billing_address.company": cart.billing_address?.company || "",
         "billing_address.postal_code": cart.billing_address?.postal_code || "",
         "billing_address.city": cart.billing_address?.city || "",
@@ -227,8 +251,79 @@ const Addresses = ({
         "billing_address.province": cart.billing_address?.province || "",
         "billing_address.phone": cart.billing_address?.phone || "",
       }
+
+      shippingFormDataRef.current = initialShippingData
+      billingFormDataRef.current = initialBillingData
+      setShippingFormData(initialShippingData)
+      setBillingFormData(initialBillingData)
+      
+      // 如果已有地址，重置自动保存标记（允许后续编辑时自动保存）
+      // 如果没有地址，重置标记以便首次填写时自动保存
+      hasAutoSavedRef.current = false
     }
   }, [cart])
+
+  // 首次填写时自动保存（防抖）
+  useEffect(() => {
+    const hasAddress = cart?.shipping_address && cart?.billing_address
+    
+    // 只在首次填写时（没有地址）且不在编辑状态时自动保存
+    if (hasAddress || isEditingAddress || isSaving) {
+      // 如果有地址了，重置自动保存标记
+      if (hasAddress) {
+        hasAutoSavedRef.current = false
+      }
+      return
+    }
+
+    const mergedData = {
+      ...shippingFormData,
+      ...billingFormData,
+    }
+
+    // 检查地址是否完整
+    if (!isAddressComplete(mergedData, sameAsBillingRef.current)) {
+      return
+    }
+
+    // 检查数据是否为空（避免初始状态触发保存）
+    const hasFormData = Object.values(mergedData).some(
+      (value) => value && String(value).trim() !== ""
+    )
+    if (!hasFormData) {
+      return
+    }
+
+    // 如果已经自动保存过，不再重复保存
+    if (hasAutoSavedRef.current) {
+      return
+    }
+
+    // 清除之前的定时器
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current)
+    }
+
+    // 防抖：延迟 1000ms 后自动保存（增加延迟时间，减少频繁保存）
+    autoSaveTimeoutRef.current = setTimeout(async () => {
+      // 再次检查条件，避免在延迟期间状态变化
+      const currentHasAddress = cart?.shipping_address && cart?.billing_address
+      if (currentHasAddress || isEditingAddress || isSaving || hasAutoSavedRef.current) {
+        return
+      }
+
+      // 标记为已保存，避免重复
+      hasAutoSavedRef.current = true
+      await saveAddresses(mergedData, sameAsBillingRef.current)
+    }, 1000)
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shippingFormData, billingFormData, isEditingAddress, isSaving])
 
 
   const hasAddress = cart?.shipping_address && cart?.billing_address
@@ -241,10 +336,10 @@ const Addresses = ({
           className="flex flex-row text-3xl-regular gap-x-2 items-baseline"
         >
           Shipping Address
-          {hasAddress && <CheckCircleSolid />}
+          {hasAddress && !isEditingAddress && <CheckCircleSolid />}
         </Heading>
       </div>
-      {hasAddress ? (
+      {hasAddress && !isEditingAddress ? (
         <div>
           <div className="text-small-regular">
             {/* 手机端：一行2个，Billing Address 折叠到第二行 */}
@@ -285,7 +380,7 @@ const Addresses = ({
                   <Text className="txt-medium text-ui-fg-subtle">
                     {cart.shipping_address.phone}
                   </Text>
-                  <Text className="txt-medium text-ui-fg-subtle">
+                  <Text className="txt-medium text-ui-fg-subtle break-words break-all">
                     {cart.email}
                   </Text>
                 </div>
@@ -349,65 +444,14 @@ const Addresses = ({
             </div>
           </div>
           <div className="mt-6">
-            <div className="pb-8">
-              <ShippingAddress
-                customer={customer}
-                checked={sameAsBilling}
-                onChange={toggleSameAsBilling}
-                cart={cart}
-                onFormDataChange={handleShippingFormDataChange}
-              />
-
-              {!sameAsBilling && (
-                <div>
-                  <Heading
-                    level="h2"
-                    className="text-3xl-regular gap-x-4 pb-6 pt-8"
-                  >
-                    Billing address
-                  </Heading>
-
-                  <BillingAddress cart={cart} onFormDataChange={handleBillingFormDataChange} />
-                </div>
-              )}
-              
-              {/* 确认按钮和保存状态指示器 */}
-              <div className="mt-6 flex flex-col gap-4">
-                <Button
-                  onClick={handleConfirmAddress}
-                  isLoading={isSaving}
-                  disabled={isSaving}
-                  variant="primary"
-                  className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 text-white border-none !border-2 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700 disabled:!border-ui-border-base !shadow-none"
-                  style={{ borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }}
-                  data-testid="confirm-address-button"
-                >
-                  Confirm Address
-                </Button>
-                
-                <div className="flex items-center gap-2">
-                  {isSaving && (
-                    <>
-                      <Spinner className="animate-spin" />
-                      <Text className="text-small-regular text-ui-fg-subtle">
-                        Saving address...
-                      </Text>
-                    </>
-                  )}
-                  {saveSuccess && !isSaving && (
-                    <Text className="text-small-regular text-green-600 flex items-center gap-2">
-                      <CheckCircleSolid className="w-4 h-4" />
-                      Address saved successfully
-                    </Text>
-                  )}
-                  {saveError && !isSaving && (
-                    <Text className="text-small-regular text-red-600">
-                      {saveError}
-                    </Text>
-                  )}
-                </div>
-              </div>
-            </div>
+            <Button
+              onClick={() => setIsEditingAddress(true)}
+              variant="secondary"
+              className="w-full sm:w-auto"
+              data-testid="change-address-button"
+            >
+              Change
+            </Button>
           </div>
         </div>
       ) : (

@@ -24,6 +24,7 @@ const ShippingAddress = ({
     "shipping_address.first_name": cart?.shipping_address?.first_name || "",
     "shipping_address.last_name": cart?.shipping_address?.last_name || "",
     "shipping_address.address_1": cart?.shipping_address?.address_1 || "",
+    "shipping_address.address_2": cart?.shipping_address?.address_2 || "",
     "shipping_address.company": cart?.shipping_address?.company || "",
     "shipping_address.postal_code": cart?.shipping_address?.postal_code || "",
     "shipping_address.city": cart?.shipping_address?.city || "",
@@ -57,6 +58,7 @@ const ShippingAddress = ({
         "shipping_address.first_name": address?.first_name || "",
         "shipping_address.last_name": address?.last_name || "",
         "shipping_address.address_1": address?.address_1 || "",
+        "shipping_address.address_2": address?.address_2 || "",
         "shipping_address.company": address?.company || "",
         "shipping_address.postal_code": address?.postal_code || "",
         "shipping_address.city": address?.city || "",
@@ -154,6 +156,14 @@ const ShippingAddress = ({
           data-testid="shipping-address-input"
         />
         <Input
+          label="Address Line 2 (Optional)"
+          name="shipping_address.address_2"
+          autoComplete="address-line2"
+          value={formData["shipping_address.address_2"]}
+          onChange={handleChange}
+          data-testid="shipping-address-2-input"
+        />
+        <Input
           label="Company"
           name="shipping_address.company"
           value={formData["shipping_address.company"]}
@@ -194,6 +204,7 @@ const ShippingAddress = ({
           autoComplete="address-level1"
           value={formData["shipping_address.province"]}
           onChange={handleChange}
+          required
           data-testid="shipping-province-input"
         />
       </div>

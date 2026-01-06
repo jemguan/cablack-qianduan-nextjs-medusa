@@ -101,6 +101,7 @@ const StripeWrapper: React.FC<StripeWrapperProps> = ({
   const options: StripeElementsOptions = {
     clientSecret,
     appearance,
+    locale: "en",
   }
 
   if (!stripeKey) {
