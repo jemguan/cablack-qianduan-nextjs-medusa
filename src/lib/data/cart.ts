@@ -600,6 +600,59 @@ export async function placeOrder(cartId?: string) {
     ...(await getAuthHeaders()),
   }
 
+  // 在完成订单前，先刷新购物车状态以确保 shipping method 仍然有效
+  try {
+    const currentCart = await retrieveCart(
+      id,
+      "*items, *region, *items.product, *items.variant, *shipping_methods, *payment_collection, *payment_collection.payment_sessions"
+    )
+
+    if (!currentCart) {
+      throw new Error("Cart not found")
+    }
+
+    // 验证购物车是否准备好完成订单
+    if (!currentCart.shipping_address) {
+      throw new Error("Shipping address is required")
+    }
+
+    if (!currentCart.billing_address) {
+      throw new Error("Billing address is required")
+    }
+
+    if (!currentCart.email) {
+      throw new Error("Email is required")
+    }
+
+    if (!currentCart.shipping_methods || currentCart.shipping_methods.length === 0) {
+      throw new Error("Shipping method is required. Please select a shipping method.")
+    }
+
+    if (!currentCart.payment_collection?.payment_sessions || currentCart.payment_collection.payment_sessions.length === 0) {
+      throw new Error("Payment session is required")
+    }
+
+    // 检查支付会话是否已授权
+    const authorizedPaymentSession = currentCart.payment_collection.payment_sessions.find(
+      (session) => session.status === "authorized" || session.status === "requires_more"
+    )
+
+    if (!authorizedPaymentSession) {
+      throw new Error("Payment session is not authorized. Please complete the payment first.")
+    }
+  } catch (error: any) {
+    // 如果是验证错误，直接抛出
+    if (error.message && (
+      error.message.includes("required") ||
+      error.message.includes("not authorized") ||
+      error.message.includes("not found")
+    )) {
+      throw error
+    }
+    // 其他错误继续处理，可能是网络问题
+    console.error("Error validating cart before placing order:", error)
+  }
+
   const cartRes = await sdk.store.cart
     .complete(id, {}, headers)
     .then(async (cartRes) => {
@@ -607,7 +660,13 @@ export async function placeOrder(cartId?: string) {
       revalidateTag(cartCacheTag)
       return cartRes
     })
-    .catch(medusaError)
+    .catch((error: any) => {
+      // 提供更友好的错误信息
+      if (error?.message?.includes("shipping profiles") || error?.message?.includes("shipping methods")) {
+        throw new Error("The selected shipping method is no longer valid for the items in your cart. Please go back and select a different shipping method.")
+      }
+      throw medusaError(error)
+    })
 
   if (cartRes?.type === "order") {
     const orderCacheTag = await getCacheTag("orders")

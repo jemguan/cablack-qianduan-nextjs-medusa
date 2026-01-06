@@ -64,6 +64,9 @@ const StripePaymentButton = ({
 
   const onPaymentCompleted = async () => {
     try {
+      // 等待一小段时间，确保支付状态已同步
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
       const result = await placeOrder()
       // If placeOrder returns an order, redirect manually
       if (result && typeof result === 'object' && 'type' in result && result.type === 'order' && result.order?.id) {
@@ -71,7 +74,16 @@ const StripePaymentButton = ({
         return
       }
     } catch (err: any) {
-      setErrorMessage(err?.message || "Failed to place order")
+      // 提供更友好的错误信息
+      let errorMsg = err?.message || "Failed to place order"
+      
+      if (errorMsg.includes("shipping method") || errorMsg.includes("shipping profiles")) {
+        errorMsg = "Shipping method issue detected. Please refresh the page and try again, or select a different shipping method."
+      } else if (errorMsg.includes("not authorized") || errorMsg.includes("Payment session")) {
+        errorMsg = "Payment verification failed. Please try again or contact support if the issue persists."
+      }
+      
+      setErrorMessage(errorMsg)
       setSubmitting(false)
     }
   }
@@ -124,12 +136,20 @@ const StripePaymentButton = ({
             (pi && pi.status === "requires_capture") ||
             (pi && pi.status === "succeeded")
           ) {
+            // 支付已成功，但 Stripe 返回了错误（可能是其他原因）
+            // 继续完成订单流程
             onPaymentCompleted()
-        return
+            return
           }
 
-          setErrorMessage(error.message || null)
-      setSubmitting(false)
+          // 如果是支付相关的错误，显示友好信息
+          let errorMsg = error.message || "Payment failed"
+          if (error.type === "card_error" || error.type === "validation_error") {
+            errorMsg = error.message || "Payment information is invalid. Please check your details and try again."
+          }
+          
+          setErrorMessage(errorMsg)
+          setSubmitting(false)
           return
         }
 
@@ -181,7 +201,16 @@ const ManualTestPaymentButton = ({ notReady, "data-testid": dataTestId }: { notR
         return
       }
     } catch (err: any) {
-      setErrorMessage(err?.message || "Failed to place order")
+      // 提供更友好的错误信息
+      let errorMsg = err?.message || "Failed to place order"
+      
+      if (errorMsg.includes("shipping method") || errorMsg.includes("shipping profiles")) {
+        errorMsg = "Shipping method issue detected. Please refresh the page and try again, or select a different shipping method."
+      } else if (errorMsg.includes("not authorized") || errorMsg.includes("Payment session")) {
+        errorMsg = "Payment verification failed. Please try again or contact support if the issue persists."
+      }
+      
+      setErrorMessage(errorMsg)
       setSubmitting(false)
     }
   }
@@ -228,7 +257,16 @@ const EmtPaymentButton = ({ notReady, "data-testid": dataTestId }: { notReady: b
         return
       }
     } catch (err: any) {
-      setErrorMessage(err?.message || "Failed to place order")
+      // 提供更友好的错误信息
+      let errorMsg = err?.message || "Failed to place order"
+      
+      if (errorMsg.includes("shipping method") || errorMsg.includes("shipping profiles")) {
+        errorMsg = "Shipping method issue detected. Please refresh the page and try again, or select a different shipping method."
+      } else if (errorMsg.includes("not authorized") || errorMsg.includes("Payment session")) {
+        errorMsg = "Payment verification failed. Please try again or contact support if the issue persists."
+      }
+      
+      setErrorMessage(errorMsg)
       setSubmitting(false)
     }
   }
