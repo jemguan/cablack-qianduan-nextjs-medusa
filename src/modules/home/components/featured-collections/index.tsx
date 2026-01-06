@@ -7,6 +7,25 @@ import { HttpTypes } from '@medusajs/types';
 import { listProducts } from '@lib/data/products';
 import { FeaturedCollectionsClient } from './FeaturedCollectionsClient';
 
+/**
+ * 判断产品是否有库存
+ * 产品有库存的条件：
+ * - 至少有一个变体的 manage_inventory === false（不管理库存，始终有货）
+ * - 至少有一个变体的 allow_backorder === true（允许缺货订购，视为有货）
+ * - 至少有一个变体的 inventory_quantity > 0（库存数量大于 0）
+ */
+function hasProductInStock(product: HttpTypes.StoreProduct): boolean {
+  if (!product.variants || product.variants.length === 0) {
+    return false;
+  }
+
+  return product.variants.some((variant) => {
+    if (variant.manage_inventory === false) return true;
+    if (variant.allow_backorder === true) return true;
+    return (variant.inventory_quantity || 0) > 0;
+  });
+}
+
 interface FeaturedCollectionsProps {
   category: HttpTypes.StoreProductCategory; // 单个分类
   region: HttpTypes.StoreRegion;
@@ -71,18 +90,26 @@ export default async function FeaturedCollections({
     return null;
   }
 
-  // 获取该分类的产品
+  // 获取该分类的产品（最多查询24件）
   const {
     response: { products: pricedProducts },
   } = await listProducts({
     regionId: region.id,
     queryParams: {
       category_id: category.id,
+      limit: 24, // 最多查询24件产品
       fields: "*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.images.id,*variants.images.url,*variants.images.metadata",
     },
   });
 
   if (!pricedProducts || pricedProducts.length === 0) {
+    return null;
+  }
+
+  // 过滤掉没有库存的产品
+  const productsInStock = pricedProducts.filter(hasProductInStock);
+
+  if (productsInStock.length === 0) {
     return null;
   }
 
@@ -94,7 +121,7 @@ export default async function FeaturedCollections({
       <FeaturedCollectionsClient
         category={category}
         region={region}
-        products={pricedProducts}
+        products={productsInStock}
         title={title}
         subtitle={subtitle}
         showTitle={showTitle}
