@@ -284,11 +284,20 @@ export async function initiatePaymentSession(
         "*items, *region, *items.product, *items.variant, *items.variant.images, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, *payment_collection, *payment_collection.payment_sessions"
       )
       if (!retrievedCart) {
-        throw new Error("Cart not found")
+        throw new Error("Cart not found. Please refresh the page and try again.")
       }
       cartObj = retrievedCart
     } else {
       cartObj = cart
+    }
+
+    // 验证购物车是否有必要的字段
+    if (!cartObj.region_id) {
+      throw new Error("Cart region is missing. Please refresh the page and try again.")
+    }
+
+    if (!cartObj.id) {
+      throw new Error("Cart ID is missing. Please refresh the page and try again.")
     }
 
     const resp = await sdk.store.payment.initiatePaymentSession(
@@ -301,11 +310,45 @@ export async function initiatePaymentSession(
     revalidateTag(cartCacheTag)
     return resp
   } catch (error: any) {
+    // 提取友好的错误信息
+    let errorMessage = "Failed to initialize payment session"
+    
+    if (error?.response) {
+      // 处理 HTTP 响应错误
+      const status = error.response.status
+      const responseData = error.response.data
+      
+      if (status === 500) {
+        errorMessage = "Payment service is temporarily unavailable. Please try again in a moment or contact support."
+      } else if (status === 401 || status === 403) {
+        errorMessage = "Authentication failed. Please refresh the page and try again."
+      } else if (status === 404) {
+        errorMessage = "Payment method not found. Please refresh the page and try again."
+      } else if (responseData?.message) {
+        errorMessage = typeof responseData.message === "string" 
+          ? responseData.message 
+          : JSON.stringify(responseData.message)
+      } else if (responseData) {
+        errorMessage = typeof responseData === "string" 
+          ? responseData 
+          : "Payment initialization failed. Please try again."
+      }
+    } else if (error?.message) {
+      errorMessage = error.message
+    }
+    
     // 仅在开发环境输出详细调试信息
     if (process.env.NODE_ENV === "development") {
-      console.error("initiatePaymentSession error:", error?.message)
+      console.error("initiatePaymentSession error:", {
+        message: errorMessage,
+        originalError: error?.message,
+        status: error?.response?.status,
+        data: error?.response?.data
+      })
     }
-    throw medusaError(error)
+    
+    // 抛出友好的错误信息
+    throw new Error(errorMessage)
   }
 }
 

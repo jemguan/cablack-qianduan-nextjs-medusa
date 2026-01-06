@@ -30,8 +30,10 @@ const Payment = ({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [stripePaymentComplete, setStripePaymentComplete] = useState(false)
-  // 初始状态为空，由用户手动选择支付方式
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("")
+  
+  // 初始化时，如果有 pending 的支付会话，自动设置选中的支付方式
+  const initialPaymentMethod = pendingSession?.provider_id || ""
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(initialPaymentMethod)
 
   // Now we can use selectedPaymentMethod to find the active session
   const activeSession = cart.payment_collection?.payment_sessions?.find(
@@ -42,6 +44,20 @@ const Payment = ({
 
   const router = useRouter()
 
+  // 当购物车数据更新时（例如刷新后），检查是否有新的支付会话并更新选中状态
+  useEffect(() => {
+    if (pendingSession?.provider_id) {
+      // 使用函数式更新，避免依赖 selectedPaymentMethod
+      setSelectedPaymentMethod((current: string) => {
+        // 如果当前没有选中，或者 pendingSession 的 provider_id 与当前选中不同，则更新
+        if (!current || pendingSession.provider_id !== current) {
+          return pendingSession.provider_id
+        }
+        return current
+      })
+    }
+  }, [pendingSession?.provider_id, pendingSession?.status])
+
   const setPaymentMethod = async (method: string) => {
     setError(null)
     setSelectedPaymentMethod(method)
@@ -51,11 +67,11 @@ const Payment = ({
       setIsLoading(true)
       try {
         if (!cart?.id) {
-          throw new Error("Cart not found")
+          throw new Error("Cart not found. Please refresh the page and try again.")
         }
         
         if (!cart?.region_id) {
-          throw new Error("Cart region not found")
+          throw new Error("Cart region not found. Please refresh the page and try again.")
         }
         
         // Pass only cart.id to avoid serialization issues in server action
@@ -66,9 +82,32 @@ const Payment = ({
         // Refresh the page to get updated cart data with payment session
         router.refresh()
       } catch (err: any) {
-        setError(err.message || "Failed to initialize payment session")
-        // Reset selection on error
-        setSelectedPaymentMethod(activeSession?.provider_id ?? "")
+        // 提取更友好的错误信息
+        let errorMessage = "Failed to initialize payment session"
+        
+        if (err?.message) {
+          errorMessage = err.message
+          // 处理常见的服务器错误
+          if (err.message.includes("500") || err.message.includes("Internal Server Error")) {
+            errorMessage = "Payment service is temporarily unavailable. Please try again in a moment or contact support."
+          } else if (err.message.includes("401") || err.message.includes("Unauthorized")) {
+            errorMessage = "Authentication failed. Please refresh the page and try again."
+          } else if (err.message.includes("404") || err.message.includes("Not Found")) {
+            errorMessage = "Payment method not found. Please refresh the page and try again."
+          } else if (err.message.includes("Cart not found")) {
+            errorMessage = "Your cart session has expired. Please refresh the page."
+          } else if (err.message.includes("region")) {
+            errorMessage = "Region configuration error. Please refresh the page and try again."
+          }
+        } else if (err?.response?.data?.message) {
+          errorMessage = err.response.data.message
+        } else if (typeof err === "string") {
+          errorMessage = err
+        }
+        
+        setError(errorMessage)
+        // Reset selection on error - 清空选择，让用户重新选择
+        setSelectedPaymentMethod("")
       } finally {
         setIsLoading(false)
       }
