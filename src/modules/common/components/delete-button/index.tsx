@@ -20,7 +20,13 @@ const DeleteButton = ({
   const handleDelete = async (id: string) => {
     setIsDeleting(true)
     try {
-      await deleteLineItem(id)
+      const result = await deleteLineItem(id)
+      
+      if (!result.success) {
+        setIsDeleting(false)
+        alert(result.error || "Failed to delete item. Please try again.")
+        return
+      }
       
       // 如果删除的是捆绑包产品，同步折扣
       // 即使同步失败也不阻止删除操作

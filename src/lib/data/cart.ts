@@ -197,15 +197,15 @@ export async function updateLineItem({
     .catch(medusaError)
 }
 
-export async function deleteLineItem(lineId: string) {
+export async function deleteLineItem(lineId: string): Promise<{ success: boolean; error?: string }> {
   if (!lineId) {
-    throw new Error("Missing lineItem ID when deleting line item")
+    return { success: false, error: "Missing lineItem ID when deleting line item" }
   }
 
   const cartId = await getCartId()
 
   if (!cartId) {
-    throw new Error("Missing cart ID when deleting line item")
+    return { success: false, error: "Missing cart ID when deleting line item" }
   }
 
   const headers = {
@@ -222,6 +222,8 @@ export async function deleteLineItem(lineId: string) {
         const fulfillmentCacheTag = await getCacheTag("fulfillment")
         revalidateTag(fulfillmentCacheTag)
       })
+    
+    return { success: true }
   } catch (error: any) {
     // 记录详细错误信息以便调试
     console.error("[deleteLineItem] Error details:", {
@@ -231,7 +233,16 @@ export async function deleteLineItem(lineId: string) {
       response: error?.response?.data,
       status: error?.response?.status,
     })
-    throw medusaError(error)
+    
+    // 提取错误消息
+    let errorMessage = "Failed to delete item"
+    if (error?.response?.data?.message) {
+      errorMessage = error.response.data.message
+    } else if (error?.message) {
+      errorMessage = error.message
+    }
+    
+    return { success: false, error: errorMessage }
   }
 }
 
