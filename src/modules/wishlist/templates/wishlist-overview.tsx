@@ -88,7 +88,7 @@ const WishlistOverview = ({ region }: WishlistOverviewProps) => {
           Browse our products and click the heart icon to add items to your wishlist.
         </Text>
         <LocalizedClientLink
-          href="/store"
+          href="/products"
           className="mt-4 px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
         >
           Start Shopping

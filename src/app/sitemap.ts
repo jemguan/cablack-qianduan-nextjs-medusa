@@ -55,7 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // 主要导航页面
     const staticPages = [
-      "/store",
+      "/products",
       "/search",
       "/blogs",
       "/collections",

@@ -75,7 +75,7 @@ export default async function SharedWishlistPage({
             The owner hasn&apos;t added any items to this wishlist yet.
           </Text>
           <LocalizedClientLink
-            href="/store"
+            href="/products"
             className="mt-4 px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
           >
             Browse Products

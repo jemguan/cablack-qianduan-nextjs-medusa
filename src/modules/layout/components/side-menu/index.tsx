@@ -16,7 +16,7 @@ import { signout } from "@lib/data/customer"
 // 默认菜单项（当没有配置时使用）
 const DEFAULT_SIDE_MENU_ITEMS = {
   Home: "/",
-  Store: "/store",
+  Store: "/products",
   Account: "/account",
   Cart: "/cart",
 }

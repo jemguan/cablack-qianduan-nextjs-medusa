@@ -114,10 +114,10 @@ export default async function SitemapPage() {
                 </li>
                 <li>
                   <Link
-                    href="/store"
+                    href="/products"
                     className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover hover:underline"
                   >
-                    Store
+                    Products
                   </Link>
                 </li>
                 <li>

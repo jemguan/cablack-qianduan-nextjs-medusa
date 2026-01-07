@@ -236,7 +236,7 @@ const CartDropdown = ({
                   </div>
                   <span className="text-muted-foreground font-medium text-sm">Your bag is empty.</span>
                   <div>
-                    <LocalizedClientLink href="/store">
+                    <LocalizedClientLink href="/products">
                       <Button 
                         variant="secondary" 
                         onClick={close}
