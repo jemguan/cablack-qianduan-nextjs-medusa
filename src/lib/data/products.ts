@@ -5,7 +5,7 @@ import { getCacheConfig } from "@lib/config/cache"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { unstable_cache } from "next/cache"
-import { getAuthHeaders, getCacheOptions, getRegionCountryCode } from "./cookies"
+import { getAuthHeaders, getCacheOptions, getCacheTag, getRegionCountryCode } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 
 // 用于排序的超精简字段（只包含排序所需的最小字段）
@@ -98,8 +98,16 @@ export const listProducts = async ({
     ...(await getAuthHeaders()),
   }
 
+  const cacheOptions = await getCacheOptions("products")
+  const productsInventoryTag = await getCacheTag("products-inventory")
+  
+  // 添加产品库存相关的缓存标签，以便在库存变化时失效缓存
+  const existingTags = (cacheOptions as { tags?: string[] })?.tags || []
   const next = {
-    ...(await getCacheOptions("products")),
+    ...cacheOptions,
+    ...(productsInventoryTag ? {
+      tags: [...existingTags, productsInventoryTag].filter(Boolean)
+    } : {}),
   }
 
   const cacheConfig = getCacheConfig("PRODUCT_LIST")
@@ -188,6 +196,9 @@ const getSortedProductIds = async (
   
   const cacheKey = `sorted-${countryCode}-${sortBy}-${JSON.stringify(normalizedQueryParams)}`
   
+  // 获取产品库存缓存标签
+  const productsInventoryTag = await getCacheTag("products-inventory")
+  
   // 使用 unstable_cache 缓存排序结果
   const getCachedSortedIds = unstable_cache(
     async () => {
@@ -262,7 +273,7 @@ const getSortedProductIds = async (
     [cacheKey],
     {
       revalidate: 300, // 缓存 5 分钟（300秒），显著提升性能
-      tags: ["products", "sort", `products-sort-${countryCode}`],
+      tags: ["products", "sort", `products-sort-${countryCode}`, productsInventoryTag].filter(Boolean),
     }
   )
 

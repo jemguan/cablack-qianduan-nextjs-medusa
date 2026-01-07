@@ -19,6 +19,22 @@ import {
 import { getRegion } from "./regions"
 
 /**
+ * 失效产品库存相关的缓存
+ * 在库存变化时调用（添加商品、更新数量、删除商品、下单等）
+ */
+async function revalidateProductInventoryCache() {
+  const productsInventoryTag = await getCacheTag("products-inventory")
+  if (productsInventoryTag) {
+    revalidateTag(productsInventoryTag)
+  }
+  // 同时失效产品列表缓存
+  const productsCacheTag = await getCacheTag("products")
+  if (productsCacheTag) {
+    revalidateTag(productsCacheTag)
+  }
+}
+
+/**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
  * @param cartId - optional - The ID of the cart to retrieve.
  * @returns The cart object if found, or null if not found.
@@ -160,6 +176,9 @@ export async function addToCart({
 
       const fulfillmentCacheTag = await getCacheTag("fulfillment")
       revalidateTag(fulfillmentCacheTag)
+      
+      // 失效产品库存缓存，因为添加商品会影响库存
+      await revalidateProductInventoryCache()
     })
     .catch(medusaError)
 }
@@ -193,6 +212,9 @@ export async function updateLineItem({
 
       const fulfillmentCacheTag = await getCacheTag("fulfillment")
       revalidateTag(fulfillmentCacheTag)
+      
+      // 失效产品库存缓存，因为更新商品数量会影响库存
+      await revalidateProductInventoryCache()
     })
     .catch(medusaError)
 }
@@ -221,6 +243,9 @@ export async function deleteLineItem(lineId: string): Promise<{ success: boolean
 
         const fulfillmentCacheTag = await getCacheTag("fulfillment")
         revalidateTag(fulfillmentCacheTag)
+        
+        // 失效产品库存缓存，因为删除商品会影响库存
+        await revalidateProductInventoryCache()
       })
     
     return { success: true }
@@ -786,6 +811,10 @@ export async function placeOrder(cartId?: string) {
     .then(async (cartRes) => {
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
+      
+      // 失效产品库存缓存，因为下单会消耗库存
+      await revalidateProductInventoryCache()
+      
       return cartRes
     })
     .catch((error: any) => {
