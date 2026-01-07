@@ -94,8 +94,12 @@ const HeaderCountrySelect = ({ regions }: HeaderCountrySelectProps) => {
     >
       <Popover className="relative h-full">
         <PopoverButton 
-          className="h-full focus:outline-none px-2 text-ui-fg-subtle hover:text-ui-fg-base transition-colors flex items-center justify-center gap-x-1.5"
+          className="h-full focus:outline-none px-2 text-ui-fg-subtle hover:text-ui-fg-base active:text-ui-fg-base transition-colors flex items-center justify-center gap-x-1.5 touch-manipulation"
           aria-label="Select Country"
+          onClick={() => {
+            // 点击时切换状态（手机端）
+            setDropdownOpen(!dropdownOpen)
+          }}
         >
           {selectedOption && selectedOption.country ? (
             <>
@@ -131,7 +135,11 @@ const HeaderCountrySelect = ({ regions }: HeaderCountrySelectProps) => {
         >
           <PopoverPanel
             static
-            className="hidden small:block absolute top-[calc(100%+1px)] right-0 bg-card border border-border w-[280px] text-foreground shadow-xl rounded-b-lg overflow-hidden max-h-[400px] overflow-y-auto"
+            className="absolute top-[calc(100%+1px)] right-0 bg-card border border-border w-[280px] small:w-[280px] text-foreground shadow-xl rounded-b-lg overflow-hidden max-h-[400px] overflow-y-auto z-[100]"
+            onClick={(e) => {
+              // 阻止点击事件冒泡，防止关闭
+              e.stopPropagation()
+            }}
           >
             <div className="p-2">
               {options?.map((option, index) => {
@@ -142,11 +150,11 @@ const HeaderCountrySelect = ({ regions }: HeaderCountrySelectProps) => {
                     onClick={() => handleChange(option)}
                     className={`
                       w-full text-left px-3 py-2 rounded-md text-base-regular transition-colors
-                      flex items-center gap-x-3
+                      flex items-center gap-x-3 touch-manipulation
                       ${
                         selectedOption?.country === option.country
                           ? "bg-ui-bg-base-hover text-ui-fg-base font-medium"
-                          : "text-ui-fg-subtle hover:text-ui-fg-base hover:bg-ui-bg-base-hover"
+                          : "text-ui-fg-subtle hover:text-ui-fg-base hover:bg-ui-bg-base-hover active:bg-ui-bg-base-hover"
                       }
                     `}
                   >

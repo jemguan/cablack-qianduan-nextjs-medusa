@@ -211,17 +211,48 @@ export function MobileEmblaCarousel({
 
       {showPagination && (() => {
         // 确定要渲染的分页点数量
-        const dotsCount = scrollSnaps.length > 0 ? scrollSnaps.length : childrenArray.length
+        const totalDots = scrollSnaps.length > 0 ? scrollSnaps.length : childrenArray.length
+        // 手机端最多只显示 7 个导航点
+        const maxMobileDots = 7
+        const dotsCount = Math.min(totalDots, maxMobileDots)
+        
+        // 如果总数量超过 7 个，计算均匀分布的索引
+        const getDotIndex = (dotIndex: number): number => {
+          if (totalDots <= maxMobileDots) {
+            // 如果总数不超过 7 个，直接使用原始索引
+            return dotIndex
+          }
+          // 如果总数超过 7 个，均匀分布
+          // 例如：20 个位置，7 个点 -> 0, 3, 6, 9, 12, 15, 19
+          const step = (totalDots - 1) / (maxMobileDots - 1)
+          return Math.round(dotIndex * step)
+        }
+        
+        // 判断当前选中的索引对应哪个导航点
+        const getSelectedDotIndex = (): number => {
+          if (totalDots <= maxMobileDots) {
+            return selectedIndex
+          }
+          // 找到最接近当前选中索引的导航点
+          const step = (totalDots - 1) / (maxMobileDots - 1)
+          return Math.round(selectedIndex / step)
+        }
+        
+        const selectedDotIndex = getSelectedDotIndex()
+        
         return (
           <div className="embla__dots">
-            {Array.from({ length: dotsCount }).map((_, dotIndex) => (
-              <button
-                key={`dot-${dotIndex}`}
-                className={`embla__dot ${dotIndex === selectedIndex ? 'embla__dot--selected' : ''}`}
-                onClick={() => scrollTo(dotIndex)}
-                aria-label={`Go to slide ${dotIndex + 1}`}
-              />
-            ))}
+            {Array.from({ length: dotsCount }).map((_, dotIndex) => {
+              const actualIndex = getDotIndex(dotIndex)
+              return (
+                <button
+                  key={`dot-${dotIndex}`}
+                  className={`embla__dot ${dotIndex === selectedDotIndex ? 'embla__dot--selected' : ''}`}
+                  onClick={() => scrollTo(actualIndex)}
+                  aria-label={`Go to slide ${actualIndex + 1}`}
+                />
+              )
+            })}
           </div>
         )
       })()}
