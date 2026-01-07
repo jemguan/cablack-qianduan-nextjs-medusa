@@ -158,8 +158,36 @@ async function getRegionMap(cacheId: string) {
 }
 
 /**
+ * 从请求头中检测用户的国家代码
+ * 支持多种 CDN/代理服务提供的国家代码头
+ */
+function detectCountryFromRequest(request: NextRequest): string | null {
+  // Cloudflare 提供的国家代码头
+  const cfCountry = request.headers.get("cf-ipcountry")
+  if (cfCountry && cfCountry.length === 2) {
+    return cfCountry.toLowerCase()
+  }
+
+  // Vercel 提供的国家代码头
+  const vercelCountry = request.headers.get("x-vercel-ip-country")
+  if (vercelCountry && vercelCountry.length === 2) {
+    return vercelCountry.toLowerCase()
+  }
+
+  // 其他可能的请求头（根据实际使用的 CDN/代理服务调整）
+  const cloudflareCountry = request.headers.get("CF-IPCountry")
+  if (cloudflareCountry && cloudflareCountry.length === 2) {
+    return cloudflareCountry.toLowerCase()
+  }
+
+  // 如果都没有，返回 null
+  return null
+}
+
+/**
  * Middleware to handle region cookie, legacy URL redirects, and security headers.
  * No longer adds countryCode to URLs - region is stored in cookie only.
+ * Now includes IP-based country detection for first-time visitors.
  */
 export async function middleware(request: NextRequest) {
   // Check if the url is a static asset
@@ -208,12 +236,29 @@ export async function middleware(request: NextRequest) {
   // Normal request - ensure cookies are set
   const regionCookie = request.cookies.get("_medusa_region")
 
-  // If no region cookie, set it to default
+  // If no region cookie, try to detect country from IP and set region accordingly
   if (!regionCookie || !cacheIdCookie) {
     const response = NextResponse.next()
 
     if (!regionCookie) {
-      response.cookies.set("_medusa_region", DEFAULT_REGION, {
+      // 尝试从 IP 检测国家代码
+      const detectedCountry = detectCountryFromRequest(request)
+      
+      // 确定要使用的国家代码
+      let countryCodeToUse = DEFAULT_REGION
+      
+      if (detectedCountry) {
+        // 检查检测到的国家是否在可用区域中
+        if (regionMap.has(detectedCountry)) {
+          countryCodeToUse = detectedCountry
+        } else {
+          // 如果检测到的国家不在可用区域中，使用默认区域
+          // 可以选择记录日志或使用默认值
+          countryCodeToUse = DEFAULT_REGION
+        }
+      }
+
+      response.cookies.set("_medusa_region", countryCodeToUse, {
         maxAge: 60 * 60 * 24 * 365, // 1 year
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",

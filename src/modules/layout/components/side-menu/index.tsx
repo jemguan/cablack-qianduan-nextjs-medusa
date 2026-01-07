@@ -3,7 +3,7 @@
 import { Popover, PopoverButton, PopoverPanel, Transition } from "@headlessui/react"
 import { ArrowRightMini, XMark } from "@medusajs/icons"
 import { Text, clx, useToggleState } from "@medusajs/ui"
-import { Fragment, Suspense } from "react"
+import { Fragment, Suspense, useEffect } from "react"
 import { usePathname } from "next/navigation"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -39,6 +39,64 @@ export interface SideMenuProps {
 const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => {
   const toggleState = useToggleState()
   const pathname = usePathname()
+
+  // 清除移动端文本选择状态（仅在移动端）
+  useEffect(() => {
+    // 检测是否为移动设备
+    const isMobile = () => {
+      return window.innerWidth <= 768 || 'ontouchstart' in window || navigator.maxTouchPoints > 0
+    }
+
+    if (!isMobile()) {
+      return // 桌面端不添加这些事件监听器
+    }
+
+    const clearSelection = () => {
+      if (window.getSelection) {
+        const selection = window.getSelection()
+        if (selection && selection.rangeCount > 0) {
+          selection.removeAllRanges()
+        }
+      }
+      if (document.getSelection) {
+        const selection = document.getSelection()
+        if (selection && selection.rangeCount > 0) {
+          selection.removeAllRanges()
+        }
+      }
+    }
+
+    // 监听触摸开始事件，清除文本选择
+    const handleTouchStart = (e: TouchEvent) => {
+      // 如果触摸的是可交互元素，清除选择
+      const target = e.target as HTMLElement
+      // 不要清除输入框的选择
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.closest('input') || target.closest('textarea')) {
+        return
+      }
+      if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.closest('button') || target.closest('a')) {
+        clearSelection()
+      }
+    }
+
+    // 监听触摸结束事件，清除文本选择
+    const handleTouchEnd = (e: TouchEvent) => {
+      const target = e.target as HTMLElement
+      // 不要清除输入框的选择
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.closest('input') || target.closest('textarea')) {
+        return
+      }
+      clearSelection()
+    }
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: true })
+    document.addEventListener('touchend', handleTouchEnd, { passive: true })
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart)
+      document.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [])
 
   // 如果没有配置菜单项，使用默认菜单项
   const displayMenuItems: MenuItem[] = menuItems && menuItems.length > 0

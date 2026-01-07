@@ -15,7 +15,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import GoogleLoginButton from "@modules/account/components/google-login-button"
 import User from "@modules/common/icons/user"
 import { useRouter, useParams } from "next/navigation"
-import { Fragment, useState } from "react"
+import { Fragment, useState, useRef, useEffect } from "react"
 import { useActionState } from "react"
 
 const AccountDropdown = () => {
@@ -24,9 +24,65 @@ const AccountDropdown = () => {
   const router = useRouter()
   const params = useParams()
   const countryCode = params?.countryCode as string
+  const containerRef = useRef<HTMLDivElement>(null)
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const open = () => setAccountDropdownOpen(true)
-  const close = () => setAccountDropdownOpen(false)
+  const open = () => {
+    // 清除任何待关闭的定时器
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = null
+    }
+    setAccountDropdownOpen(true)
+  }
+
+  const close = () => {
+    // 延迟关闭，给用户时间移动鼠标
+    closeTimeoutRef.current = setTimeout(() => {
+      setAccountDropdownOpen(false)
+    }, 200)
+  }
+
+  const handleMouseEnter = () => {
+    // 鼠标进入容器，取消关闭
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = null
+    }
+    setAccountDropdownOpen(true)
+  }
+
+  const handleMouseLeave = (e: React.MouseEvent) => {
+    // 检查鼠标是否真的离开了整个容器（包括下拉菜单）
+    const relatedTarget = e.relatedTarget as HTMLElement
+    if (containerRef.current && relatedTarget && containerRef.current.contains(relatedTarget)) {
+      // 鼠标还在容器内，不关闭
+      return
+    }
+    // 鼠标离开，延迟关闭
+    close()
+  }
+  
+  const handlePanelMouseLeave = (e: React.MouseEvent) => {
+    // 检查鼠标是否移动到按钮上
+    const relatedTarget = e.relatedTarget as HTMLElement
+    const button = containerRef.current?.querySelector('button[data-testid="nav-account-link"]') as HTMLElement
+    if (button && relatedTarget && button.contains(relatedTarget)) {
+      // 鼠标移动到按钮上，保持打开
+      return
+    }
+    // 鼠标离开面板，延迟关闭
+    close()
+  }
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const handleLogin = async (_currentState: unknown, formData: FormData) => {
     const result = await login(_currentState, formData)
@@ -43,9 +99,10 @@ const AccountDropdown = () => {
 
   return (
     <div
+      ref={containerRef}
       className="h-full z-50"
-      onMouseEnter={open}
-      onMouseLeave={close}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <Popover className="relative h-full">
         <PopoverButton 
@@ -69,6 +126,8 @@ const AccountDropdown = () => {
             static
             className="hidden small:block absolute top-[calc(100%+1px)] right-0 bg-card border border-border w-[380px] text-foreground shadow-xl rounded-b-lg overflow-hidden z-[60]"
             data-testid="nav-account-dropdown"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handlePanelMouseLeave}
           >
             <div className="p-6">
               {currentView === LOGIN_VIEW.SIGN_IN ? (

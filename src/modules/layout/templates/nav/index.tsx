@@ -11,6 +11,7 @@ import SideMenu from "@modules/layout/components/side-menu"
 import HeaderMenu from "@modules/layout/components/header-menu"
 import ThemeToggleButton from "@modules/layout/components/theme-toggle-button"
 import SearchBox from "@modules/layout/components/search-box"
+import HeaderCountrySelect from "@modules/layout/components/header-country-select"
 import { getMedusaConfig } from "@lib/admin-api/config"
 import { clx } from "@medusajs/ui"
 import User from "@modules/common/icons/user"
@@ -137,15 +138,15 @@ export default async function Nav() {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-x-4 h-full flex-1 basis-0 justify-end">
-            <div className="hidden small:flex items-center gap-x-4 h-full relative">
-              <Suspense fallback={
-                <div className="p-2">
-                  <User size="20" />
-                </div>
-              }>
+            <Suspense fallback={
+              <div className="hidden small:flex p-2">
+                <User size="20" />
+              </div>
+            }>
+              <div className="hidden small:flex items-center h-full relative">
                 <AccountButton />
-              </Suspense>
-            </div>
+              </div>
+            </Suspense>
             <ThemeToggleButton />
             <Suspense
               fallback={
@@ -188,6 +189,9 @@ export default async function Nav() {
             >
               <CartButton />
             </Suspense>
+            {regions && regions.length > 0 && (
+              <HeaderCountrySelect regions={regions} />
+            )}
           </div>
         </nav>
       </header>
