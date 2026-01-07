@@ -51,6 +51,7 @@ const Addresses = ({
       "shipping_address.city",
       "shipping_address.country_code",
       "shipping_address.province",
+      "shipping_address.phone",
       "email",
     ]
 
@@ -62,6 +63,7 @@ const Addresses = ({
       "billing_address.city",
       "billing_address.country_code",
       "billing_address.province",
+      "billing_address.phone",
     ]
 
     // 检查必填字段
