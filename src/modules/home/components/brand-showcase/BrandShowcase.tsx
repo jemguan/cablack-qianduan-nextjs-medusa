@@ -1,6 +1,5 @@
 "use client"
 
-import { useResponsiveRender } from '@lib/hooks/useResponsiveRender';
 import { Text } from '@medusajs/ui';
 import type { BrandShowcaseData } from './types';
 import { DesktopBrandShowcase } from './DesktopBrandShowcase';
@@ -17,21 +16,10 @@ interface BrandShowcaseProps {
  * 品牌展示主组件
  * 根据屏幕尺寸自动切换桌面端和移动端组件
  * 
- * 优化：只在客户端根据屏幕尺寸渲染对应组件，避免同时渲染两个组件浪费内存
+ * 使用 CSS 媒体查询控制显示/隐藏，避免 Hydration 不匹配问题
+ * 注意：enabled 检查在页面级别 blockConfig 中进行，组件内部不需要再检查
  */
 export function BrandShowcase({ data }: BrandShowcaseProps) {
-  const { isDesktop, isHydrated } = useResponsiveRender();
-
-  // hydration 之前返回 null，避免 SSR 渲染两个组件
-  if (!isHydrated) {
-    return null;
-  }
-
-  // 如果 enabled 为 false，则不渲染组件
-  if (data.enabled === false) {
-    return null;
-  }
-
   const {
     title,
     subtitle,
@@ -77,11 +65,13 @@ export function BrandShowcase({ data }: BrandShowcaseProps) {
           )}
         </div>
       )}
-      {isDesktop ? (
+      {/* 使用 CSS 媒体查询控制显示/隐藏，避免 Hydration 不匹配 */}
+      <div className="hidden small:block">
         <DesktopBrandShowcase data={data} />
-      ) : (
+      </div>
+      <div className="block small:hidden">
         <MobileBrandShowcase data={data} />
-      )}
+      </div>
     </div>
   );
 }

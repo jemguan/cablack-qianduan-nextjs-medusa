@@ -1,6 +1,5 @@
 "use client"
 
-import {useResponsiveRender} from '@lib/hooks/useResponsiveRender';
 import {DesktopCollageHero} from './DesktopCollageHero';
 import {MobileCollageHero} from './MobileCollageHero';
 import type {CollageHeroBlockProps} from './types';
@@ -19,7 +18,7 @@ import type {HttpTypes} from '@medusajs/types';
  *   4. 主推产品模块
  *   5. 文字模块
  * 
- * 优化：只在客户端根据屏幕尺寸渲染对应组件，避免同时渲染两个组件浪费内存
+ * 使用 CSS 媒体查询控制显示/隐藏，避免 Hydration 不匹配问题
  */
 export function CollageHero({
   containerData,
@@ -31,18 +30,16 @@ export function CollageHero({
     return null;
   }
 
-  const {isDesktop, isHydrated} = useResponsiveRender();
-
-  // hydration 之前返回占位符，避免 SSR 渲染两个组件
-  if (!isHydrated) {
-    return <div className="relative w-full min-h-screen" aria-hidden="true" />;
-  }
-
-  // 根据屏幕尺寸只渲染对应的组件
-  return isDesktop ? (
-    <DesktopCollageHero containerData={containerData} className={className} region={region} />
-  ) : (
-    <MobileCollageHero containerData={containerData} className={className} region={region} />
+  // 使用 CSS 媒体查询控制显示/隐藏，避免 Hydration 不匹配
+  return (
+    <>
+      <div className="hidden small:block">
+        <DesktopCollageHero containerData={containerData} className={className} region={region} />
+      </div>
+      <div className="block small:hidden">
+        <MobileCollageHero containerData={containerData} className={className} region={region} />
+      </div>
+    </>
   );
 }
 

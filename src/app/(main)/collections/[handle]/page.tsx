@@ -44,9 +44,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
 
+  // 使用 .trim() 来判断，这样空格 " " 可以作为占位符，触发 fallback
   const metadata = collection.metadata || {}
-  const title = (metadata.seo_title as string) || (await getPageTitle("collection", { title: collection.title }))
-  const description = (metadata.seo_description as string) || `${collection.title} collection`
+  const title = (metadata.seo_title as string)?.trim() || (await getPageTitle("collection", { title: collection.title }))
+  const description = (metadata.seo_description as string)?.trim() || `${collection.title} collection`
 
   return {
     title,

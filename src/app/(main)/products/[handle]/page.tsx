@@ -93,9 +93,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   }
 
   // 优先使用 Metadata 中的 SEO 配置，否则使用默认逻辑
+  // 使用 .trim() 来判断，这样空格 " " 可以作为占位符，触发 fallback
   const metadata = product.metadata || {}
-  const seoTitle = (metadata.seo_title as string) || (await getPageTitle("product", { title: product.title }))
-  const seoDescription = (metadata.seo_description as string) || product.subtitle || product.description || `${product.title} - Cablack`
+  const seoTitle = (metadata.seo_title as string)?.trim() || (await getPageTitle("product", { title: product.title }))
+  const seoDescription = (metadata.seo_description as string)?.trim() || product.subtitle || product.description || `${product.title} - Cablack`
 
   return {
     title: seoTitle,
