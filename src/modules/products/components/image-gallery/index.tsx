@@ -22,7 +22,9 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
               {imageUrl && (
                 <Image
                   src={imageUrl}
-                  priority={index <= 2 ? true : false}
+                  // 只有第一张大图需要 priority，其他全部懒加载
+                  priority={index === 0}
+                  loading={index === 0 ? "eager" : "lazy"}
                   className="absolute inset-0 rounded-rounded"
                   alt={`Product image ${index + 1}`}
                   fill
