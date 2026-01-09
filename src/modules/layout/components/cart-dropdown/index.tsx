@@ -36,12 +36,13 @@ const CartDropdown = ({
       return acc + item.quantity
     }, 0) || 0
 
-  // 计算税后 subtotal：item_subtotal + tax_total - discount_total
+  // 计算税后 subtotal：item_subtotal + tax_total - discount_subtotal
   const itemSubtotal = cartState?.item_subtotal ?? cartState?.subtotal ?? 0
   const taxTotal = cartState?.tax_total ?? 0
-  const discountTotal = cartState?.discount_total ?? 0
+  // 使用 discount_subtotal（不含税折扣）而不是 discount_total（含税折扣）
+  const discountSubtotal = (cartState as any)?.discount_subtotal ?? 0
   // 税后价格 = 税前价格 + 税费 - 折扣
-  const subtotalWithTax = itemSubtotal + taxTotal - discountTotal
+  const subtotalWithTax = itemSubtotal + taxTotal - discountSubtotal
   const itemRef = useRef<number>(totalItems || 0)
 
   const timedOpen = () => {

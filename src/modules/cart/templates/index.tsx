@@ -7,6 +7,7 @@ import SignInPrompt from "../components/sign-in-prompt"
 import Divider from "@modules/common/components/divider"
 import { HttpTypes } from "@medusajs/types"
 import { useBundlePromotionSync } from "../hooks/useBundlePromotionSync"
+import { useVipDiscountSync } from "../hooks/useVipDiscountSync"
 
 const CartTemplate = ({
   cart,
@@ -17,6 +18,10 @@ const CartTemplate = ({
 }) => {
   // 监听购物车变化，同步捆绑包折扣
   useBundlePromotionSync(cart)
+  
+  // VIP 会员自动应用专属折扣码
+  useVipDiscountSync(cart, customer)
+  
   return (
     <div className="py-6 small:py-12 bg-background min-h-screen">
       <div className="content-container px-4 small:px-0" data-testid="cart-container">

@@ -7,10 +7,11 @@ import {
   Transition,
 } from "@headlessui/react"
 import { ArrowRightOnRectangle } from "@medusajs/icons"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 import { signout } from "@lib/data/customer"
+import { getLoyaltyAccount } from "@lib/data/loyalty"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import User from "@modules/common/icons/user"
 import MapPin from "@modules/common/icons/map-pin"
@@ -23,10 +24,52 @@ interface AccountLoggedInDropdownProps {
   customer: HttpTypes.StoreCustomer
 }
 
+// 积分图标
+const PointsIcon = ({ size = 18 }: { size?: number }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 6v12" />
+    <path d="M8 10h8" />
+    <path d="M8 14h8" />
+  </svg>
+)
+
 const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => {
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [isMember, setIsMember] = useState(false)
+  const [points, setPoints] = useState(0)
+  const [isPointsEnabled, setIsPointsEnabled] = useState(false)
   const router = useRouter()
+
+  // 获取积分账户信息
+  useEffect(() => {
+    const fetchLoyalty = async () => {
+      try {
+        const data = await getLoyaltyAccount()
+        if (data?.config) {
+          setIsPointsEnabled(data.config.is_points_enabled || false)
+        }
+        if (data?.account) {
+          setIsMember(data.account.is_member || false)
+          setPoints(data.account.points || 0)
+        }
+      } catch (error) {
+        // 忽略错误，默认不显示积分相关内容
+      }
+    }
+    fetchLoyalty()
+  }, [])
 
   const open = () => setAccountDropdownOpen(true)
   const close = () => setAccountDropdownOpen(false)
@@ -75,12 +118,26 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
             <div className="p-4">
               {/* 用户信息 */}
               <div className="pb-4 mb-4 border-b border-border">
-                <div className="text-base-semi text-foreground">
-                  {customer.first_name ? `Hello, ${customer.first_name}` : "Account"}
+                <div className="flex items-center gap-2">
+                  <span className="text-base-semi text-foreground">
+                    {customer.first_name ? `Hello, ${customer.first_name}` : "Account"}
+                  </span>
+                  {isPointsEnabled && isMember && (
+                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full shadow-sm">
+                      VIP
+                    </span>
+                  )}
                 </div>
                 {customer.email && (
                   <div className="text-small-regular text-ui-fg-muted mt-1">
                     {customer.email}
+                  </div>
+                )}
+                {/* 积分显示 - 仅在积分系统启用时显示 */}
+                {isPointsEnabled && (
+                  <div className="flex items-center gap-1 mt-2 text-sm text-primary">
+                    <PointsIcon size={14} />
+                    <span className="font-medium">{points.toLocaleString()} pts</span>
                   </div>
                 )}
               </div>
@@ -136,6 +193,19 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                   <Heart size="18" />
                   <span>Wishlist</span>
                 </LocalizedClientLink>
+
+                {/* 积分入口 - 仅在积分系统启用时显示 */}
+                {isPointsEnabled && (
+                  <LocalizedClientLink
+                    href="/account/loyalty"
+                    className="flex items-center gap-x-3 py-2 px-2 text-base-regular text-ui-fg-subtle hover:text-ui-fg-base hover:bg-ui-bg-base-hover rounded-md transition-colors"
+                    onClick={close}
+                    data-testid="account-loyalty-link"
+                  >
+                    <PointsIcon size={18} />
+                    <span>Points</span>
+                  </LocalizedClientLink>
+                )}
 
                 {/* 分隔线 */}
                 <div className="border-t border-border my-2"></div>

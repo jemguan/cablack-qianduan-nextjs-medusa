@@ -16,6 +16,11 @@ interface ReviewStatsContextType {
 
 export const ReviewStatsContext = createContext<ReviewStatsContextType | null>(null)
 
+// 缓存最大条目数，防止内存无限增长
+const MAX_CACHE_SIZE = 200
+// 已请求 Set 最大大小
+const MAX_REQUESTED_SIZE = 500
+
 /**
  * 评论统计 Context Provider
  * 用于批量获取和缓存产品评论统计，避免重复 API 调用
@@ -40,6 +45,19 @@ export function ReviewStatsProvider({ children }: { children: React.ReactNode })
   useEffect(() => {
     loadingSetRef.current = loadingSet
   }, [loadingSet])
+  
+  // 组件卸载时清理
+  useEffect(() => {
+    return () => {
+      if (batchTimerRef.current) {
+        clearTimeout(batchTimerRef.current)
+      }
+      // 清理所有 refs 防止内存泄漏
+      pendingRequestsRef.current.clear()
+      batchQueueRef.current.clear()
+      requestedProductsRef.current.clear()
+    }
+  }, [])
 
   // 批量获取评论统计
   const batchFetchStats = useCallback(async (productIds: string[]) => {
@@ -98,7 +116,7 @@ export function ReviewStatsProvider({ children }: { children: React.ReactNode })
 
         const results = await Promise.all(fetchPromises)
 
-        // 更新缓存
+        // 更新缓存，同时限制缓存大小防止内存泄漏
         setStatsCache((prev) => {
           const next = { ...prev }
           results.forEach((result) => {
@@ -106,6 +124,18 @@ export function ReviewStatsProvider({ children }: { children: React.ReactNode })
               next[result.productId] = result.stats
             }
           })
+          
+          // 如果缓存超过最大大小，删除最早的条目
+          const keys = Object.keys(next)
+          if (keys.length > MAX_CACHE_SIZE) {
+            const keysToRemove = keys.slice(0, keys.length - MAX_CACHE_SIZE)
+            keysToRemove.forEach((key) => {
+              delete next[key]
+              // 同时从 requestedProductsRef 中移除，允许重新请求
+              requestedProductsRef.current.delete(key)
+            })
+          }
+          
           return next
         })
       } catch (error) {
@@ -152,6 +182,15 @@ export function ReviewStatsProvider({ children }: { children: React.ReactNode })
       idsToQueue.forEach((id) => {
         requestedProductsRef.current.add(id)
       })
+      
+      // 如果 requestedProductsRef 超过最大大小，清理旧条目
+      if (requestedProductsRef.current.size > MAX_REQUESTED_SIZE) {
+        const entries = Array.from(requestedProductsRef.current)
+        const entriesToRemove = entries.slice(0, entries.length - MAX_REQUESTED_SIZE)
+        entriesToRemove.forEach((id) => {
+          requestedProductsRef.current.delete(id)
+        })
+      }
 
       // 添加到队列（只添加没有缓存的）
       idsToQueue.forEach((id) => {

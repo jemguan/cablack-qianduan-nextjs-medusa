@@ -24,11 +24,11 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
     item_subtotal,
     shipping_subtotal,
     discount_subtotal,
-    discount_total,
   } = totals
 
-  // 使用 discount_total（如果存在），否则使用 discount_subtotal
-  const discountAmount = discount_total ?? discount_subtotal ?? 0
+  // 使用 discount_subtotal（不含税的折扣）与 Subtotal (excl. taxes) 保持一致
+  // discount_total 包含税额，会导致折扣金额超过商品不含税价格
+  const discountAmount = discount_subtotal ?? 0
 
   return (
     <div>

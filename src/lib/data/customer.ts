@@ -6,6 +6,7 @@ import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
+import { cache } from "react"
 import {
   getAuthHeaders,
   getCacheOptions,
@@ -17,8 +18,11 @@ import {
   setCartId,
 } from "./cookies"
 
-export const retrieveCustomer =
-  async (): Promise<HttpTypes.StoreCustomer | null> => {
+/**
+ * 内部实现：获取客户信息
+ * 使用 React cache() 在单次渲染周期内去重请求
+ */
+const _retrieveCustomerInternal = async (): Promise<HttpTypes.StoreCustomer | null> => {
     const authHeaders = await getAuthHeaders()
 
     if (!authHeaders) return null
@@ -89,6 +93,13 @@ export const retrieveCustomer =
       }
     }
   }
+
+/**
+ * 获取当前客户信息
+ * 使用 React cache() 在单次渲染周期内去重请求
+ * 这意味着在同一次服务端渲染中，多个组件调用此函数只会发送一次请求
+ */
+export const retrieveCustomer = cache(_retrieveCustomerInternal)
 
 export const updateCustomer = async (body: HttpTypes.StoreUpdateCustomer) => {
   const headers = {

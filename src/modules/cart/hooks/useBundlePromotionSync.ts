@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useMemo } from "react"
 import { syncBundlePromotions } from "@lib/data/cart"
 import type { HttpTypes } from "@medusajs/types"
 
@@ -10,9 +10,26 @@ import type { HttpTypes } from "@medusajs/types"
  */
 export function useBundlePromotionSync(cart: HttpTypes.StoreCart | null) {
   const previousCartItemsRef = useRef<Map<string, Set<string>>>(new Map())
+  const isSyncingRef = useRef(false)
+  
+  // 使用 useMemo 创建一个稳定的 items 指纹，避免因为引用变化而触发 effect
+  // 只有当 items 的内容真正变化时才会更新
+  const itemsFingerprint = useMemo(() => {
+    if (!cart?.items) return ""
+    // 创建一个基于 item ID 和 bundle_id 的指纹
+    return cart.items
+      .map((item) => `${item.id}:${item.metadata?.bundle_id || ""}`)
+      .sort()
+      .join("|")
+  }, [cart?.items])
 
   useEffect(() => {
-    if (!cart || !cart.items) {
+    if (!cart || !cart.items || !itemsFingerprint) {
+      return
+    }
+
+    // 防止重复同步
+    if (isSyncingRef.current) {
       return
     }
 
@@ -44,7 +61,7 @@ export function useBundlePromotionSync(cart: HttpTypes.StoreCart | null) {
               ? Array.from(currentProductIds)
               : []
 
-            // 如果剩余产品数量为 0，或者剩余产品数量少于之前，需要移除 Promotion
+            // 如果剩余产品数量为 0，需要移除 Promotion
             if (remainingProducts.length === 0) {
               removedBundles.push(bundleId)
             }
@@ -53,18 +70,24 @@ export function useBundlePromotionSync(cart: HttpTypes.StoreCart | null) {
 
         // 移除已删除捆绑包的 Promotion
         if (removedBundles.length > 0) {
-          // 调用同步函数来更新 Promotion
-          await syncBundlePromotions()
+          isSyncingRef.current = true
+          try {
+            // 调用同步函数来更新 Promotion
+            await syncBundlePromotions()
+          } finally {
+            isSyncingRef.current = false
+          }
         }
 
         // 更新引用
         previousCartItemsRef.current = currentBundleProducts
       } catch (error) {
         console.error("Error syncing bundle promotions:", error)
+        isSyncingRef.current = false
       }
     }
 
     syncPromotions()
-  }, [cart?.items])
+  }, [cart, itemsFingerprint]) // 使用 fingerprint 而不是直接依赖 cart.items
 }
 

@@ -17,6 +17,7 @@ import {
   setRegionCountryCode,
 } from "./cookies"
 import { getRegion } from "./regions"
+import { getVipDiscount } from "./loyalty"
 
 /**
  * 失效产品库存相关的缓存
@@ -31,6 +32,84 @@ async function revalidateProductInventoryCache() {
   const productsCacheTag = await getCacheTag("products")
   if (productsCacheTag) {
     revalidateTag(productsCacheTag)
+  }
+}
+
+/**
+ * 自动为 VIP 会员应用专属折扣码
+ * 在添加商品到购物车后调用
+ */
+async function tryApplyVipDiscount(cartId: string): Promise<void> {
+  try {
+    // 获取 VIP 折扣信息
+    const vipDiscount = await getVipDiscount()
+    
+    if (!vipDiscount.is_vip || !vipDiscount.discount_code) {
+      return
+    }
+
+    const discountCode = vipDiscount.discount_code
+
+    // 获取当前购物车的 promotions 和 customer_id
+    const headers = {
+      ...(await getAuthHeaders()),
+    }
+
+    // 获取购物车以检查是否已应用折扣码和客户关联
+    const cartResponse = await sdk.client.fetch<{ cart: HttpTypes.StoreCart }>(
+      `/store/carts/${cartId}?fields=*promotions,customer_id`,
+      {
+        method: "GET",
+        headers,
+      }
+    )
+
+    const cart = cartResponse?.cart
+
+    // 检查购物车是否关联了客户
+    if (!cart?.customer_id) {
+      // 尝试转移购物车到当前用户
+      try {
+        const transferResult = await sdk.store.cart.transferCart(cartId, {}, headers)
+        if (transferResult?.cart?.customer_id) {
+          // 更新本地 cart 引用
+          Object.assign(cart, transferResult.cart)
+        } else {
+          return
+        }
+      } catch (transferError) {
+        return
+      }
+    }
+
+    const existingPromotions = cart?.promotions || []
+    const isAlreadyApplied = existingPromotions.some(
+      (p: HttpTypes.StorePromotion) => 
+        p.code?.toLowerCase() === discountCode.toLowerCase()
+    )
+
+    if (isAlreadyApplied) {
+      return
+    }
+
+    // 获取现有的折扣码
+    const existingCodes = existingPromotions
+      .filter((p: HttpTypes.StorePromotion) => p.code)
+      .map((p: HttpTypes.StorePromotion) => p.code!)
+
+    // 添加 VIP 折扣码
+    const newCodes = [...existingCodes, discountCode]
+
+    // 应用折扣码
+    await sdk.client.fetch<{ cart: HttpTypes.StoreCart }>(`/store/carts/${cartId}/promotions`, {
+      method: "POST",
+      headers,
+      body: {
+        promo_codes: newCodes,
+      },
+    })
+  } catch (error) {
+    // 静默失败，不影响添加商品操作
   }
 }
 
@@ -179,6 +258,9 @@ export async function addToCart({
       
       // 失效产品库存缓存，因为添加商品会影响库存
       await revalidateProductInventoryCache()
+      
+      // 自动为 VIP 会员应用专属折扣码
+      await tryApplyVipDiscount(cart.id)
     })
     .catch(medusaError)
 }
@@ -435,7 +517,7 @@ export async function initiatePaymentSession(
   }
 }
 
-export async function applyPromotions(codes: string[]) {
+export async function applyPromotions(codes: string[]): Promise<{ success: boolean; cart?: any }> {
   const cartId = await getCartId()
 
   if (!cartId) {
@@ -443,7 +525,7 @@ export async function applyPromotions(codes: string[]) {
   }
 
   if (!codes || codes.length === 0) {
-    return
+    return { success: false }
   }
 
   const headers = {
@@ -452,27 +534,30 @@ export async function applyPromotions(codes: string[]) {
 
   // 使用专门的 promotions 端点
   // SDK 会自动处理 JSON 序列化，不需要手动 JSON.stringify
-  return sdk.client
-    .fetch(`/store/carts/${cartId}/promotions`, {
+  try {
+    const response = await sdk.client.fetch<{ cart: any }>(`/store/carts/${cartId}/promotions`, {
       method: "POST",
       headers,
       body: {
         promo_codes: codes,
       },
     })
-    .then(async (response: any) => {
-      const cartCacheTag = await getCacheTag("carts")
-      revalidateTag(cartCacheTag)
 
-      const fulfillmentCacheTag = await getCacheTag("fulfillment")
-      revalidateTag(fulfillmentCacheTag)
-    })
-    .catch((error) => {
-      if (process.env.NODE_ENV === "development") {
-        console.error("Error applying promotions:", error?.message)
-      }
-      medusaError(error)
-    })
+    const cartCacheTag = await getCacheTag("carts")
+    revalidateTag(cartCacheTag)
+
+    const fulfillmentCacheTag = await getCacheTag("fulfillment")
+    revalidateTag(fulfillmentCacheTag)
+
+    return { success: true, cart: response?.cart }
+  } catch (error: any) {
+    // 如果是 promotion 相关的错误，返回失败而不是抛出
+    if (error?.message?.includes("promotion") || error?.message?.includes("code")) {
+      throw new Error(error?.message || "Invalid promotion code")
+    }
+    medusaError(error)
+    return { success: false }
+  }
 }
 
 /**
