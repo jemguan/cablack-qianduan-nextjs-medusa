@@ -30,16 +30,16 @@ function buildContentSecurityPolicy(): string {
   const directives = [
     // 默认策略：只允许同源
     "default-src 'self'",
-    // 脚本：允许同源、内联脚本（Next.js 需要）、Stripe
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://m.stripe.com",
+    // 脚本：允许同源、内联脚本（Next.js 需要）、Stripe、Cloudflare Insights
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://m.stripe.com https://static.cloudflareinsights.com",
     // 样式：允许同源、内联样式
     "style-src 'self' 'unsafe-inline'",
     // 图片：允许同源、data URL、常见 CDN 和后端
     `img-src 'self' data: blob: https://*.amazonaws.com https://*.cloudfront.net https://*.digitaloceanspaces.com https://cdn.shopify.com ${backendHost}`.trim(),
     // 字体：允许同源和 data URL
     "font-src 'self' data:",
-    // 连接：允许同源、后端 API 和 Stripe
-    `connect-src 'self' ${backendHost} https://api.stripe.com https://m.stripe.com wss://*.stripe.com`.trim(),
+    // 连接：允许同源、后端 API、Stripe 和 Cloudflare Insights
+    `connect-src 'self' ${backendHost} https://api.stripe.com https://m.stripe.com wss://*.stripe.com https://cloudflareinsights.com`.trim(),
     // frame：允许 Stripe iframe
     "frame-src 'self' https://js.stripe.com https://m.stripe.com https://hooks.stripe.com",
     // 表单：只允许同源
