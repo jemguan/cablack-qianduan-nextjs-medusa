@@ -319,3 +319,63 @@ export async function isProductInWishlist(
   }
 }
 
+/**
+ * 批量添加商品到心愿单的项目数据
+ */
+export interface BatchAddItem {
+  product_id: string
+  variant_id?: string
+  notes?: string
+}
+
+/**
+ * 批量添加结果
+ */
+export interface BatchAddResult {
+  added: string[]
+  skipped: string[]
+  errors: { product_id: string; error: string }[]
+}
+
+/**
+ * 批量添加商品到心愿单
+ * 用于登录时同步本地心愿单到服务器
+ * 单次 API 调用替代多次单独调用，大幅减少网络请求
+ */
+export async function batchAddToWishlist(
+  wishlistId: string,
+  items: BatchAddItem[]
+): Promise<{ success: boolean; result?: BatchAddResult; error?: string }> {
+  if (!items || items.length === 0) {
+    return { success: true, result: { added: [], skipped: [], errors: [] } }
+  }
+
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  try {
+    const response = await sdk.client
+      .fetch<{ success: boolean; result: BatchAddResult; message: string }>(
+        `/store/wishlists/batch-add`,
+        {
+          method: "POST",
+          body: {
+            wishlist_id: wishlistId,
+            items,
+          },
+          headers,
+        }
+      )
+
+    revalidateTag(WISHLIST_CACHE_TAG)
+    return { success: true, result: response.result }
+  } catch (error: any) {
+    console.error("Failed to batch add to wishlist:", error)
+    return {
+      success: false,
+      error: error?.message || "Failed to batch add to wishlist",
+    }
+  }
+}
+

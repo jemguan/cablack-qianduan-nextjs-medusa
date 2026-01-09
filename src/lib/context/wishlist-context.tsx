@@ -20,6 +20,7 @@ import {
   getWishlist,
   addToWishlist,
   removeFromWishlist,
+  batchAddToWishlist,
 } from "@lib/data/wishlists"
 
 const LOCAL_STORAGE_KEY = "guest_wishlist"
@@ -110,6 +111,7 @@ export const WishlistProvider = ({
   }, [isAuthenticated])
 
   // 同步本地心愿单到服务器
+  // 使用批量 API 一次性添加所有本地项目，减少 API 调用次数
   const syncLocalToServer = useCallback(async () => {
     if (!isAuthenticated) return
 
@@ -120,22 +122,16 @@ export const WishlistProvider = ({
       const serverWishlist = await getOrCreateDefaultWishlist()
       if (!serverWishlist) return
 
-      // 获取当前服务器心愿单
-      const fullWishlist = await getWishlist(serverWishlist.id)
-      const existingProductIds = new Set(
-        fullWishlist?.items?.map((item) => item.product_id) || []
-      )
+      // 准备批量添加的项目列表
+      const itemsToAdd = local.items.map((item) => ({
+        product_id: item.product_id,
+        variant_id: item.variant_id,
+        notes: item.notes,
+      }))
 
-      // 添加本地心愿单中不存在于服务器的商品
-      for (const item of local.items) {
-        if (!existingProductIds.has(item.product_id)) {
-          await addToWishlist(serverWishlist.id, {
-            product_id: item.product_id,
-            variant_id: item.variant_id,
-            notes: item.notes,
-          })
-        }
-      }
+      // 使用批量 API 一次性添加所有项目
+      // 后端会自动跳过已存在的项目
+      await batchAddToWishlist(serverWishlist.id, itemsToAdd)
 
       // 清除本地心愿单
       clearLocalWishlist()
@@ -146,6 +142,7 @@ export const WishlistProvider = ({
       setWishlist(updatedWishlist)
     } catch (error) {
       // Silently fail for sync errors
+      console.warn("Failed to sync local wishlist to server:", error)
     }
   }, [isAuthenticated, loadLocalWishlist, clearLocalWishlist])
 

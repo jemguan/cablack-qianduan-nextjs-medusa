@@ -32,13 +32,32 @@ function getMedusaBackendUrl(): string {
          "http://localhost:9000"
 }
 
+// 获取 S3/CDN 域名用于资源预连接
+function getS3Hostname(): string | null {
+  return process.env.MEDUSA_CLOUD_S3_HOSTNAME || null
+}
+
 export default async function RootLayout(props: { children: React.ReactNode }) {
   const medusaBackendUrl = getMedusaBackendUrl()
+  const s3Hostname = getS3Hostname()
   const announcements = await listAnnouncements()
   
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* 资源预连接 - 优化网络请求 */}
+        <link rel="preconnect" href={medusaBackendUrl} />
+        <link rel="dns-prefetch" href={medusaBackendUrl} />
+        {s3Hostname && (
+          <>
+            <link rel="preconnect" href={`https://${s3Hostname}`} crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href={`https://${s3Hostname}`} />
+          </>
+        )}
+        {/* 通用 CDN 预连接 */}
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        
         {/* 
           合并的初始化脚本：
           1. 注入 Medusa 后端 URL

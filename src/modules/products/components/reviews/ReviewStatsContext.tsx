@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react"
-import { getReviews } from "@lib/data/reviews"
+import { getBatchReviewStats } from "@lib/data/reviews"
 
 interface ReviewStats {
   average_rating: number
@@ -59,7 +59,7 @@ export function ReviewStatsProvider({ children }: { children: React.ReactNode })
     }
   }, [])
 
-  // 批量获取评论统计
+  // 批量获取评论统计 - 使用单个 API 请求获取多个产品的统计
   const batchFetchStats = useCallback(async (productIds: string[]) => {
     if (productIds.length === 0) return
 
@@ -83,45 +83,21 @@ export function ReviewStatsProvider({ children }: { children: React.ReactNode })
     // 创建请求 Promise
     const requestPromise = (async () => {
       try {
-        // 批量获取评论统计
-        const fetchPromises = idsToFetch.map(async (productId) => {
-          try {
-            const result = await getReviews({
-              product_id: productId,
-              status: "approved",
-              limit: 100, // 只需要少量评论来计算平均分
-              offset: 0,
-            })
-
-            if (result.reviews && result.reviews.length > 0) {
-              const total = result.count || result.reviews.length
-              const averageRating =
-                result.reviews.reduce((sum, r) => sum + (r.rating || 0), 0) /
-                result.reviews.length
-
-              return {
-                productId,
-                stats: {
-                  average_rating: averageRating,
-                  total,
-                },
-              }
-            }
-            return null
-          } catch (error) {
-            console.error(`Failed to load review stats for product ${productId}:`, error)
-            return null
-          }
-        })
-
-        const results = await Promise.all(fetchPromises)
+        // 使用批量 API 一次获取所有产品的评论统计
+        // 这比之前的逐个请求模式大幅减少 API 调用次数
+        const response = await getBatchReviewStats(idsToFetch)
 
         // 更新缓存，同时限制缓存大小防止内存泄漏
         setStatsCache((prev) => {
           const next = { ...prev }
-          results.forEach((result) => {
-            if (result) {
-              next[result.productId] = result.stats
+          
+          // 将批量 API 返回的统计添加到缓存
+          response.stats.forEach((stat) => {
+            if (stat.total > 0) {
+              next[stat.product_id] = {
+                average_rating: stat.average_rating,
+                total: stat.total,
+              }
             }
           })
           

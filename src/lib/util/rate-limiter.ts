@@ -11,20 +11,65 @@ interface RateLimitEntry {
   resetAt: number
 }
 
+// 最大存储条目数，防止内存泄漏
+const MAX_STORE_SIZE = 10000
+
 // 内存存储
 const rateLimitStore = new Map<string, RateLimitEntry>()
 
-// 定期清理过期条目（每分钟）
-if (typeof setInterval !== "undefined") {
-  setInterval(() => {
-    const now = Date.now()
-    for (const [key, entry] of rateLimitStore.entries()) {
-      if (entry.resetAt < now) {
-        rateLimitStore.delete(key)
-      }
+// 跟踪是否已初始化清理定时器（防止 SSR 环境下多次初始化）
+let cleanupIntervalId: ReturnType<typeof setInterval> | null = null
+
+/**
+ * 清理过期条目和强制限制 Map 大小
+ */
+function cleanupExpiredEntries(): void {
+  const now = Date.now()
+  
+  // 删除过期条目
+  for (const [key, entry] of rateLimitStore.entries()) {
+    if (entry.resetAt < now) {
+      rateLimitStore.delete(key)
     }
-  }, 60 * 1000)
+  }
+  
+  // 如果 Map 仍然过大，强制删除最旧的条目
+  if (rateLimitStore.size > MAX_STORE_SIZE) {
+    const entries = Array.from(rateLimitStore.entries())
+    // 按 resetAt 排序，删除最早过期的条目
+    entries.sort((a, b) => a[1].resetAt - b[1].resetAt)
+    
+    const entriesToRemove = entries.slice(0, entries.length - MAX_STORE_SIZE)
+    for (const [key] of entriesToRemove) {
+      rateLimitStore.delete(key)
+    }
+  }
 }
+
+// 初始化清理定时器（只执行一次）
+function initCleanupInterval(): void {
+  if (typeof setInterval === "undefined") {
+    return
+  }
+  
+  // 如果已经有定时器，不再创建新的
+  if (cleanupIntervalId !== null) {
+    return
+  }
+  
+  // 每分钟清理一次过期条目
+  cleanupIntervalId = setInterval(() => {
+    cleanupExpiredEntries()
+  }, 60 * 1000)
+  
+  // 如果在 Node.js 环境，使用 unref 防止定时器阻止进程退出
+  if (typeof cleanupIntervalId === "object" && "unref" in cleanupIntervalId) {
+    cleanupIntervalId.unref()
+  }
+}
+
+// 初始化清理定时器
+initCleanupInterval()
 
 export interface RateLimitConfig {
   /** 时间窗口内允许的最大请求数 */
@@ -57,6 +102,12 @@ export function rateLimit(
   const now = Date.now()
   const key = identifier
   const entry = rateLimitStore.get(key)
+
+  // 在添加新条目前，检查 Map 大小
+  // 如果快要超过限制，触发一次清理
+  if (rateLimitStore.size >= MAX_STORE_SIZE - 100) {
+    cleanupExpiredEntries()
+  }
 
   // 如果条目不存在或已过期，创建新条目
   if (!entry || entry.resetAt < now) {
@@ -126,4 +177,3 @@ export const RATE_LIMITS = {
   // 订阅类请求：每小时 5 次
   NEWSLETTER: { limit: 5, windowMs: 60 * 60 * 1000 },
 } as const
-

@@ -1,17 +1,11 @@
 import { Metadata } from "next"
+import dynamic from "next/dynamic"
 
 import { listCategories } from "@lib/data/categories"
 import { getCurrentRegion, getCountryCode } from "@lib/data/regions"
 import { getMedusaConfig } from "@lib/admin-api/config"
 import { getPageLayoutBlocks } from "@lib/admin-api/pageLayoutUtils"
 import { getHomePageLayoutBlocks } from "@modules/home/utils/getPageLayoutBlocks"
-import FeaturedCollections from "@modules/home/components/featured-collections"
-import { CollageHero } from "@modules/home/components/collage-hero"
-import { BrandShowcase } from "@modules/home/components/brand-showcase"
-import { TextBlock } from "@modules/home/components/text-block"
-import { FAQBlock } from "@modules/home/components/faq-block"
-import { FeaturedBlog } from "@modules/home/components/featured-blog"
-import { FeaturedProduct } from "@modules/home/components/featured-product"
 import { listBlogs } from "@lib/data/blogs"
 import { sdk } from "@lib/config"
 import { getAuthHeaders, getCacheOptions } from "@lib/data/cookies"
@@ -20,6 +14,44 @@ import { getPageTitle, getPageTitleConfig } from "@lib/data/page-title-config"
 import type { HttpTypes } from "@medusajs/types"
 import Schema from "@modules/common/components/seo/Schema"
 import { getBaseURL } from "@lib/util/env"
+
+// 首屏关键组件 - 正常导入
+import { CollageHero } from "@modules/home/components/collage-hero"
+import FeaturedCollections from "@modules/home/components/featured-collections"
+import { TextBlock } from "@modules/home/components/text-block"
+
+// 非首屏组件 - 动态导入以减少初始 JS 包大小
+const BrandShowcase = dynamic(
+  () => import("@modules/home/components/brand-showcase").then(mod => mod.BrandShowcase),
+  { 
+    loading: () => <div className="min-h-[200px]" />,
+    ssr: true  // 保持 SSR 以利于 SEO
+  }
+)
+
+const FAQBlock = dynamic(
+  () => import("@modules/home/components/faq-block").then(mod => mod.FAQBlock),
+  { 
+    loading: () => <div className="min-h-[300px]" />,
+    ssr: true
+  }
+)
+
+const FeaturedBlog = dynamic(
+  () => import("@modules/home/components/featured-blog").then(mod => mod.FeaturedBlog),
+  { 
+    loading: () => <div className="min-h-[400px]" />,
+    ssr: true
+  }
+)
+
+const FeaturedProduct = dynamic(
+  () => import("@modules/home/components/featured-product").then(mod => mod.FeaturedProduct),
+  { 
+    loading: () => <div className="min-h-[300px]" />,
+    ssr: true
+  }
+)
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = await getPageTitleConfig()

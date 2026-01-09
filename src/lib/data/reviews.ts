@@ -193,10 +193,11 @@ export async function getReviewStats(
 ): Promise<ReviewStats | null> {
   try {
     // 获取所有评论来计算统计信息
+    // 使用较小的 limit 避免传输大量数据
     const allReviews = await getReviews({
       product_id: productId,
-      status: undefined, // 获取所有状态的评论用于统计
-      limit: 1000, // 获取足够多的评论
+      status: "approved", // 只获取已审核的评论用于统计
+      limit: 100, // 降低 limit，减少数据传输
       offset: 0,
     })
 
@@ -205,7 +206,7 @@ export async function getReviewStats(
       average_rating: 0,
       rating_distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
       pending_count: 0,
-      approved_count: 0,
+      approved_count: allReviews.count,
     }
 
     if (allReviews.reviews.length === 0) {
@@ -220,8 +221,6 @@ export async function getReviewStats(
         stats.rating_distribution[rating] =
           (stats.rating_distribution[rating] || 0) + 1
       }
-      if (review.status === "pending") stats.pending_count++
-      if (review.status === "approved") stats.approved_count++
     })
 
     stats.average_rating = totalRating / allReviews.reviews.length
@@ -231,5 +230,61 @@ export async function getReviewStats(
     console.error("Failed to get review stats:", error)
     return null
   }
+}
+
+/**
+ * 批量获取产品评论统计的响应类型
+ */
+export interface BatchReviewStatsItem {
+  product_id: string
+  average_rating: number
+  total: number
+  approved_count: number
+}
+
+export interface BatchReviewStatsResponse {
+  stats: BatchReviewStatsItem[]
+}
+
+/**
+ * 批量获取多个产品的评论统计
+ * 使用专用的批量 API，一次请求获取多个产品的统计
+ * 大幅减少 API 调用次数，提升性能
+ */
+export async function getBatchReviewStats(
+  productIds: string[]
+): Promise<BatchReviewStatsResponse> {
+  if (productIds.length === 0) {
+    return { stats: [] }
+  }
+
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  const next = {
+    ...(await getCacheOptions("reviews")),
+  }
+
+  const cacheConfig = getCacheConfig("REVIEW")
+
+  // 使用逗号分隔的 product_ids 参数
+  const query: Record<string, string> = {
+    product_ids: productIds.join(","),
+  }
+
+  return await sdk.client
+    .fetch<BatchReviewStatsResponse>(`/store/reviews/batch-stats`, {
+      method: "GET",
+      query,
+      headers,
+      next,
+      ...cacheConfig,
+    })
+    .catch((err) => {
+      console.error("Failed to fetch batch review stats:", err)
+      // 返回空结果而不是抛出错误，避免影响页面渲染
+      return { stats: [] }
+    })
 }
 

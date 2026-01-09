@@ -21,15 +21,34 @@ export function useRecentlyViewedProducts(
 ) {
   const [products, setProducts] = useState<HttpTypes.StoreProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // 用于跟踪组件是否已卸载
+  const isMountedRef = useRef(true);
+  // 用于取消 fetch 请求
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // 加载最近浏览的产品
   const loadProducts = useCallback(async () => {
     if (!countryCode && !regionId) {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
       return;
     }
 
-    setLoading(true);
+    // 取消之前的请求
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // 创建新的 AbortController
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+
+    if (isMountedRef.current) {
+      setLoading(true);
+    }
+    
     try {
       // 从 localStorage 获取产品ID列表
       const viewedProducts = getRecentlyViewedProducts(
@@ -38,8 +57,10 @@ export function useRecentlyViewedProducts(
       );
 
       if (viewedProducts.length === 0) {
-        setProducts([]);
-        setLoading(false);
+        if (isMountedRef.current) {
+          setProducts([]);
+          setLoading(false);
+        }
         return;
       }
 
@@ -59,7 +80,13 @@ export function useRecentlyViewedProducts(
         headers: {
           'Content-Type': 'application/json',
         },
+        signal, // 添加 AbortController signal
       });
+
+      // 检查是否已取消或组件已卸载
+      if (signal.aborted || !isMountedRef.current) {
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(`HTTP error: ${response.status}`);
@@ -70,6 +97,11 @@ export function useRecentlyViewedProducts(
         count: number;
       };
 
+      // 检查是否已取消或组件已卸载
+      if (signal.aborted || !isMountedRef.current) {
+        return;
+      }
+
       // 按照浏览顺序排序（保持 localStorage 中的顺序）
       const productMap = new Map(
         (data.products || []).map((p) => [p.id, p]),
@@ -78,12 +110,22 @@ export function useRecentlyViewedProducts(
         .map((viewed) => productMap.get(viewed.id))
         .filter((p): p is HttpTypes.StoreProduct => p !== undefined);
 
-      setProducts(orderedProducts);
+      if (isMountedRef.current) {
+        setProducts(orderedProducts);
+      }
     } catch (error) {
+      // 忽略 AbortError（正常的取消操作）
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
       console.warn('加载最近浏览产品失败:', error);
-      setProducts([]);
+      if (isMountedRef.current) {
+        setProducts([]);
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [limit, excludeProductId, countryCode, regionId]);
 
@@ -100,18 +142,32 @@ export function useRecentlyViewedProducts(
   // 清空浏览历史
   const clearHistory = useCallback(() => {
     clearViewingHistory();
-    setProducts([]);
+    if (isMountedRef.current) {
+      setProducts([]);
+    }
   }, []);
 
-  // 初始加载
+  // 初始加载和清理
   useEffect(() => {
+    // 标记组件已挂载
+    isMountedRef.current = true;
+    
     loadProducts();
+    
+    // 清理函数：标记组件已卸载并取消任何进行中的请求
+    return () => {
+      isMountedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
   }, [loadProducts]);
 
   // 监听localStorage变化（其他标签页的更新）
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'medusa_recently_viewed_products') {
+      if (e.key === 'medusa_recently_viewed_products' && isMountedRef.current) {
         loadProducts();
       }
     };
@@ -165,4 +221,3 @@ export function useProductViewTracking() {
 
   return { trackProductView };
 }
-

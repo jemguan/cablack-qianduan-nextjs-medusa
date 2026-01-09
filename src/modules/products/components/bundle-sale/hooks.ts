@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import type { Bundle } from "@lib/types/bundle"
 import type { HttpTypes } from "@medusajs/types"
 import { getBundlesByProductId } from "@lib/data/bundles"
@@ -16,6 +16,52 @@ export interface BundleWithProducts {
   quantityMap: Record<string, number>
 }
 
+// 客户端缓存配置
+const CACHE_TTL_MS = 60 * 1000 // 60秒缓存时间
+const MAX_CACHE_SIZE = 50 // 最大缓存条目数
+
+interface CacheEntry {
+  data: HttpTypes.StoreProduct[]
+  timestamp: number
+}
+
+// 简单的内存缓存，用于减少重复请求
+const productCache = new Map<string, CacheEntry>()
+
+/**
+ * 获取缓存的产品数据
+ */
+function getCachedProducts(cacheKey: string): HttpTypes.StoreProduct[] | null {
+  const entry = productCache.get(cacheKey)
+  if (!entry) return null
+  
+  // 检查是否过期
+  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+    productCache.delete(cacheKey)
+    return null
+  }
+  
+  return entry.data
+}
+
+/**
+ * 设置缓存的产品数据
+ */
+function setCachedProducts(cacheKey: string, data: HttpTypes.StoreProduct[]): void {
+  // 如果缓存过大，删除最旧的条目
+  if (productCache.size >= MAX_CACHE_SIZE) {
+    const firstKey = productCache.keys().next().value
+    if (firstKey) {
+      productCache.delete(firstKey)
+    }
+  }
+  
+  productCache.set(cacheKey, {
+    data,
+    timestamp: Date.now(),
+  })
+}
+
 /**
  * 获取 Bundle 及其完整产品数据的 Hook
  * 1. 获取包含当前产品作为主产品的 bundle
@@ -28,21 +74,47 @@ export function useBundleProducts(
 ) {
   const [bundlesWithProducts, setBundlesWithProducts] = useState<BundleWithProducts[]>([])
   const [loading, setLoading] = useState(true)
+  
+  // 用于跟踪组件是否已卸载
+  const isMountedRef = useRef(true)
+  // 用于取消 fetch 请求
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   const loadBundleProducts = useCallback(async () => {
     if (!productId || !regionId) {
-      setLoading(false)
+      if (isMountedRef.current) {
+        setLoading(false)
+      }
       return
     }
 
-    setLoading(true)
+    // 取消之前的请求
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    
+    // 创建新的 AbortController
+    abortControllerRef.current = new AbortController()
+    const signal = abortControllerRef.current.signal
+
+    if (isMountedRef.current) {
+      setLoading(true)
+    }
+    
     try {
       // 1. 获取包含当前产品作为主产品的 bundles
       const bundles = await getBundlesByProductId(productId)
 
+      // 检查是否已取消或组件已卸载
+      if (signal.aborted || !isMountedRef.current) {
+        return
+      }
+
       if (bundles.length === 0) {
-        setBundlesWithProducts([])
-        setLoading(false)
+        if (isMountedRef.current) {
+          setBundlesWithProducts([])
+          setLoading(false)
+        }
         return
       }
 
@@ -64,43 +136,77 @@ export function useBundleProducts(
 
       if (allAddonProductIds.size === 0) {
         // 没有副产品，直接返回 bundle 信息
-        setBundlesWithProducts(
-          bundles.map((bundle) => ({
-            bundle,
-            addonProducts: [],
-            quantityMap: {},
-          }))
-        )
-        setLoading(false)
+        if (isMountedRef.current) {
+          setBundlesWithProducts(
+            bundles.map((bundle) => ({
+              bundle,
+              addonProducts: [],
+              quantityMap: {},
+            }))
+          )
+          setLoading(false)
+        }
         return
       }
 
       // 3. 使用 Next.js API 代理路由获取产品数据，避免 CORS 问题
-      const params = new URLSearchParams()
-      Array.from(allAddonProductIds).forEach((id) => params.append('id', id))
-      params.append('region_id', regionId)
-      params.append('fields', '*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.inventory_items.inventory_item_id,*variants.inventory_items.required_quantity,*variants.images.id,*variants.images.url,*variants.images.metadata,*variants.options.option_id,*variants.options.value,*options.id,*options.title,*options.values.id,*options.values.value,+metadata,+tags,')
+      const productIdsArray = Array.from(allAddonProductIds)
+      
+      // 创建缓存键（基于产品 ID 和区域）
+      const cacheKey = `${productIdsArray.sort().join(',')}_${regionId}`
+      
+      // 检查缓存
+      const cachedProducts = getCachedProducts(cacheKey)
+      
+      let products: HttpTypes.StoreProduct[]
+      
+      if (cachedProducts) {
+        // 使用缓存的数据
+        products = cachedProducts
+      } else {
+        // 缓存未命中，从 API 获取
+        const params = new URLSearchParams()
+        productIdsArray.forEach((id) => params.append('id', id))
+        params.append('region_id', regionId)
+        params.append('fields', '*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.inventory_items.inventory_item_id,*variants.inventory_items.required_quantity,*variants.images.id,*variants.images.url,*variants.images.metadata,*variants.options.option_id,*variants.options.value,*options.id,*options.title,*options.values.id,*options.values.value,+metadata,+tags,')
 
-      const fetchResponse = await fetch(`/api/medusa-proxy/products?${params.toString()}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        cache: 'no-store', // 产品数据包含价格和库存，需要实时更新
-      })
+        const fetchResponse = await fetch(`/api/medusa-proxy/products?${params.toString()}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          // 使用默认缓存策略，让浏览器和 CDN 可以缓存
+          signal, // 添加 AbortController signal
+        })
 
-      if (!fetchResponse.ok) {
-        throw new Error(`HTTP error: ${fetchResponse.status}`)
-      }
+        // 检查是否已取消或组件已卸载
+        if (signal.aborted || !isMountedRef.current) {
+          return
+        }
 
-      const response = await fetchResponse.json() as {
-        products: HttpTypes.StoreProduct[]
-        count: number
+        if (!fetchResponse.ok) {
+          throw new Error(`HTTP error: ${fetchResponse.status}`)
+        }
+
+        const response = await fetchResponse.json() as {
+          products: HttpTypes.StoreProduct[]
+          count: number
+        }
+
+        // 检查是否已取消或组件已卸载
+        if (signal.aborted || !isMountedRef.current) {
+          return
+        }
+        
+        products = response.products || []
+        
+        // 存入缓存
+        setCachedProducts(cacheKey, products)
       }
 
       // 创建产品 ID 到产品对象的映射
       const productMap = new Map(
-        (response.products || []).map((p) => [p.id, p])
+        products.map((p) => [p.id, p])
       )
 
       // 4. 为每个 bundle 构建完整的数据
@@ -126,17 +232,39 @@ export function useBundleProducts(
         }
       })
 
-      setBundlesWithProducts(result)
+      if (isMountedRef.current) {
+        setBundlesWithProducts(result)
+      }
     } catch (error) {
+      // 忽略 AbortError（正常的取消操作）
+      if (error instanceof Error && error.name === 'AbortError') {
+        return
+      }
       console.error("Failed to load bundle products:", error)
-      setBundlesWithProducts([])
+      if (isMountedRef.current) {
+        setBundlesWithProducts([])
+      }
     } finally {
-      setLoading(false)
+      if (isMountedRef.current) {
+        setLoading(false)
+      }
     }
   }, [productId, regionId])
 
   useEffect(() => {
+    // 标记组件已挂载
+    isMountedRef.current = true
+    
     loadBundleProducts()
+    
+    // 清理函数：标记组件已卸载并取消任何进行中的请求
+    return () => {
+      isMountedRef.current = false
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+        abortControllerRef.current = null
+      }
+    }
   }, [loadBundleProducts])
 
   return {
@@ -145,4 +273,3 @@ export function useBundleProducts(
     refresh: loadBundleProducts,
   }
 }
-

@@ -1,6 +1,7 @@
 import { sdk } from "@lib/config"
 import { getCacheConfig } from "@lib/config/cache"
 import { unstable_cache } from "next/cache"
+import { cache } from "react"
 import { escapeText } from "@lib/util/sanitize"
 
 export type PageTitleConfig = {
@@ -55,22 +56,26 @@ async function fetchPageTitleConfigInternal(): Promise<PageTitleConfig> {
 }
 
 /**
- * 获取页面标题配置（带缓存）
- * 使用 Next.js unstable_cache 进行服务端缓存
+ * 模块级别的 unstable_cache 实例
+ * 确保在构建时缓存能够在页面之间共享
  */
-export async function getPageTitleConfig(): Promise<PageTitleConfig> {
-  // 使用 unstable_cache 进行服务端缓存（2小时）
-  const cachedFetch = unstable_cache(
-    async () => fetchPageTitleConfigInternal(),
-    ["page-title-config"],
-    {
-      revalidate: 7200, // 2小时
-      tags: ["page-title-config"],
-    }
-  )
+const cachedPageTitleConfig = unstable_cache(
+  fetchPageTitleConfigInternal,
+  ["page-title-config"],
+  {
+    revalidate: 7200, // 2小时
+    tags: ["page-title-config"],
+  }
+)
 
-  return cachedFetch()
-}
+/**
+ * 获取页面标题配置（带缓存）
+ * 使用 React.cache 确保同一次渲染只请求一次
+ * 使用 unstable_cache 确保跨请求缓存
+ */
+export const getPageTitleConfig = cache(async (): Promise<PageTitleConfig> => {
+  return cachedPageTitleConfig()
+})
 
 // 预编译的正则表达式缓存
 const regexCache = new Map<string, RegExp>()

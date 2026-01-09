@@ -2,7 +2,7 @@
 
 import { sdk } from "@lib/config"
 import { HttpTypes } from "@medusajs/types"
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { decodeToken } from "react-jwt"
 
@@ -131,6 +131,9 @@ export default function GoogleCallbackPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [customer, setCustomer] = useState<HttpTypes.StoreCustomer | null>(null)
+  
+  // 用于跟踪组件是否已卸载，防止在卸载后调用 setState
+  const isMountedRef = useRef(true)
 
   // 获取所有查询参数
   const queryParams = useMemo(() => {
@@ -142,24 +145,36 @@ export default function GoogleCallbackPage() {
   }, [searchParams])
 
   useEffect(() => {
+    // 标记组件已挂载
+    isMountedRef.current = true
+    
     const validateCallback = async () => {
       try {
-        setLoading(true)
-        setError(null)
+        if (isMountedRef.current) {
+          setLoading(true)
+          setError(null)
+        }
 
         // 检查是否有必要的参数
         if (!queryParams.code) {
-          setError("Missing authorization code from Google")
-          setLoading(false)
+          if (isMountedRef.current) {
+            setError("Missing authorization code from Google")
+            setLoading(false)
+          }
           return
         }
 
         // 步骤 1: 调用 Medusa 的 callback API 验证 Google 认证
         const token = await sdk.auth.callback("customer", "google", queryParams)
+        
+        // 检查组件是否仍然挂载
+        if (!isMountedRef.current) return
 
         if (!token || typeof token !== "string") {
-          setError("Authentication failed: Invalid token received")
-          setLoading(false)
+          if (isMountedRef.current) {
+            setError("Authentication failed: Invalid token received")
+            setLoading(false)
+          }
           return
         }
 
@@ -244,8 +259,10 @@ export default function GoogleCallbackPage() {
           }
           
           if (!email) {
-            setError("Unable to retrieve email from Google authentication")
-            setLoading(false)
+            if (isMountedRef.current) {
+              setError("Unable to retrieve email from Google authentication")
+              setLoading(false)
+            }
             return
           }
 
@@ -322,8 +339,10 @@ export default function GoogleCallbackPage() {
                     const reauthCount = parseInt(sessionStorage.getItem("medusa_reauth_count") || "0")
                     if (reauthCount >= 2) {
                       console.error("[OAuth Callback] Re-authentication loop detected")
-                      setError("Your account was deleted and we couldn't recreate it automatically after multiple attempts. Please try logging out and logging in again manually.")
-                      setLoading(false)
+                      if (isMountedRef.current) {
+                        setError("Your account was deleted and we couldn't recreate it automatically after multiple attempts. Please try logging out and logging in again manually.")
+                        setLoading(false)
+                      }
                       sessionStorage.removeItem("medusa_reauth_count")
                       return
                     }
@@ -397,8 +416,10 @@ export default function GoogleCallbackPage() {
                       
                       const reauthCount = parseInt(sessionStorage.getItem("medusa_reauth_count") || "0")
                       if (reauthCount >= 2) {
-                        setError("Account recreation failed after multiple attempts. Please contact support.")
-                        setLoading(false)
+                        if (isMountedRef.current) {
+                          setError("Account recreation failed after multiple attempts. Please contact support.")
+                          setLoading(false)
+                        }
                         sessionStorage.removeItem("medusa_reauth_count")
                         return
                       }
@@ -457,7 +478,7 @@ export default function GoogleCallbackPage() {
               
               if (response.ok) {
                 const data = await response.json()
-                if (data?.customer) {
+                if (data?.customer && isMountedRef.current) {
                   setCustomer(data.customer)
                 }
               } else if (response.status === 404) {
@@ -471,8 +492,10 @@ export default function GoogleCallbackPage() {
                     
                     const reauthCount = parseInt(sessionStorage.getItem("medusa_reauth_count") || "0")
                     if (reauthCount >= 2) {
-                      setError("Account recreation failed. Please contact support.")
-                      setLoading(false)
+                      if (isMountedRef.current) {
+                        setError("Account recreation failed. Please contact support.")
+                        setLoading(false)
+                      }
                       sessionStorage.removeItem("medusa_reauth_count")
                       return
                     }
@@ -500,17 +523,28 @@ export default function GoogleCallbackPage() {
         window.location.replace("/account")
         return
       } catch (err: any) {
-        setError(err.message || "Authentication failed. Please try again.")
+        if (isMountedRef.current) {
+          setError(err.message || "Authentication failed. Please try again.")
+        }
       } finally {
-        setLoading(false)
+        if (isMountedRef.current) {
+          setLoading(false)
+        }
       }
     }
 
     if (queryParams.code) {
       validateCallback()
     } else {
-      setError("Missing required parameters from Google")
-      setLoading(false)
+      if (isMountedRef.current) {
+        setError("Missing required parameters from Google")
+        setLoading(false)
+      }
+    }
+    
+    // 清理函数：标记组件已卸载
+    return () => {
+      isMountedRef.current = false
     }
   }, [queryParams, router])
 
