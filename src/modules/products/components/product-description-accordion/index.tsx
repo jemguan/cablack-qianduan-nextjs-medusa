@@ -79,63 +79,68 @@ const ProductDescriptionAccordion: React.FC<ProductDescriptionAccordionProps> = 
       }
     }
 
-    // 如果正则匹配失败，尝试使用 DOM 解析
-    if (matches.length === 0) {
-      const parser = new DOMParser()
-      const doc = parser.parseFromString(htmlDescription, "text/html")
-      const body = doc.body
+    // 如果正则匹配失败，尝试使用 DOM 解析（仅在浏览器环境中）
+    if (matches.length === 0 && typeof window !== "undefined" && typeof DOMParser !== "undefined") {
+      try {
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(htmlDescription, "text/html")
+        const body = doc.body
 
-      // 查找包含标题的元素
-      for (const title of sectionTitles) {
-        const titleRegex = new RegExp(
-          `^\\s*${title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`,
-          "i"
-        )
+        // 查找包含标题的元素
+        for (const title of sectionTitles) {
+          const titleRegex = new RegExp(
+            `^\\s*${title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`,
+            "i"
+          )
 
-        // 查找所有元素
-        const allElements = Array.from(body.querySelectorAll("*"))
-        const titleElements: Element[] = []
+          // 查找所有元素
+          const allElements = Array.from(body.querySelectorAll("*"))
+          const titleElements: Element[] = []
 
-        for (const element of allElements) {
-          const text = (element.textContent || "").trim()
-          if (titleRegex.test(text)) {
-            titleElements.push(element)
+          for (const element of allElements) {
+            const text = (element.textContent || "").trim()
+            if (titleRegex.test(text)) {
+              titleElements.push(element)
+            }
           }
-        }
 
-        // 如果找到标题元素，提取其后的内容
-        for (const titleElement of titleElements) {
-          const contentParts: string[] = []
-          let currentElement: Element | null = titleElement.nextElementSibling
+          // 如果找到标题元素，提取其后的内容
+          for (const titleElement of titleElements) {
+            const contentParts: string[] = []
+            let currentElement: Element | null = titleElement.nextElementSibling
 
-          // 收集直到下一个标题的内容
-          while (currentElement) {
-            const currentText = (currentElement.textContent || "").trim().toUpperCase()
-            const isNextTitle = sectionTitles.some(
-              (t) =>
-                t.toUpperCase() !== title.toUpperCase() &&
-                (currentText === t.toUpperCase() ||
-                  currentText.startsWith(t.toUpperCase()))
-            )
+            // 收集直到下一个标题的内容
+            while (currentElement) {
+              const currentText = (currentElement.textContent || "").trim().toUpperCase()
+              const isNextTitle = sectionTitles.some(
+                (t) =>
+                  t.toUpperCase() !== title.toUpperCase() &&
+                  (currentText === t.toUpperCase() ||
+                    currentText.startsWith(t.toUpperCase()))
+              )
 
-            if (isNextTitle) {
-              break
+              if (isNextTitle) {
+                break
+              }
+
+              contentParts.push(currentElement.outerHTML)
+              currentElement = currentElement.nextElementSibling
             }
 
-            contentParts.push(currentElement.outerHTML)
-            currentElement = currentElement.nextElementSibling
-          }
+            const content = contentParts.join("").trim()
 
-          const content = contentParts.join("").trim()
-
-          if (content) {
-            extractedSections.push({
-              title,
-              content,
-            })
-            break // 只取第一个匹配的标题
+            if (content) {
+              extractedSections.push({
+                title,
+                content,
+              })
+              break // 只取第一个匹配的标题
+            }
           }
         }
+      } catch (error) {
+        // 如果 DOM 解析失败，忽略错误，继续使用正则匹配的结果
+        console.warn("DOMParser failed, using regex results only:", error)
       }
     } else {
       // 使用正则匹配的结果

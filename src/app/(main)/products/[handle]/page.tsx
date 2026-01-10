@@ -38,26 +38,33 @@ const getProductByHandle = cache(async (handle: string, includeCategories: boole
   return response.products[0] || null
 })
 
-export async function generateStaticParams() {
-  try {
-    // For static generation, we generate params for handles only (no countryCode in URL)
-    const { response } = await listProducts({
-      queryParams: { limit: 100, fields: "handle" },
-    })
+// 注意：由于页面使用了 cookies() 和 searchParams，需要动态渲染
+// 如果未来需要静态生成，需要重构以在静态生成时不使用 cookies
+export const dynamic = 'force-dynamic'
+export const dynamicParams = true
 
-    return response.products
-      .filter((product) => product.handle)
-      .map((product) => ({
-        handle: product.handle,
-      }))
-  } catch (error) {
-    console.error(
-      `Failed to generate static paths for product pages: ${error instanceof Error ? error.message : "Unknown error"
-      }.`
-    )
-    return []
-  }
-}
+// 可选：保留 generateStaticParams 用于预生成常用产品页面
+// 但需要确保在静态生成时不使用 cookies
+// export async function generateStaticParams() {
+//   try {
+//     // For static generation, we generate params for handles only (no countryCode in URL)
+//     const { response } = await listProducts({
+//       queryParams: { limit: 100, fields: "handle" },
+//     })
+
+//     return response.products
+//       .filter((product) => product.handle)
+//       .map((product) => ({
+//         handle: product.handle,
+//       }))
+//   } catch (error) {
+//     console.error(
+//       `Failed to generate static paths for product pages: ${error instanceof Error ? error.message : "Unknown error"
+//       }.`
+//     )
+//     return []
+//   }
+// }
 
 function getImagesForVariant(
   product: HttpTypes.StoreProduct,
