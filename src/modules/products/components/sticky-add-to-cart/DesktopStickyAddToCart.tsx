@@ -271,15 +271,23 @@ export function DesktopStickyAddToCart({
                 !isValidVariant
               }
               variant="primary"
-              className="h-8 px-4 bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 text-white border-none !border-2 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700 disabled:!border-ui-border-base !shadow-none"
-              style={{ borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }}
+              className={`h-8 px-4 text-white border-none !border-2 !shadow-none ${
+                !inStock || !isValidVariant || !selectedVariant
+                  ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
+                  : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
+              }`}
+              style={
+                !inStock || !isValidVariant || !selectedVariant
+                  ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
+                  : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
+              }
               isLoading={isAdding}
             >
               {!selectedVariant || !isValidVariant
                 ? 'Select variant'
                 : !inStock
-                ? 'Out of stock'
-                : 'Add to cart'}
+                ? 'Out of Stock'
+                : 'Add to Cart'}
             </Button>
           </div>
         </div>

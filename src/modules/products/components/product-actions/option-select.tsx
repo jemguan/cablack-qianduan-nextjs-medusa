@@ -89,7 +89,7 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
               )}
               disabled={disabled || !isAvailable}
               data-testid="option-button"
-              title={!isAvailable ? "Out of stock" : undefined}
+              title={!isAvailable ? "Out of Stock" : undefined}
             >
               {v}
             </button>

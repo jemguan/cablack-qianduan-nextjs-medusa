@@ -186,16 +186,24 @@ export default function ProductActions({
               !isValidVariant
             }
             variant="primary"
-            className="flex-1 h-10 bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 text-white border-none !border-2 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700 disabled:!border-ui-border-base !shadow-none"
-            style={{ borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }}
+            className={`flex-1 h-10 text-white border-none !border-2 !shadow-none ${
+              !inStock || !isValidVariant || !selectedVariant
+                ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
+                : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
+            }`}
+            style={
+              !inStock || !isValidVariant || !selectedVariant
+                ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
+                : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
+            }
             isLoading={isAdding}
             data-testid="add-product-button"
           >
             {!selectedVariant && !options
               ? "Select variant"
               : !inStock || !isValidVariant
-              ? "Out of stock"
-              : "Add to cart"}
+              ? "Out of Stock"
+              : "Add to Cart"}
           </Button>
           <WishlistButton product={product} size="md" iconOnly />
         </div>
