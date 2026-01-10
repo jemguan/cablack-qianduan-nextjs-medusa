@@ -45,35 +45,42 @@ export const searchProductsClient = async ({
 
     const { productIds, count } = searchResult
 
+    console.log("[SearchProductsClient] Search API returned:", {
+      productIdsCount: productIds?.length || 0,
+      count,
+      firstFewIds: productIds?.slice(0, 3),
+    })
+
     if (!productIds || productIds.length === 0) {
       return { products: [], count: count || 0 }
     }
 
-    // 2. 使用 /api/medusa-proxy/products 代理路由获取完整产品信息
-    // 使用 URLSearchParams 确保 id 参数格式正确（id=xxx&id=yyy 而不是 id[0]=xxx&id[1]=yyy）
-    const params = new URLSearchParams()
-    productIds.forEach((id) => params.append('id', id))
-    params.append('limit', productIds.length.toString())
-    params.append('region_id', regionId)
-    params.append('fields', '*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.inventory_items.inventory_item_id,*variants.inventory_items.required_quantity,*variants.images.id,*variants.images.url,*variants.images.metadata,*variants.options.option_id,*variants.options.value,*options.id,*options.title,*options.values.id,*options.values.value,+metadata,+tags,')
+    // 2. 使用 sdk.client.fetch 直接调用 /store/products API
+    // SDK 会自动处理数组参数的序列化（id[0]=xxx&id[1]=yyy 格式）
+    console.log("[SearchProductsClient] Fetching products with IDs:", productIds.slice(0, 3))
 
-    const productsResponse = await fetch(`/api/medusa-proxy/products?${params.toString()}`, {
-      method: "GET",
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      cache: "no-store",
-    }).then(res => {
-      if (!res.ok) {
-        throw new Error(`HTTP error: ${res.status}`)
-      }
-      return res.json()
-    }) as {
+    const productsResponse = await sdk.client.fetch<{
       products: HttpTypes.StoreProduct[]
       count: number
-    }
+    }>(`/store/products`, {
+      method: "GET",
+      query: {
+        id: productIds, // 直接传递数组，SDK 会处理序列化
+        limit: productIds.length,
+        region_id: regionId,
+        fields: '*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.inventory_items.inventory_item_id,*variants.inventory_items.required_quantity,*variants.images.id,*variants.images.url,*variants.images.metadata,*variants.options.option_id,*variants.options.value,*options.id,*options.title,*options.values.id,*options.values.value,+metadata,+tags,',
+      },
+      cache: "no-store",
+    })
+
+    console.log("[SearchProductsClient] Products API response:", {
+      productsCount: productsResponse.products?.length || 0,
+      count: productsResponse.count,
+      productIds: productsResponse.products?.map(p => p.id) || [],
+    })
 
     const products = productsResponse.products || []
+
 
     // 3. 按照搜索 API 返回的 ID 顺序重新排列产品
     const productMap = new Map(products.map((p) => [p.id, p]))
