@@ -46,6 +46,7 @@ export function getSystemTheme(): Theme {
     : 'light';
 }
 
+
 /**
  * 应用主题到 DOM
  * @param theme 要应用的主题

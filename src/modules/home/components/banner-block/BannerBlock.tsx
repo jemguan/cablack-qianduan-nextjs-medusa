@@ -24,23 +24,7 @@ export function BannerBlock({ data }: BannerBlockProps) {
 
   // 如果没有模块，不渲染
   if (!modules || modules.length === 0) {
-    console.warn('[BannerBlock] No modules found');
     return null;
-  }
-
-  // 调试：检查模块数据
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[BannerBlock] Data:', { 
-      modulesCount: modules.length, 
-      gridCols: data.gridCols,
-      gridGap: data.gridGap,
-      fullWidth,
-      modules: modules.map(m => ({ 
-        id: m.id, 
-        desktopCols: m.desktopCols,
-        rowSpan: m.rowSpan,
-      }))
-    });
   }
 
   // 根据 fullWidth 配置决定容器样式

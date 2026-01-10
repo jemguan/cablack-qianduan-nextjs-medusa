@@ -32,9 +32,6 @@ function BannerModule({ module, fillHeight = false }: { module: BannerModuleData
 
   const imageUrl = getImageUrl(module);
   if (!imageUrl || imageUrl.trim() === '') {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[DesktopBannerBlock] No image URL for module:', module.id);
-    }
     return null;
   }
 
@@ -54,9 +51,6 @@ function BannerModule({ module, fillHeight = false }: { module: BannerModuleData
         className="object-cover"
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         unoptimized={imageUrl.startsWith('http') || imageUrl.startsWith('//')}
-        onError={(e) => {
-          console.error('[DesktopBannerBlock] Image load error:', imageUrl);
-        }}
       />
     </div>
   ) : (
@@ -66,9 +60,6 @@ function BannerModule({ module, fillHeight = false }: { module: BannerModuleData
         alt="Banner image"
         className="w-full h-auto object-cover"
         style={{ display: 'block' }}
-        onError={(e) => {
-          console.error('[DesktopBannerBlock] Image load error:', imageUrl);
-        }}
       />
     </div>
   );
@@ -96,11 +87,6 @@ function BannerModule({ module, fillHeight = false }: { module: BannerModuleData
  */
 export function DesktopBannerBlock({ data }: BannerBlockProps) {
   const { modules, gridCols = 1, gridGap = 24 } = data;
-
-  // 调试信息
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[DesktopBannerBlock] Grid config:', { gridCols, gridGap, modulesCount: modules?.length });
-  }
 
   if (!modules || modules.length === 0) {
     return (
@@ -147,14 +133,6 @@ export function DesktopBannerBlock({ data }: BannerBlockProps) {
           gridColumn: `span ${moduleCols}`,
           gridRow: moduleRows > 1 ? `span ${moduleRows}` : undefined,
         };
-
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`[DesktopBannerBlock] Module ${module.id}:`, { 
-            desktopCols: moduleCols,
-            rowSpan: moduleRows,
-            gridItemStyle: JSON.stringify(gridItemStyle),
-          });
-        }
 
         return (
           <div 

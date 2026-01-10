@@ -5,7 +5,7 @@ import type {Theme} from './types';
  */
 export const THEME_CONFIG = {
   /** 默认主题 */
-  defaultTheme: 'dark' as Theme,
+  defaultTheme: 'light' as Theme,
   
   /** 本地存储键名 */
   storageKey: 'theme-preference',

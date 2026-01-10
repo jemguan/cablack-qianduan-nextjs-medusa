@@ -30,6 +30,7 @@ interface SearchBoxProps {
   variant?: "desktop" | "mobile"
   regionId?: string
   defaultExpanded?: boolean
+  onSearchComplete?: () => void // 搜索完成后的回调（用于关闭侧边栏等）
 }
 
 const SearchBox = ({
@@ -37,11 +38,14 @@ const SearchBox = ({
   variant = "desktop",
   regionId,
   defaultExpanded = false,
+  onSearchComplete,
 }: SearchBoxProps) => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [searchTerm, setSearchTerm] = useState("")
+  // 如果 defaultExpanded 为 true，则始终保持展开状态
   const [isExpanded, setIsExpanded] = useState(defaultExpanded || variant === "desktop")
+  const isAlwaysExpanded = defaultExpanded === true
   const [showPreview, setShowPreview] = useState(false)
   const [searchResults, setSearchResults] = useState<HttpTypes.StoreProduct[]>([])
   const [searchCount, setSearchCount] = useState(0)
@@ -103,7 +107,12 @@ const SearchBox = ({
   }, [debouncedSearchTerm, regionId])
 
   // Close preview and input box when clicking outside
+  // Skip if search box is always expanded
   useEffect(() => {
+    if (isAlwaysExpanded) {
+      return
+    }
+    
     const handleClickOutside = (event: MouseEvent) => {
       if (
         containerRef.current &&
@@ -121,7 +130,7 @@ const SearchBox = ({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [searchTerm])
+  }, [searchTerm, isAlwaysExpanded])
 
   const handleProductClick = useCallback(
     (searchTerm: string) => {
@@ -141,6 +150,11 @@ const SearchBox = ({
         setIsExpanded(false)
       }
 
+      // 调用搜索完成回调（用于关闭侧边栏等）
+      if (onSearchComplete) {
+        onSearchComplete()
+      }
+
       // Reset navigating state after a short delay
       setTimeout(() => {
         setIsNavigating(false)
@@ -152,7 +166,7 @@ const SearchBox = ({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Escape") {
       setShowPreview(false)
-      if (!searchTerm.trim()) {
+      if (!searchTerm.trim() && !isAlwaysExpanded) {
         setIsExpanded(false)
       }
       inputRef.current?.blur()
@@ -356,7 +370,7 @@ const SearchBox = ({
                   )}
                 </button>
               )}
-              {variant === "desktop" && (
+              {variant === "desktop" && !isAlwaysExpanded && (
                 <button
                   type="button"
                   onClick={() => {
@@ -373,7 +387,7 @@ const SearchBox = ({
               )}
             </>
           ) : (
-            variant === "desktop" && (
+            variant === "desktop" && !isAlwaysExpanded && (
               <button
                 type="button"
                 onClick={() => {
@@ -401,27 +415,6 @@ const SearchBox = ({
           />
         )}
       </div>
-      
-      {/* Mobile: Recent searches or suggestions */}
-      {variant === "mobile" && !searchTerm.trim() && !isLoading && (
-        <div className="w-full mt-4">
-          <p className="text-sm text-muted-foreground mb-2">Popular searches</p>
-          <div className="flex flex-wrap gap-2">
-            {["New arrivals", "Best sellers", "On sale"].map((term) => (
-              <button
-                key={term}
-                onClick={() => {
-                  setSearchTerm(term)
-                  inputRef.current?.focus()
-                }}
-                className="px-3 py-1.5 text-sm bg-muted hover:bg-muted/80 rounded-full transition-colors"
-              >
-                {term}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

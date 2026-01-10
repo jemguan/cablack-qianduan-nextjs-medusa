@@ -29,9 +29,6 @@ function BannerModule({ module }: { module: BannerModuleData }) {
 
   const imageUrl = getImageUrl(module);
   if (!imageUrl || imageUrl.trim() === '') {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[MobileBannerBlock] No image URL for module:', module.id);
-    }
     return null;
   }
 
@@ -44,9 +41,6 @@ function BannerModule({ module }: { module: BannerModuleData }) {
         alt="Banner image"
         className="w-full h-auto object-cover"
         style={{ display: 'block' }}
-        onError={(e) => {
-          console.error('[MobileBannerBlock] Image load error:', imageUrl);
-        }}
       />
     </div>
   );

@@ -3,7 +3,7 @@
 import { Popover, PopoverButton, PopoverPanel, Transition } from "@headlessui/react"
 import { ArrowRightMini, XMark } from "@medusajs/icons"
 import { Text, clx, useToggleState } from "@medusajs/ui"
-import { Fragment, Suspense, useEffect } from "react"
+import { Fragment, Suspense, useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -39,6 +39,7 @@ export interface SideMenuProps {
 const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => {
   const toggleState = useToggleState()
   const pathname = usePathname()
+  const closeRef = useRef<(() => void) | null>(null)
 
   // 清除移动端文本选择状态（仅在移动端）
   useEffect(() => {
@@ -98,6 +99,13 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
     }
   }, [])
 
+  // 当路由变化时自动关闭侧边栏
+  useEffect(() => {
+    if (closeRef.current) {
+      closeRef.current()
+    }
+  }, [pathname])
+
   // 如果没有配置菜单项，使用默认菜单项
   const displayMenuItems: MenuItem[] = menuItems && menuItems.length > 0
     ? menuItems
@@ -113,16 +121,20 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
     <div className="h-full">
       <div className="flex items-center h-full">
         <Popover className="h-full flex">
-          {({ open, close }) => (
-            <>
-              <div className="relative flex h-full">
-                <PopoverButton
-                  data-testid="nav-menu-button"
-                  className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none text-ui-fg-subtle hover:text-ui-fg-base"
-                >
-                  <MenuIcon className="w-6 h-6" />
-                </PopoverButton>
-              </div>
+          {({ open, close }) => {
+            // 保存 close 函数到 ref，以便在 useEffect 中使用
+            closeRef.current = close
+
+            return (
+              <>
+                <div className="relative flex h-full">
+                  <PopoverButton
+                    data-testid="nav-menu-button"
+                    className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none text-ui-fg-subtle hover:text-ui-fg-base"
+                  >
+                    <MenuIcon className="w-6 h-6" />
+                  </PopoverButton>
+                </div>
 
               {open && (
                 <div
@@ -165,7 +177,7 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                     <div className="mb-6 pb-6 border-b border-border">
                       <div className="w-full">
                         <Suspense fallback={<div className="w-full h-10" />}>
-                          <SearchBox variant="mobile" regionId={regionId} />
+                          <SearchBox variant="mobile" regionId={regionId} onSearchComplete={close} />
                         </Suspense>
                       </div>
                     </div>
@@ -287,8 +299,9 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                   </div>
                 </PopoverPanel>
               </Transition>
-            </>
-          )}
+              </>
+            )
+          }}
         </Popover>
       </div>
     </div>
