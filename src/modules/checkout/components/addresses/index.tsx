@@ -86,6 +86,20 @@ const Addresses = ({
 
   // 保存地址（手动触发）
   const saveAddresses = useCallback(async (data: Record<string, any>, sameAsBilling: boolean) => {
+    // 确保收货地址电话字段必填（无论是否登录）
+    if (!data["shipping_address.phone"] || String(data["shipping_address.phone"]).trim() === "") {
+      setSaveError("Please enter shipping address phone number (required)")
+      return
+    }
+    
+    // 如果账单地址与收货地址不同，确保账单地址电话字段必填
+    if (!sameAsBilling) {
+      if (!data["billing_address.phone"] || String(data["billing_address.phone"]).trim() === "") {
+        setSaveError("Please enter billing address phone number (required)")
+        return
+      }
+    }
+    
     if (!isAddressComplete(data, sameAsBilling)) {
       return
     }
@@ -139,7 +153,7 @@ const Addresses = ({
             try {
               const retryError = await setAddresses(null, formData)
               if (retryError) {
-                setSaveError("购物车中有无效商品，请刷新页面后重试")
+                setSaveError("Cart contains invalid items, please refresh the page and try again")
               } else {
                 setSaveError(null)
                 setSaveSuccess(true)
@@ -154,7 +168,7 @@ const Addresses = ({
                 }, 500)
               }
             } catch (retryErr: any) {
-              setSaveError("购物车中有无效商品，请刷新页面后重试")
+              setSaveError("Cart contains invalid items, please refresh the page and try again")
             }
           }, 1000)
           return
@@ -180,7 +194,7 @@ const Addresses = ({
       const errorMessage = error.message || "Failed to save address"
       // 检查是否是变体错误
       if (errorMessage.includes("do not exist") || errorMessage.includes("not published")) {
-        setSaveError("购物车中有无效商品，请刷新页面后重试")
+        setSaveError("Cart contains invalid items, please refresh the page and try again")
         // 刷新购物车
         router.refresh()
       } else {
@@ -216,8 +230,22 @@ const Addresses = ({
       ...billingFormDataRef.current,
     }
     
+    // 检查收货地址电话字段是否填写（无论是否登录都必填）
+    if (!mergedData["shipping_address.phone"] || String(mergedData["shipping_address.phone"]).trim() === "") {
+      setSaveError("Please enter shipping address phone number (required)")
+      return
+    }
+    
+    // 如果账单地址与收货地址不同，检查账单地址电话字段
+    if (!sameAsBillingRef.current) {
+      if (!mergedData["billing_address.phone"] || String(mergedData["billing_address.phone"]).trim() === "") {
+        setSaveError("Please enter billing address phone number (required)")
+        return
+      }
+    }
+    
     if (!isAddressComplete(mergedData, sameAsBillingRef.current)) {
-      setSaveError("请填写所有必填字段")
+      setSaveError("Please fill in all required fields")
       return
     }
 
@@ -356,19 +384,19 @@ const Addresses = ({
                     Shipping Address
                   </Text>
                   <Text className="txt-medium text-ui-fg-subtle">
-                    {cart.shipping_address.first_name}{" "}
-                    {cart.shipping_address.last_name}
+                    {cart.shipping_address?.first_name}{" "}
+                    {cart.shipping_address?.last_name}
                   </Text>
                   <Text className="txt-medium text-ui-fg-subtle">
-                    {cart.shipping_address.address_1}{" "}
-                    {cart.shipping_address.address_2}
+                    {cart.shipping_address?.address_1}{" "}
+                    {cart.shipping_address?.address_2}
                   </Text>
                   <Text className="txt-medium text-ui-fg-subtle">
-                    {cart.shipping_address.postal_code},{" "}
-                    {cart.shipping_address.city}
+                    {cart.shipping_address?.postal_code},{" "}
+                    {cart.shipping_address?.city}
                   </Text>
                   <Text className="txt-medium text-ui-fg-subtle">
-                    {cart.shipping_address.country_code?.toUpperCase()}
+                    {cart.shipping_address?.country_code?.toUpperCase()}
                   </Text>
                 </div>
 
@@ -380,7 +408,7 @@ const Addresses = ({
                     Contact
                   </Text>
                   <Text className="txt-medium text-ui-fg-subtle">
-                    {cart.shipping_address.phone}
+                    {cart.shipping_address?.phone}
                   </Text>
                   <Text className="txt-medium text-ui-fg-subtle break-words break-all">
                     {cart.email}

@@ -130,10 +130,12 @@ const BillingAddress = ({
         <Input
           label="Phone"
           name="billing_address.phone"
+          type="tel"
           autoComplete="tel"
           value={formData["billing_address.phone"]}
           onChange={handleChange}
           required
+          title="Phone number is required"
           data-testid="billing-phone-input"
         />
       </div>

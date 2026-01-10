@@ -232,10 +232,12 @@ const ShippingAddress = ({
         <Input
           label="Phone"
           name="shipping_address.phone"
+          type="tel"
           autoComplete="tel"
           value={formData["shipping_address.phone"]}
           onChange={handleChange}
           required
+          title="Phone number is required"
           data-testid="shipping-phone-input"
         />
       </div>
