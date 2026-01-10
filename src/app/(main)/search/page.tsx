@@ -3,13 +3,14 @@ import { notFound } from "next/navigation"
 import { searchProducts } from "@lib/data/search"
 import { getCurrentRegion, getCountryCode } from "@lib/data/regions"
 import { getPageTitle } from "@lib/data/page-title-config"
+import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import SearchResults from "@modules/search/templates/search-results"
 
 // 强制动态渲染，搜索页面不应该被缓存
 export const dynamic = "force-dynamic"
 
 type Props = {
-  searchParams: Promise<{ q?: string; page?: string }>
+  searchParams: Promise<{ q?: string; page?: string; sortBy?: SortOptions }>
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
@@ -31,7 +32,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 export default async function SearchPage(props: Props) {
   const searchParams = await props.searchParams
-  const { q: searchTerm, page } = searchParams
+  const { q: searchTerm, page, sortBy } = searchParams
   const countryCode = await getCountryCode()
 
   const region = await getCurrentRegion()
@@ -63,12 +64,15 @@ export default async function SearchPage(props: Props) {
   }
 
   const pageNumber = page ? parseInt(page) : 1
+  // 默认按最新上架排序
+  const safeSortBy: SortOptions = sortBy || "created_at"
 
   const { response } = await searchProducts({
     searchTerm: searchTerm.trim(),
     pageParam: pageNumber,
     countryCode,
     limit: 12,
+    sortBy: safeSortBy,
   })
 
   return (
@@ -79,6 +83,7 @@ export default async function SearchPage(props: Props) {
         searchTerm={searchTerm.trim()}
         page={pageNumber}
         region={region}
+        sortBy={safeSortBy}
       />
     </div>
   )
