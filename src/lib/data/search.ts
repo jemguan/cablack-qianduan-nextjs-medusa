@@ -1,20 +1,15 @@
 "use server"
 
-import { sdk } from "@lib/config"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
-import { getAuthHeaders } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 import { listProducts } from "./products"
 
 /**
  * 搜索产品
  * 
- * 使用与产品列表相同的模式：
- * 1. 调用搜索 API 获取排序后的产品 ID 列表
- * 2. 调用 listProducts（Medusa /store/products API）获取完整产品信息
- * 
- * 这样可以保持产品数据格式一致（包括 calculated_price、inventory_quantity 等）
+ * 直接使用 Medusa 标准的 /store/products API 的 q 参数进行搜索
+ * Medusa 会自动处理销售渠道、区域、价格等过滤
  */
 export const searchProducts = async ({
   searchTerm,
@@ -63,66 +58,38 @@ export const searchProducts = async ({
     }
   }
 
-  const headers = {
-    ...(await getAuthHeaders()),
+  // 将 sortBy 转换为 Medusa 的 order 参数格式
+  let order: string
+  switch (sortBy) {
+    case "price_asc":
+      order = "variants.calculated_price.calculated_amount"
+      break
+    case "price_desc":
+      order = "-variants.calculated_price.calculated_amount"
+      break
+    case "created_at":
+    default:
+      order = "-created_at"
+      break
   }
 
-  // 1. 调用搜索 API 获取排序后的产品 ID 列表
-  const searchResult = await sdk.client
-    .fetch<{ productIds: string[]; count: number; sortBy: string }>(
-      `/store/products/search`,
-      {
-        method: "GET",
-        query: {
-          q: searchTerm.trim(),
-          limit,
-          offset,
-          sortBy,
-          currency_code: region?.currency_code,
-        },
-        headers,
-        cache: "no-store",
-      }
-    )
-    .catch(() => {
-      return { productIds: [], count: 0, sortBy: "created_at" }
-    })
-
-  const { productIds, count } = searchResult
-
-  if (productIds.length === 0) {
-    return {
-      response: { products: [], count },
-      nextPage: null,
-    }
-  }
-
-  // 2. 使用 listProducts（Medusa /store/products API）获取完整产品信息
-  // 这样可以获得 calculated_price、inventory_quantity 等完整数据
+  // 直接使用 listProducts，传入 q 参数进行搜索
   const { response } = await listProducts({
-    pageParam: 1,
+    pageParam: _pageParam,
     queryParams: {
-      id: productIds,
-      limit: productIds.length,
+      q: searchTerm.trim(),
+      limit,
+      order,
     },
     countryCode,
     regionId,
     useListViewFields: true,
   })
 
-  // 3. 按照搜索 API 返回的 ID 顺序重新排列产品
-  const productMap = new Map(response.products.map((p) => [p.id, p]))
-  const orderedProducts = productIds
-    .map((id) => productMap.get(id))
-    .filter((p): p is HttpTypes.StoreProduct => p !== undefined)
-
-  const nextPage = count > offset + limit ? pageParam + 1 : null
+  const nextPage = response.count > offset + limit ? pageParam + 1 : null
 
   return {
-    response: {
-      products: orderedProducts,
-      count,
-    },
+    response,
     nextPage,
   }
 }
