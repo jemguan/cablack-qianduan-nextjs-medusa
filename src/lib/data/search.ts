@@ -1,9 +1,8 @@
 "use server"
 
 import { sdk } from "@lib/config"
-import { getCacheConfig } from "@lib/config/cache"
 import { HttpTypes } from "@medusajs/types"
-import { getAuthHeaders, getCacheOptions } from "./cookies"
+import { getAuthHeaders } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 
 export const searchProducts = async ({
@@ -55,12 +54,7 @@ export const searchProducts = async ({
     ...(await getAuthHeaders()),
   }
 
-  const next = {
-    ...(await getCacheOptions("products")),
-  }
-
-  const cacheConfig = getCacheConfig("PRODUCT_LIST")
-
+  // 搜索结果不缓存，确保实时性
   // 使用自定义的模糊搜索 API（不区分大小写）
   return sdk.client
     .fetch<{ products: HttpTypes.StoreProduct[]; count: number }>(
@@ -74,8 +68,7 @@ export const searchProducts = async ({
           region_id: region?.id,
         },
         headers,
-        next,
-        ...cacheConfig,
+        cache: "no-store",
       }
     )
     .then(({ products, count }) => {
