@@ -5,6 +5,9 @@ import { getCurrentRegion, getCountryCode } from "@lib/data/regions"
 import { getPageTitle } from "@lib/data/page-title-config"
 import SearchResults from "@modules/search/templates/search-results"
 
+// 强制动态渲染，搜索页面不应该被缓存
+export const dynamic = "force-dynamic"
+
 type Props = {
   searchParams: Promise<{ q?: string; page?: string }>
 }
