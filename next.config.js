@@ -86,18 +86,24 @@ const nextConfig = {
         protocol: "https",
         hostname: "cdn.shopify.com",
       },
+      // AWS S3 - 支持常见格式
       {
         protocol: "https",
-        hostname: "**.amazonaws.com",
+        hostname: "*.s3.amazonaws.com",
       },
       {
         protocol: "https",
-        hostname: "**.cloudfront.net",
+        hostname: "s3.*.amazonaws.com",
       },
-      // DigitalOcean Spaces
+      // CloudFront
       {
         protocol: "https",
-        hostname: "**.digitaloceanspaces.com",
+        hostname: "*.cloudfront.net",
+      },
+      // DigitalOcean Spaces - 支持所有子域名
+      {
+        protocol: "https",
+        hostname: "*.digitaloceanspaces.com",
       },
       // Custom S3 hostname from environment variable
       ...(S3_HOSTNAME && S3_PATHNAME
