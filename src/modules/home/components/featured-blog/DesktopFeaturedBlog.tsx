@@ -65,8 +65,9 @@ export function DesktopFeaturedBlog({
 
   if (shouldUseCarousel) {
     // 轮播布局 - 使用 EmblaCarousel
+    const finalClassName = className ? `space-y-6 ${className}`.trim() : "space-y-6"
     return (
-      <div className={`space-y-6 ${className}`}>
+      <div className={finalClassName}>
         {((showTitle && title) || (showSubtitle && subtitle)) && (
           <div className={`${titleAlignClass}`}>
             {showTitle && title && (
@@ -111,8 +112,9 @@ export function DesktopFeaturedBlog({
   }
 
   // 网格布局
+  const finalClassName = className ? `space-y-6 ${className}`.trim() : "space-y-6"
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={finalClassName}>
       {((showTitle && title) || (showSubtitle && subtitle)) && (
         <div className={`${titleAlignClass}`}>
           {showTitle && title && (

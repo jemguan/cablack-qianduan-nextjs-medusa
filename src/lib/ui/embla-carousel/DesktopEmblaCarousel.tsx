@@ -204,8 +204,9 @@ export function DesktopEmblaCarousel({
 
   // 如果还没有挂载，返回占位符
   if (!isMounted) {
+    const finalClassName = className ? `embla ${className}`.trim() : "embla"
     return (
-      <div className={`embla ${className}`}>
+      <div className={finalClassName}>
         <div className="flex items-center justify-center min-h-[300px] bg-muted rounded-lg">
           <span className="text-muted-foreground text-sm">Loading...</span>
         </div>
@@ -213,8 +214,9 @@ export function DesktopEmblaCarousel({
     )
   }
 
+  const finalClassName = className ? `embla ${className}`.trim() : "embla"
   return (
-    <div className={`embla ${className}`}>
+    <div className={finalClassName}>
       <div className="embla__viewport" ref={emblaRef}>
         <div
           className="embla__container"

@@ -14,6 +14,7 @@ export function EmblaCarousel({
   children,
   desktopSlidesPerView,
   mobileSlidesPerView,
+  className = "",
   ...props
 }: EmblaCarouselProps) {
   // 将 children 转换为数组
@@ -23,15 +24,23 @@ export function EmblaCarousel({
 
   const { isDesktop, isHydrated } = useResponsiveRender()
 
-  // hydration 之前返回 null，避免 SSR 渲染两个组件
+  // hydration 之前返回占位符，确保服务端和客户端渲染一致
   if (!isHydrated) {
-    return null
+    const finalClassName = className ? `embla ${className}`.trim() : "embla"
+    return (
+      <div className={finalClassName}>
+        <div className="flex items-center justify-center min-h-[300px] bg-muted rounded-lg">
+          <span className="text-muted-foreground text-sm">Loading...</span>
+        </div>
+      </div>
+    )
   }
 
   // 根据屏幕尺寸只渲染对应的组件
   return isDesktop ? (
     <DesktopEmblaCarousel
       {...props}
+      className={className}
       desktopSlidesPerView={desktopSlidesPerView}
     >
       {childrenArray}
@@ -39,6 +48,7 @@ export function EmblaCarousel({
   ) : (
     <MobileEmblaCarousel
       {...props}
+      className={className}
       mobileSlidesPerView={mobileSlidesPerView}
     >
       {childrenArray}

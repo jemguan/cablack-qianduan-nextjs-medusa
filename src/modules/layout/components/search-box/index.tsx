@@ -82,7 +82,7 @@ const SearchBox = ({
         setSearchResults(result.products)
         setShowPreview(true)
       } catch (error) {
-        console.error("Search error:", error)
+        console.error("[SearchBox] Search error:", error)
         setSearchResults([])
       } finally {
         setIsLoading(false)
