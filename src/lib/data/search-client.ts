@@ -22,17 +22,16 @@ export const searchProductsClient = async ({
   }
 
   try {
+    // 使用自定义的模糊搜索 API（不区分大小写）
     const response = await sdk.client.fetch<{
       products: HttpTypes.StoreProduct[]
       count: number
-    }>(`/store/products`, {
+    }>(`/store/products/search`, {
       method: "GET",
       query: {
         q: searchTerm.trim(),
         limit,
         region_id: regionId,
-        fields:
-          "*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.inventory_items.inventory_item_id,*variants.inventory_items.required_quantity,*variants.images.id,*variants.images.url,*variants.images.metadata,+metadata,+tags,",
       },
     })
 
