@@ -59,12 +59,14 @@ export const listProducts = async ({
   countryCode,
   regionId,
   useListViewFields = false,
+  noCache = false,
 }: {
   pageParam?: number
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductListParams
   countryCode?: string
   regionId?: string
   useListViewFields?: boolean
+  noCache?: boolean
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
@@ -110,7 +112,10 @@ export const listProducts = async ({
     } : {}),
   }
 
-  const cacheConfig = getCacheConfig("PRODUCT_LIST")
+  // 如果 noCache 为 true，禁用缓存（用于搜索等动态查询）
+  const cacheConfig = noCache 
+    ? { cache: "no-store" as const }
+    : getCacheConfig("PRODUCT_LIST")
 
   // 根据使用场景选择字段
   // 如果 queryParams.fields 以 "=" 开头，表示完全替换默认字段

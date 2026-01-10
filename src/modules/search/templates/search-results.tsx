@@ -71,10 +71,49 @@ const SearchResults = ({
 
       {count === 0 ? (
         <div className="py-16 text-center" data-testid="no-results">
+          <div className="mb-6">
+            <svg
+              className="mx-auto h-12 w-12 text-muted-foreground"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
           <p className="text-lg text-ui-fg-subtle mb-2">No products found</p>
-          <p className="text-small-regular text-ui-fg-muted">
-            Please try searching with different keywords
+          <p className="text-small-regular text-ui-fg-muted mb-4">
+            Search term: <span className="font-semibold text-foreground">"{searchTerm}"</span>
           </p>
+          <div className="max-w-md mx-auto">
+            <p className="text-small-regular text-ui-fg-muted mb-3">
+              Try:
+            </p>
+            <ul className="text-small-regular text-ui-fg-muted space-y-2 text-left inline-block">
+              <li className="flex items-start gap-2">
+                <span className="text-primary">•</span>
+                <span>Check spelling</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary">•</span>
+                <span>Use more general keywords</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary">•</span>
+                <span>Reduce the number of search terms</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary">•</span>
+                <span>Use synonyms or related terms</span>
+              </li>
+            </ul>
+          </div>
         </div>
       ) : (
         <>

@@ -136,6 +136,13 @@ export default async function Nav() {
             </LocalizedClientLink>
           </div>
 
+          {/* Center: Search Box */}
+          <div className="hidden small:flex flex-1 justify-center items-center px-4">
+            <Suspense fallback={<div className="w-full max-w-2xl h-10" />}>
+              <SearchBox variant="desktop" regionId={currentRegionId} defaultExpanded={true} />
+            </Suspense>
+          </div>
+
           {/* Right: Actions */}
           <div className="flex items-center gap-x-4 h-full flex-1 basis-0 justify-end">
             <Suspense fallback={
@@ -201,12 +208,6 @@ export default async function Nav() {
         <div className="hidden small:block border-b border-border bg-background/90 backdrop-blur-xl relative z-40 overflow-visible">
           <div className="content-container flex items-center justify-center gap-x-8 py-1 overflow-visible">
             <HeaderMenu menuItems={headerMenuItems} />
-            {/* Search Box in Menu */}
-            <div className="relative z-[100]">
-              <Suspense fallback={<div className="w-64 h-10" />}>
-                <SearchBox variant="desktop" regionId={currentRegionId} />
-              </Suspense>
-            </div>
           </div>
         </div>
       )}

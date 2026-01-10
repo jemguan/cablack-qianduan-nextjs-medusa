@@ -71,6 +71,7 @@ export default async function SearchPage(props: Props) {
     searchTerm: searchTerm.trim(),
     pageParam: pageNumber,
     countryCode,
+    regionId: region.id,
     limit: 12,
     sortBy: safeSortBy,
   })
