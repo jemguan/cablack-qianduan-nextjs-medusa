@@ -46,9 +46,18 @@ export async function GET(request: NextRequest) {
     const backendUrl = getMedusaBackendUrl();
     
     // 构建目标 URL，保留所有查询参数
+    // 注意：必须使用 getAll 来获取所有同名参数的值（如多个 id 参数）
     const targetUrl = new URL('/store/products', backendUrl);
+    const seenKeys = new Set<string>();
     searchParams.forEach((value, key) => {
-      targetUrl.searchParams.append(key, value);
+      // 对于每个 key，获取所有值（处理数组参数如 id=xxx&id=yyy）
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key);
+        const allValues = searchParams.getAll(key);
+        allValues.forEach((val) => {
+          targetUrl.searchParams.append(key, val);
+        });
+      }
     });
 
     // 准备请求头

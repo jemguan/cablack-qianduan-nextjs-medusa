@@ -49,20 +49,29 @@ export const searchProductsClient = async ({
       return { products: [], count: count || 0 }
     }
 
-    // 2. 使用 /store/products API 获取完整产品信息
-    const productsResponse = await sdk.client.fetch<{
-      products: HttpTypes.StoreProduct[]
-      count: number
-    }>(`/store/products`, {
+    // 2. 使用 /api/medusa-proxy/products 代理路由获取完整产品信息
+    // 使用 URLSearchParams 确保 id 参数格式正确（id=xxx&id=yyy 而不是 id[0]=xxx&id[1]=yyy）
+    const params = new URLSearchParams()
+    productIds.forEach((id) => params.append('id', id))
+    params.append('limit', productIds.length.toString())
+    params.append('region_id', regionId)
+    params.append('fields', '*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.inventory_items.inventory_item_id,*variants.inventory_items.required_quantity,*variants.images.id,*variants.images.url,*variants.images.metadata,*variants.options.option_id,*variants.options.value,*options.id,*options.title,*options.values.id,*options.values.value,+metadata,+tags,')
+
+    const productsResponse = await fetch(`/api/medusa-proxy/products?${params.toString()}`, {
       method: "GET",
-      query: {
-        id: productIds,
-        limit: productIds.length,
-        region_id: regionId,
-        fields: "*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.inventory_items.inventory_item_id,*variants.inventory_items.required_quantity,*variants.images.id,*variants.images.url,*variants.images.metadata,*variants.options.option_id,*variants.options.value,*options.id,*options.title,*options.values.id,*options.values.value,+metadata,+tags,",
+      headers: {
+        'Content-Type': 'application/json',
       },
       cache: "no-store",
-    })
+    }).then(res => {
+      if (!res.ok) {
+        throw new Error(`HTTP error: ${res.status}`)
+      }
+      return res.json()
+    }) as {
+      products: HttpTypes.StoreProduct[]
+      count: number
+    }
 
     const products = productsResponse.products || []
 
