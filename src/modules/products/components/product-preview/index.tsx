@@ -236,8 +236,8 @@ const ProductPreview = ({
           {/* Wishlist Button */}
           <WishlistButton product={product} size="sm" overlay />
 
-          {/* Quick View Button - Show on Hover */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none">
+          {/* Quick View Button - Show on Hover (Desktop Only) */}
+          <div className="hidden small:flex absolute inset-0 items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none">
             <button
               onClick={(e) => {
                 e.preventDefault()

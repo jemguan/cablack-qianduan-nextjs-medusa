@@ -19,6 +19,7 @@ import { getBaseURL } from "@lib/util/env"
 import { CollageHero } from "@modules/home/components/collage-hero"
 import FeaturedCollections from "@modules/home/components/featured-collections"
 import { TextBlock } from "@modules/home/components/text-block"
+import { BannerBlock } from "@modules/home/components/banner-block"
 
 // 非首屏组件 - 动态导入以减少初始 JS 包大小
 const BrandShowcase = dynamic(
@@ -156,6 +157,7 @@ export default async function Home() {
     CollageHero,
     BrandShowcase,
     TextBlock,
+    BannerBlock,
     FAQBlock,
     FeaturedBlog,
     FeaturedProduct,

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { getVipDiscount } from "@lib/data/loyalty"
+import { getVipDiscount, getLoyaltyConfig } from "@lib/data/loyalty"
 import { applyPromotions } from "@lib/data/cart"
 import type { HttpTypes } from "@medusajs/types"
 
@@ -113,6 +113,12 @@ export function useVipDiscountSync(
       }
 
       try {
+        // 检查积分系统是否启用，如果未启用则不应用 VIP 折扣
+        const loyaltyConfig = await getLoyaltyConfig()
+        if (!loyaltyConfig?.config?.is_points_enabled) {
+          return
+        }
+
         // 获取 VIP 折扣信息
         const vipDiscount = await getVipDiscount()
 

@@ -6,7 +6,7 @@
 import type { MedusaConfig } from '@lib/admin-api/config';
 import type { HttpTypes } from '@medusajs/types';
 import { getPageLayoutBlocks } from '@lib/admin-api/pageLayoutUtils';
-import { handleFeaturedCollectionsBlock, handleCollageHeroBlock, handleBrandShowcaseBlock, handleTextBlockBlock, handleFAQBlock, handleFeaturedBlogBlock, handleFeaturedProductBlock } from './blockHandlers';
+import { handleFeaturedCollectionsBlock, handleCollageHeroBlock, handleBrandShowcaseBlock, handleTextBlockBlock, handleBannerBlockBlock, handleFAQBlock, handleFeaturedBlogBlock, handleFeaturedProductBlock } from './blockHandlers';
 import type { BlogPost } from '@lib/data/blogs';
 
 export interface BlockConfig {
@@ -84,6 +84,9 @@ async function getBlockConfigForBlock(
 
     case 'textBlock':
       return handleTextBlockBlock(block, block.config);
+
+    case 'bannerBlock':
+      return handleBannerBlockBlock(block, block.config);
 
     case 'faq':
       return handleFAQBlock(block, block.config);

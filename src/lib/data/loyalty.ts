@@ -20,32 +20,44 @@ const LOYALTY_CACHE_TAG = "loyalty"
  * 内部实现：获取当前用户的积分账户信息
  */
 async function _getLoyaltyAccountInternal(): Promise<LoyaltyAccountResponse | null> {
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
+  try {
+    const headers = {
+      ...(await getAuthHeaders()),
+    }
 
-  const next = {
-    ...(await getCacheOptions("loyalty")),
-  }
+    const next = {
+      ...(await getCacheOptions("loyalty")),
+    }
 
-  // 用户积分账户使用 no-cache，确保实时性
-  const cacheConfig = getCacheConfig("CUSTOMER")
+    // 用户积分账户使用 no-cache，确保实时性
+    const cacheConfig = getCacheConfig("CUSTOMER")
 
-  return await sdk.client
-    .fetch<LoyaltyAccountResponse>(`/store/loyalty/account`, {
-      method: "GET",
-      headers,
-      next,
-      ...cacheConfig,
-    })
-    .catch((err) => {
-      // 如果用户未登录，返回 null
-      if (err?.status === 401) {
+    return await sdk.client
+      .fetch<LoyaltyAccountResponse>(`/store/loyalty/account`, {
+        method: "GET",
+        headers,
+        next,
+        ...cacheConfig,
+      })
+      .catch((err) => {
+        // 如果用户未登录，返回 null
+        if (err?.status === 401 || err?.response?.status === 401) {
+          return null
+        }
+        // 网络错误或其他错误也返回 null，不抛出异常
+        if (process.env.NODE_ENV === 'development') {
+          console.warn("[Loyalty] Failed to get account:", err?.message || err)
+        }
         return null
-      }
-      console.error("[Loyalty] Failed to get account:", err)
-      return null
-    })
+      })
+  } catch (error: any) {
+    // 捕获所有错误，包括 SDK 初始化错误、网络错误等
+    // 静默返回 null，不抛出异常
+    if (process.env.NODE_ENV === 'development') {
+      console.warn("[Loyalty] Error in _getLoyaltyAccountInternal:", error?.message || error)
+    }
+    return null
+  }
 }
 
 /**
@@ -215,6 +227,55 @@ export type VipDiscountResponse = {
   is_vip: boolean
   discount_code: string | null
   membership_expires_at?: string
+}
+
+/**
+ * 获取积分系统配置（公开端点，无需登录）
+ */
+export async function getLoyaltyConfig(): Promise<{
+  config: {
+    is_points_enabled: boolean
+    points_earn_rate: number
+    vip_multiplier: number
+    coupon_redemption_rate: number
+  }
+} | null> {
+  try {
+    const next = {
+      ...(await getCacheOptions("loyalty")),
+    }
+
+    // 使用短期缓存
+    const cacheConfig = getCacheConfig("PUBLIC")
+
+    return await sdk.client
+      .fetch<{
+        config: {
+          is_points_enabled: boolean
+          points_earn_rate: number
+          vip_multiplier: number
+          coupon_redemption_rate: number
+        }
+      }>(`/store/loyalty/config`, {
+        method: "GET",
+        next,
+        ...cacheConfig,
+      })
+      .catch((err) => {
+        // 静默处理错误，不抛出异常
+        // 404 或其他错误都返回 null，让组件使用默认值
+        if (process.env.NODE_ENV === 'development') {
+          console.warn("[Loyalty] Failed to get config (this is OK if endpoint doesn't exist yet):", err?.message || err)
+        }
+        return null
+      })
+  } catch (error: any) {
+    // 捕获所有错误，包括网络错误、配置错误等
+    if (process.env.NODE_ENV === 'development') {
+      console.warn("[Loyalty] Error in getLoyaltyConfig:", error?.message || error)
+    }
+    return null
+  }
 }
 
 /**

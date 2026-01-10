@@ -15,6 +15,7 @@ import { useVariantSelection } from "@modules/products/contexts/variant-selectio
 import { ProductQuantitySelector } from "../quantity-selector"
 import WishlistButton from "@modules/wishlist/components/wishlist-button"
 import ProductPointsInfo from "../product-points-info"
+import ProductPointsLoginPrompt from "../product-points-login-prompt"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -146,12 +147,18 @@ export default function ProductActions({
         {!mobileLayout && (
           <>
             <ProductPrice product={product} variant={selectedVariant || undefined} />
-            {/* 积分获取信息 */}
+            {/* 积分获取信息 - 根据登录状态显示不同组件 */}
             {selectedVariant?.calculated_price?.calculated_amount && (
-              <ProductPointsInfo
-                price={selectedVariant.calculated_price.calculated_amount}
-                currencyCode={selectedVariant.calculated_price.currency_code || "cad"}
-              />
+              <>
+                <ProductPointsInfo
+                  price={selectedVariant.calculated_price.calculated_amount}
+                  currencyCode={selectedVariant.calculated_price.currency_code || "cad"}
+                />
+                <ProductPointsLoginPrompt
+                  price={selectedVariant.calculated_price.calculated_amount}
+                  currencyCode={selectedVariant.calculated_price.currency_code || "cad"}
+                />
+              </>
             )}
           </>
         )}

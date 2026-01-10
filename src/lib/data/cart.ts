@@ -17,7 +17,7 @@ import {
   setRegionCountryCode,
 } from "./cookies"
 import { getRegion } from "./regions"
-import { getVipDiscount } from "./loyalty"
+import { getVipDiscount, getLoyaltyConfig } from "./loyalty"
 
 /**
  * 失效产品库存相关的缓存
@@ -41,6 +41,12 @@ async function revalidateProductInventoryCache() {
  */
 async function tryApplyVipDiscount(cartId: string): Promise<void> {
   try {
+    // 检查积分系统是否启用，如果未启用则不应用 VIP 折扣
+    const loyaltyConfig = await getLoyaltyConfig()
+    if (!loyaltyConfig?.config?.is_points_enabled) {
+      return
+    }
+
     // 获取 VIP 折扣信息
     const vipDiscount = await getVipDiscount()
     

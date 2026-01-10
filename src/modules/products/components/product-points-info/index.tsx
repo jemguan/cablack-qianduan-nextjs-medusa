@@ -14,6 +14,7 @@ export default function ProductPointsInfo({ price, currencyCode }: ProductPoints
   const [isMember, setIsMember] = useState(false)
   const [isPointsEnabled, setIsPointsEnabled] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
     const fetchLoyaltyInfo = async () => {
@@ -23,10 +24,17 @@ export default function ProductPointsInfo({ price, currencyCode }: ProductPoints
           setIsPointsEnabled(data.config.is_points_enabled || false)
           setPointsEarnRate(data.config.points_earn_rate || 10)
           setVipMultiplier(data.config.vip_multiplier || 1)
-          setIsMember(data.account.is_member || false)
+          // 检查用户是否登录（有 account 信息表示已登录）
+          setIsLoggedIn(!!data.account)
+          // 只有在用户登录且有账户信息时才设置会员状态
+          setIsMember(data.account?.is_member || false)
+        } else {
+          // 如果返回 null，说明用户未登录
+          setIsLoggedIn(false)
         }
       } catch (error) {
         // 忽略错误，使用默认值
+        setIsLoggedIn(false)
       } finally {
         setIsLoading(false)
       }
@@ -34,8 +42,9 @@ export default function ProductPointsInfo({ price, currencyCode }: ProductPoints
     fetchLoyaltyInfo()
   }, [])
 
-  // 如果正在加载或积分系统未启用，不显示
-  if (isLoading || !isPointsEnabled) {
+  // 如果正在加载、积分系统未启用或用户未登录，不显示此组件
+  // 未登录时应该显示 ProductPointsLoginPrompt 组件
+  if (isLoading || !isPointsEnabled || !isLoggedIn) {
     return null
   }
 
