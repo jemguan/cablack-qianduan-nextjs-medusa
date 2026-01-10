@@ -24,10 +24,12 @@ const AccountNav = ({
   const route = usePathname()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [isPointsEnabled, setIsPointsEnabled] = useState(false)
+  const [isAffiliate, setIsAffiliate] = useState(false)
 
-  // 获取积分系统启用状态
+  // 获取积分系统启用状态和 Affiliate 状态
   useEffect(() => {
-    const fetchLoyaltyConfig = async () => {
+    const fetchConfig = async () => {
+      // 获取积分配置
       try {
         const data = await getLoyaltyAccount()
         if (data?.config) {
@@ -36,8 +38,31 @@ const AccountNav = ({
       } catch (error) {
         // 忽略错误，默认不显示积分入口
       }
+
+      // 检查是否是 Affiliate
+      try {
+        const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        }
+        if (publishableKey) {
+          headers["x-publishable-api-key"] = publishableKey
+        }
+        
+        const response = await fetch("/store/affiliate/me", {
+          headers,
+          credentials: "include",
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          setIsAffiliate(!!data?.affiliate)
+        }
+      } catch (error) {
+        // 忽略错误，默认不显示 Affiliate 入口
+      }
     }
-    fetchLoyaltyConfig()
+    fetchConfig()
   }, [])
 
   const handleLogout = async () => {
@@ -154,6 +179,29 @@ const AccountNav = ({
                     </LocalizedClientLink>
                   </li>
                 )}
+                {/* Affiliate Program 入口 - 仅对 Affiliate 显示 */}
+                {isAffiliate && (
+                  <li>
+                    <LocalizedClientLink
+                      href="/account/affiliate"
+                      className="flex items-center justify-between py-4 border-b border-border px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                      data-testid="affiliate-link"
+                    >
+                      <div className="flex items-center gap-x-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                        </svg>
+                        <span>Affiliate Program</span>
+                      </div>
+                      <ChevronDown className="transform -rotate-90" />
+                    </LocalizedClientLink>
+                  </li>
+                )}
                 <li>
                   <button
                     type="button"
@@ -242,6 +290,18 @@ const AccountNav = ({
                     data-testid="loyalty-link"
                   >
                     Points
+                  </AccountNavLink>
+                </li>
+              )}
+              {/* Affiliate Program 入口 - 仅对 Affiliate 显示 */}
+              {isAffiliate && (
+                <li>
+                  <AccountNavLink
+                    href="/account/affiliate"
+                    route={route!}
+                    data-testid="affiliate-link"
+                  >
+                    Affiliate Program
                   </AccountNavLink>
                 </li>
               )}

@@ -17,12 +17,15 @@ import Thumbnail from "@modules/products/components/thumbnail"
 import ShoppingBag from "@modules/common/icons/shopping-bag"
 import { usePathname } from "next/navigation"
 import { Fragment, useEffect, useRef, useState } from "react"
+import { useAffiliateTracking } from "@modules/cart/hooks/use-affiliate-tracking"
 
 const CartDropdown = ({
   cart: cartState,
 }: {
   cart?: HttpTypes.StoreCart | null
 }) => {
+  // 同步 Affiliate Code 到购物车 metadata
+  useAffiliateTracking(cartState || null)
   const [activeTimer, setActiveTimer] = useState<NodeJS.Timer | undefined>(
     undefined
   )

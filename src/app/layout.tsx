@@ -1,11 +1,13 @@
 import { getBaseURL } from "@lib/util/env"
 import { Metadata } from "next"
+import { Suspense } from "react"
 import "styles/globals.css"
 import { ThemeProvider } from "@modules/common/components/theme-toggle"
 import { ScrollToTop } from "@components/ScrollToTop"
 import { getPageTitleConfig } from "@lib/data/page-title-config"
 import { listAnnouncements } from "@lib/data/announcements"
 import AnnouncementBar from "@modules/layout/components/announcement-bar"
+import AffiliateTracker from "@components/affiliate-tracker"
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = await getPageTitleConfig()
@@ -73,6 +75,9 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
       <body suppressHydrationWarning>
         <ThemeProvider>
           <ScrollToTop />
+          <Suspense fallback={null}>
+            <AffiliateTracker />
+          </Suspense>
           {announcements.length > 0 && <AnnouncementBar announcements={announcements} />}
           <main className="relative">{props.children}</main>
         </ThemeProvider>

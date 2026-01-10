@@ -233,11 +233,17 @@ export async function middleware(request: NextRequest) {
     return addSecurityHeaders(response)
   }
 
+  // Check for affiliate code in URL parameter (?ref=KOL_CODE)
+  const affiliateCode = request.nextUrl.searchParams.get("ref")
+  const affiliateTid = request.nextUrl.searchParams.get("tid")
+  const affiliateCookie = request.cookies.get("_affiliate_code")
+  const affiliateTidCookie = request.cookies.get("_affiliate_tid")
+
   // Normal request - ensure cookies are set
   const regionCookie = request.cookies.get("_medusa_region")
 
   // If no region cookie, try to detect country from IP and set region accordingly
-  if (!regionCookie || !cacheIdCookie) {
+  if (!regionCookie || !cacheIdCookie || (affiliateCode && !affiliateCookie)) {
     const response = NextResponse.next()
 
     if (!regionCookie) {
@@ -271,12 +277,53 @@ export async function middleware(request: NextRequest) {
       })
     }
 
+    // Set affiliate code cookie if present in URL (有效期 30 天)
+    if (affiliateCode && affiliateCode !== affiliateCookie?.value) {
+      response.cookies.set("_affiliate_code", affiliateCode, {
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+      })
+    }
+    
+    // Set affiliate tid cookie if present in URL
+    if (affiliateTid && affiliateTid !== affiliateTidCookie?.value) {
+      response.cookies.set("_affiliate_tid", affiliateTid, {
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+      })
+    }
+
     // Add security headers
     return addSecurityHeaders(response)
   }
 
   // Add security headers to normal response
   const response = NextResponse.next()
+  
+  // Set affiliate code cookie if present in URL (even if other cookies are set)
+  if (affiliateCode && affiliateCode !== affiliateCookie?.value) {
+    response.cookies.set("_affiliate_code", affiliateCode, {
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+    })
+  }
+  
+  // Set affiliate tid cookie if present in URL
+  if (affiliateTid && affiliateTid !== affiliateTidCookie?.value) {
+    response.cookies.set("_affiliate_tid", affiliateTid, {
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+    })
+  }
+  
   return addSecurityHeaders(response)
 }
 
