@@ -7,6 +7,7 @@ import CheckoutForm from "@modules/checkout/templates/checkout-form"
 import CheckoutSummary from "@modules/checkout/templates/checkout-summary"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { getLoyaltyConfig } from "@lib/data/loyalty"
 
 import { getPageTitle } from "@lib/data/page-title-config"
 
@@ -28,16 +29,20 @@ export default async function Checkout() {
   }
 
   // 并行获取所有需要的数据，避免 Suspense 导致的闪烁
-  const [customer, shippingMethods, paymentMethods] = await Promise.all([
+  const [customer, shippingMethods, paymentMethods, loyaltyConfigResponse] = await Promise.all([
     retrieveCustomer(),
     listCartShippingMethods(cart.id),
     listCartPaymentMethods(cart.region?.id ?? ""),
+    getLoyaltyConfig(),
   ])
 
   // 如果必要数据缺失，返回 404
   if (!shippingMethods || !paymentMethods) {
     return notFound()
   }
+
+  // 提取 membershipProductIds
+  const membershipProductIds = loyaltyConfigResponse?.config?.membership_product_ids || null
 
   return (
     <div className="grid grid-cols-1 small:grid-cols-[1fr_416px] content-container gap-x-40 py-12">
@@ -47,6 +52,7 @@ export default async function Checkout() {
           customer={customer}
           shippingMethods={shippingMethods}
           paymentMethods={paymentMethods}
+          membershipProductIds={membershipProductIds}
         />
       </PaymentWrapper>
       <CheckoutSummary cart={cart} />

@@ -11,14 +11,19 @@ import ErrorMessage from "@modules/checkout/components/error-message"
 import Divider from "@modules/common/components/divider"
 import MedusaRadio from "@modules/common/components/radio"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 
 const PICKUP_OPTION_ON = "__PICKUP_ON"
 const PICKUP_OPTION_OFF = "__PICKUP_OFF"
 
+// Digital Products 配送方式名称（用于过滤）
+const DIGITAL_PRODUCTS_SHIPPING_NAME = "Digital Products"
+
 type ShippingProps = {
   cart: HttpTypes.StoreCart
   availableShippingMethods: HttpTypes.StoreCartShippingOption[] | null
+  /** 会员产品 ID 列表 */
+  membershipProductIds?: Record<string, boolean> | null
 }
 
 function formatAddress(address: HttpTypes.StoreCartAddress) {
@@ -50,6 +55,7 @@ function formatAddress(address: HttpTypes.StoreCartAddress) {
 const Shipping: React.FC<ShippingProps> = ({
   cart,
   availableShippingMethods,
+  membershipProductIds,
 }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingPrices, setIsLoadingPrices] = useState(true)
@@ -66,15 +72,53 @@ const Shipping: React.FC<ShippingProps> = ({
 
   const router = useRouter()
 
-  const _shippingMethods = availableShippingMethods?.filter(
-    (sm) => sm.service_zone?.fulfillment_set?.type !== "pickup"
-  )
+  // 检查购物车中的会员产品状态
+  const cartMembershipStatus = useMemo(() => {
+    const items = cart.items || []
+    let hasMembershipProduct = false
+    let hasNonMembershipProduct = false
+
+    for (const item of items) {
+      const productId = item.product_id
+      if (productId && membershipProductIds && membershipProductIds[productId]) {
+        hasMembershipProduct = true
+      } else {
+        hasNonMembershipProduct = true
+      }
+    }
+
+    return {
+      hasMembershipProduct,
+      hasNonMembershipProduct,
+      onlyMembershipProducts: hasMembershipProduct && !hasNonMembershipProduct,
+    }
+  }, [cart.items, membershipProductIds])
+
+  // 根据购物车内容过滤配送方式
+  // - 只有会员产品时：只显示 Digital Products
+  // - 有其他产品时（无论是否有会员产品）：不显示 Digital Products
+  const filteredShippingMethods = useMemo(() => {
+    const methods = availableShippingMethods?.filter(
+      (sm) => (sm as any).service_zone?.fulfillment_set?.type !== "pickup"
+    ) || []
+
+    if (cartMembershipStatus.onlyMembershipProducts) {
+      // 只有会员产品：只显示 Digital Products
+      return methods.filter((sm) => sm.name === DIGITAL_PRODUCTS_SHIPPING_NAME)
+    } else {
+      // 有其他产品：不显示 Digital Products
+      return methods.filter((sm) => sm.name !== DIGITAL_PRODUCTS_SHIPPING_NAME)
+    }
+  }, [availableShippingMethods, cartMembershipStatus.onlyMembershipProducts])
+
+  const _shippingMethods = filteredShippingMethods
 
   const _pickupMethods = availableShippingMethods?.filter(
-    (sm) => sm.service_zone?.fulfillment_set?.type === "pickup"
+    (sm) => (sm as any).service_zone?.fulfillment_set?.type === "pickup"
   )
 
-  const hasPickupOptions = !!_pickupMethods?.length
+  // 只有会员产品时，不显示 pickup 选项
+  const hasPickupOptions = cartMembershipStatus.onlyMembershipProducts ? false : !!_pickupMethods?.length
 
   useEffect(() => {
     setIsLoadingPrices(true)
@@ -159,7 +203,7 @@ const Shipping: React.FC<ShippingProps> = ({
         </div>
         <div data-testid="delivery-options-container">
           <div className="pb-8 md:pt-0 pt-2">
-            {hasPickupOptions && (
+            {hasPickupOptions && _pickupMethods && (
               <RadioGroup
                 value={showPickupOptions}
                 onChange={(value) => {
@@ -307,7 +351,7 @@ const Shipping: React.FC<ShippingProps> = ({
                           </span>
                           <span className="text-base-regular text-ui-fg-muted">
                             {formatAddress(
-                              option.service_zone?.fulfillment_set?.location
+                              (option as any).service_zone?.fulfillment_set?.location
                                 ?.address
                             )}
                           </span>

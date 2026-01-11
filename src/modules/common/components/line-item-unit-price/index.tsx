@@ -15,8 +15,10 @@ const LineItemUnitPrice = ({
   currencyCode,
   showPreTaxPrice = false,
 }: LineItemUnitPriceProps) => {
-  const { total, original_total, unit_price, subtotal, tax_total } = item as any
+  const { total, original_total, unit_price, subtotal, tax_total, original_subtotal } = item as any
+  
   // 如果要求显示税前价格，计算税前单价
+  // 使用 subtotal（产品小计，不含订单级别折扣）
   let unitPrice = unit_price || (total / item.quantity)
   if (showPreTaxPrice) {
     if (subtotal !== undefined && subtotal !== null) {
@@ -42,14 +44,22 @@ const LineItemUnitPrice = ({
     }
   }
 
-  // 确定原价：优先使用 original_total（Price List 原价），如果没有则使用对比价格
-  // 注意：即使显示税前价格，也显示对比价格（因为都是单价，基准一致）
-  let originalUnitPrice = original_total ? original_total / item.quantity : null
+  // 确定原价：只显示产品级别的折扣（Price List 促销），不显示订单级别折扣（优惠码、VIP折扣）
+  // 
+  // 区分产品折扣和订单折扣：
+  // - 产品级别折扣：original_subtotal > subtotal 或 original_total > subtotal（Price List 促销）
+  // - 订单级别折扣：subtotal > total（优惠码应用于订单）
+  //
+  // 我们只应该显示产品级别的折扣作为划线价格
+  let originalUnitPrice: number | null = null
   let shouldShowComparePrice = false
 
-  // 如果 original_total 存在且大于 total，说明有 Price List 促销价格
-  if (original_total && original_total > total) {
-    originalUnitPrice = original_total / item.quantity
+  // 检查是否有产品级别的折扣（Price List 促销）
+  // 使用 original_subtotal 或 original_total 与 subtotal 比较
+  const originalSubtotalValue = original_subtotal ?? original_total
+  if (originalSubtotalValue && subtotal && originalSubtotalValue > subtotal) {
+    // 产品本身有折扣（Price List 促销）
+    originalUnitPrice = originalSubtotalValue / item.quantity
     shouldShowComparePrice = true
   } 
   // 如果没有 Price List 原价，但有对比价格，且现价低于对比价格，使用对比价格

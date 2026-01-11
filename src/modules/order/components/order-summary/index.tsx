@@ -17,30 +17,39 @@ const OrderSummary = ({ order }: OrderSummaryProps) => {
     })
   }
 
+  // 使用与 CartTotals 一致的字段
+  // item_subtotal: 商品小计（不含运费和税）
+  // discount_subtotal: 折扣金额（不含税）- 与 Subtotal 保持一致的税前基准
+  // shipping_subtotal: 运费小计（不含税）
+  const orderAny = order as any
+  const itemSubtotal = orderAny.item_subtotal ?? order.subtotal
+  const discountSubtotal = orderAny.discount_subtotal ?? order.discount_total
+  const shippingSubtotal = orderAny.shipping_subtotal ?? order.shipping_total
+
   return (
     <div>
       <h2 className="text-base-semi">Order Summary</h2>
       <div className="text-small-regular text-ui-fg-base my-2">
         <div className="flex items-center justify-between text-base-regular text-ui-fg-base mb-2">
           <span>Subtotal</span>
-          <span>{getAmount(order.subtotal)}</span>
+          <span>{getAmount(itemSubtotal)}</span>
         </div>
         <div className="flex flex-col gap-y-1">
-          {order.discount_total > 0 && (
+          {discountSubtotal > 0 && (
             <div className="flex items-center justify-between">
               <span>Discount</span>
-              <span>- {getAmount(order.discount_total)}</span>
+              <span className="text-ui-fg-interactive">- {getAmount(discountSubtotal)}</span>
             </div>
           )}
           {order.gift_card_total > 0 && (
             <div className="flex items-center justify-between">
-              <span>Discount</span>
-              <span>- {getAmount(order.gift_card_total)}</span>
+              <span>Gift Card</span>
+              <span className="text-ui-fg-interactive">- {getAmount(order.gift_card_total)}</span>
             </div>
           )}
           <div className="flex items-center justify-between">
             <span>Shipping</span>
-            <span>{getAmount(order.shipping_total)}</span>
+            <span>{getAmount(shippingSubtotal)}</span>
           </div>
           <div className="flex items-center justify-between">
             <span>Taxes</span>
