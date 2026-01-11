@@ -27,6 +27,13 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
 
   const paymentSession = cart.payment_collection?.payment_sessions?.[0]
 
+  // 零金额订单：使用专门的按钮，直接下单无需支付
+  if (cart.total === 0) {
+    return (
+      <ZeroPaymentButton notReady={notReady} data-testid={dataTestId} />
+    )
+  }
+
   switch (true) {
     case isStripeLike(paymentSession?.provider_id):
       return (
@@ -323,6 +330,62 @@ const EmtPaymentButton = ({ notReady, "data-testid": dataTestId }: { notReady: b
       <ErrorMessage
         error={errorMessage}
         data-testid="emt-payment-error-message"
+      />
+    </>
+  )
+}
+
+// 零金额订单按钮：直接下单，无需支付
+const ZeroPaymentButton = ({ notReady, "data-testid": dataTestId }: { notReady: boolean; "data-testid"?: string }) => {
+  const router = useRouter()
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const onPaymentCompleted = async () => {
+    try {
+      const result = await placeOrder()
+      // If placeOrder returns an order, redirect manually
+      if (result && typeof result === 'object' && 'type' in result && result.type === 'order' && result.order?.id) {
+        router.push(result.redirectUrl || `/order/${result.order.id}/confirmed`)
+        return
+      }
+    } catch (err: any) {
+      // 提供更友好的错误信息
+      let errorMsg = err?.message || "Failed to place order"
+      
+      if (errorMsg.includes("shipping method") || errorMsg.includes("shipping profiles")) {
+        errorMsg = "Shipping method issue detected. Please refresh the page and try again, or select a different shipping method."
+      } else if (errorMsg.includes("not authorized") || errorMsg.includes("Payment session")) {
+        errorMsg = "Order processing issue. Please try again or contact support if the issue persists."
+      }
+      
+      setErrorMessage(errorMsg)
+      setSubmitting(false)
+    }
+  }
+
+  const handlePayment = () => {
+    setSubmitting(true)
+    onPaymentCompleted()
+  }
+
+  return (
+    <>
+      <Button
+        disabled={notReady}
+        isLoading={submitting}
+        onClick={handlePayment}
+        size="large"
+        variant="primary"
+        className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 text-white border-none !border-2 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700 disabled:!border-ui-border-base !shadow-none"
+        style={{ borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }}
+        data-testid={dataTestId}
+      >
+        Place order
+      </Button>
+      <ErrorMessage
+        error={errorMessage}
+        data-testid="zero-payment-error-message"
       />
     </>
   )
