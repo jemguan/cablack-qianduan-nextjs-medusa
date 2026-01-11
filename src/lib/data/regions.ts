@@ -5,8 +5,12 @@ import { getCacheConfig } from "@lib/config/cache"
 import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { getCacheOptions, getRegionCountryCode } from "./cookies"
+import { cache } from "react"
 
-export const listRegions = async () => {
+/**
+ * 内部实现：获取所有区域
+ */
+const _listRegionsInternal = async () => {
   // 获取缓存标签
   const cacheOptions = await getCacheOptions("regions")
   
@@ -27,6 +31,12 @@ export const listRegions = async () => {
     .then(({ regions }) => regions)
     .catch(medusaError)
 }
+
+/**
+ * 获取所有区域
+ * 使用 React cache() 在单次渲染周期内去重请求
+ */
+export const listRegions = cache(_listRegionsInternal)
 
 export const retrieveRegion = async (id: string) => {
   // 获取缓存标签

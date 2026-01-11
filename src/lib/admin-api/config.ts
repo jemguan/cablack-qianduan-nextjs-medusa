@@ -4,6 +4,8 @@
  */
 
 import { get } from './adminApi';
+import { cache } from "react";
+import { unstable_cache } from "next/cache";
 
 export interface MedusaConfig {
   brand?: {
@@ -230,9 +232,9 @@ export interface MedusaCategory {
 }
 
 /**
- * 获取 Medusa 配置
+ * 内部实现：获取 Medusa 配置
  */
-export async function getMedusaConfig(): Promise<MedusaConfig | null> {
+const _getMedusaConfigInternal = async (): Promise<MedusaConfig | null> => {
   try {
     const response = await get<MedusaConfig>('/api/public/medusa/config');
     if (response.success && response.data) {
@@ -244,6 +246,22 @@ export async function getMedusaConfig(): Promise<MedusaConfig | null> {
     return null;
   }
 }
+
+/**
+ * 使用 unstable_cache 进行跨请求缓存（5分钟）
+ */
+const cachedMedusaConfig = unstable_cache(
+  _getMedusaConfigInternal,
+  ["medusa-config"],
+  { revalidate: 300 }
+);
+
+/**
+ * 获取 Medusa 配置
+ * 使用 cache() 在单次渲染周期内去重
+ * 使用 unstable_cache 在跨请求间缓存（5分钟）
+ */
+export const getMedusaConfig = cache(cachedMedusaConfig);
 
 /**
  * 获取 Medusa 目录树

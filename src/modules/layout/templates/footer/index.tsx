@@ -11,11 +11,14 @@ import { SocialShare } from "@modules/layout/components/social-share"
 import type { SocialPlatform } from "@modules/layout/components/social-share/types"
 
 export default async function Footer() {
-  const { collections } = await listCollections({
-    fields: "*products",
-  })
-  const productCategories = await listCategories()
-  const config = await getMedusaConfig()
+  // 并行获取所有数据，减少等待时间
+  const [collectionsResult, productCategories, config] = await Promise.all([
+    listCollections({ fields: "*products" }),
+    listCategories(),
+    getMedusaConfig(),
+  ])
+  
+  const { collections } = collectionsResult
   const footerConfig = config?.footerConfig
 
   return (

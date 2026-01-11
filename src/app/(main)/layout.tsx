@@ -20,15 +20,16 @@ export const metadata: Metadata = {
 }
 
 export default async function PageLayout(props: { children: React.ReactNode }) {
-  const customer = await retrieveCustomer()
-  const cart = await retrieveCart()
-  let shippingOptions: StoreCartShippingOption[] = []
-
-  if (cart) {
-    const { shipping_options } = await listCartOptions()
-
-    shippingOptions = shipping_options
-  }
+  // 并行获取 customer 和 cart，减少等待时间
+  const [customer, cart] = await Promise.all([
+    retrieveCustomer(),
+    retrieveCart(),
+  ])
+  
+  // 只有在有购物车时才获取配送选项
+  const shippingOptions: StoreCartShippingOption[] = cart
+    ? (await listCartOptions()).shipping_options
+    : []
 
   return (
     <WishlistProvider customer={customer}>

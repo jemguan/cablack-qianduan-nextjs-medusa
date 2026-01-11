@@ -1,7 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef, useCallback } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState, useRef } from "react"
 import { getVipDiscount, getLoyaltyConfig } from "@lib/data/loyalty"
 import { applyPromotions } from "@lib/data/cart"
 import type { HttpTypes } from "@medusajs/types"
@@ -10,6 +9,12 @@ const VIP_DISCOUNT_STORAGE_KEY = "vip_discount_applied"
 
 // 防抖延迟时间（毫秒）
 const DEBOUNCE_DELAY = 500
+
+// 最大尝试次数（防止无限循环）
+const MAX_APPLY_ATTEMPTS = 3
+
+// 冷却时间（毫秒）- 防止短时间内重复调用
+const COOLDOWN_MS = 30000 // 30 秒
 
 /**
  * 获取已应用的 VIP 折扣码（从 sessionStorage）
@@ -70,8 +75,10 @@ export function useVipDiscountSync(
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   // 用于防止重复调用的 ref
   const lastApplyAttemptRef = useRef<string | null>(null)
-  
-  const router = useRouter()
+  // 调用计数器（防止无限循环）
+  const applyAttemptsRef = useRef(0)
+  // 上次调用时间（用于冷却检查）
+  const lastApplyTimeRef = useRef(0)
 
   // 清理防抖 timer
   useEffect(() => {
@@ -94,6 +101,17 @@ export function useVipDiscountSync(
       return
     }
 
+    // 检查是否超过最大尝试次数
+    if (applyAttemptsRef.current >= MAX_APPLY_ATTEMPTS) {
+      return
+    }
+
+    // 检查冷却时间
+    const now = Date.now()
+    if (now - lastApplyTimeRef.current < COOLDOWN_MS) {
+      return
+    }
+
     // 清除之前的防抖 timer
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
@@ -103,6 +121,16 @@ export function useVipDiscountSync(
     debounceTimerRef.current = setTimeout(async () => {
       // 再次检查是否正在应用
       if (isApplyingRef.current) {
+        return
+      }
+
+      // 再次检查最大尝试次数和冷却时间
+      if (applyAttemptsRef.current >= MAX_APPLY_ATTEMPTS) {
+        return
+      }
+      
+      const currentTime = Date.now()
+      if (currentTime - lastApplyTimeRef.current < COOLDOWN_MS) {
         return
       }
 
@@ -150,38 +178,28 @@ export function useVipDiscountSync(
           return
         }
 
-        // 标记为正在应用
+        // 标记为正在应用，增加尝试计数，记录时间
         isApplyingRef.current = true
         setIsApplying(true)
         lastApplyAttemptRef.current = attemptKey
+        applyAttemptsRef.current += 1
+        lastApplyTimeRef.current = Date.now()
 
         // 获取现有的折扣码
         const existingCodes = existingPromotions
-          .filter((p: HttpTypes.StorePromotion) => p.code)
-          .map((p: HttpTypes.StorePromotion) => p.code!)
+          .filter((p: any) => p.code)
+          .map((p: any) => p.code!)
 
         // 添加 VIP 折扣码
         const newCodes = [...existingCodes, discountCode]
 
         try {
-          const result = await applyPromotions(newCodes)
-          
-          // 检查返回的购物车中是否有 promotions
-          const appliedPromotions = result?.cart?.promotions || []
-          
-          // 检查折扣码是否真的被应用了
-          const wasApplied = appliedPromotions.some(
-            (p: any) => p.code?.toLowerCase() === discountCode.toLowerCase()
-          )
+          await applyPromotions(newCodes)
           
           // 标记为已尝试应用（保存到 sessionStorage）
+          // 注意：不再调用 router.refresh()，依赖 revalidateTag 机制
+          // 下次用户操作（如添加商品、刷新页面）时会自动获取最新数据
           setAppliedCode(cart.id, discountCode)
-          
-          if (wasApplied) {
-            // 使用 Next.js router.refresh() 软刷新，而不是 window.location.reload()
-            // router.refresh() 会重新获取服务器数据而不完全刷新页面
-            router.refresh()
-          }
         } catch (applyError: any) {
           // 标记为已尝试，避免无限重试
           setAppliedCode(cart.id, discountCode)
@@ -195,14 +213,16 @@ export function useVipDiscountSync(
         setIsApplying(false)
       }
     }, DEBOUNCE_DELAY)
-  }, [cart?.id, customer?.id, router]) // 只依赖 ID，不依赖整个对象，避免不必要的重新运行
+  }, [cart?.id, customer?.id]) // 只依赖 ID，不依赖整个对象，避免不必要的重新运行
 
   // 当客户变化时，重置应用状态
   useEffect(() => {
     if (customer?.id) {
-      // 客户变化时清除之前的记录
+      // 客户变化时清除之前的记录，重置计数器
       clearAppliedCode()
       lastApplyAttemptRef.current = null
+      applyAttemptsRef.current = 0
+      lastApplyTimeRef.current = 0
     }
   }, [customer?.id])
 

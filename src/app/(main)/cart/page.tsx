@@ -17,12 +17,18 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Cart() {
-  const cart = await retrieveCart().catch((error) => {
-    console.error(error)
-    return notFound()
-  })
+  // 并行获取 cart 和 customer，减少等待时间
+  const [cart, customer] = await Promise.all([
+    retrieveCart().catch((error) => {
+      console.error(error)
+      return null
+    }),
+    retrieveCustomer(),
+  ])
 
-  const customer = await retrieveCustomer()
+  if (!cart) {
+    return notFound()
+  }
 
   return <CartTemplate cart={cart} customer={customer} />
 }

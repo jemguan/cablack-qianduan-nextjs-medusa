@@ -19,8 +19,8 @@ type DiscountCodeProps = {
 
 const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
   const router = useRouter()
-  const [isOpen, setIsOpen] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState("")
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   const { promotions = [] } = cart
   const removePromotionCode = async (code: string) => {
@@ -36,9 +36,11 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
 
   const addPromotionCode = async (formData: FormData) => {
     setErrorMessage("")
+    setIsSubmitting(true)
 
     const code = formData.get("code")
     if (!code) {
+      setIsSubmitting(false)
       return
     }
     
@@ -46,6 +48,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
     const trimmedCode = code.toString().trim()
     if (!trimmedCode) {
       setErrorMessage("Please enter a valid promotion code")
+      setIsSubmitting(false)
       return
     }
     
@@ -60,6 +63,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
       if (input) {
         input.value = ""
       }
+      setIsSubmitting(false)
       return
     }
     
@@ -71,6 +75,8 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
       router.refresh()
     } catch (e: any) {
       setErrorMessage(e.message)
+    } finally {
+      setIsSubmitting(false)
     }
 
     if (input) {
@@ -81,44 +87,47 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
   return (
     <div className="w-full bg-card flex flex-col">
       <div className="txt-medium">
-        <form action={(a) => addPromotionCode(a)} className="w-full mb-5">
-          <Label className="flex gap-x-1 my-2 items-center">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              type="button"
-              className="txt-medium text-primary hover:text-primary/80 transition-colors font-medium"
-              data-testid="add-discount-button"
+        <form action={(a) => addPromotionCode(a)} className="w-full mb-4">
+          {/* 标题和图标 */}
+          <Label className="flex gap-x-2 mb-3 items-center">
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="currentColor" 
+              className="w-5 h-5 text-primary"
             >
-              Add Promotion Code(s)
-            </button>
+              <path fillRule="evenodd" d="M5.25 2.25a3 3 0 00-3 3v4.318a3 3 0 00.879 2.121l9.58 9.581c.92.92 2.39 1.186 3.548.428a18.849 18.849 0 005.441-5.44c.758-1.16.492-2.629-.428-3.548l-9.58-9.581a3 3 0 00-2.122-.879H5.25zM6.375 7.5a1.125 1.125 0 100-2.25 1.125 1.125 0 000 2.25z" clipRule="evenodd" />
+            </svg>
+            <span className="txt-medium text-foreground font-medium">
+              Promotion Code
+            </span>
           </Label>
 
-          {isOpen && (
-            <>
-              <div className="flex w-full gap-x-2">
-                <Input
-                  className="size-full bg-background border-border text-foreground"
-                  id="promotion-input"
-                  name="code"
-                  type="text"
-                  autoFocus={false}
-                  data-testid="discount-input"
-                />
-                <SubmitButton
-                  variant="secondary"
-                  className="border-border bg-muted hover:bg-muted/80 text-foreground"
-                  data-testid="discount-apply-button"
-                >
-                  Apply
-                </SubmitButton>
-              </div>
+          {/* 输入框和按钮 - 始终显示 */}
+          <div className="flex w-full gap-x-2 items-stretch">
+            <Input
+              className="flex-1 bg-background border-border text-foreground placeholder:text-muted-foreground h-10"
+              id="promotion-input"
+              name="code"
+              type="text"
+              placeholder="Enter promotion code..."
+              autoFocus={false}
+              data-testid="discount-input"
+            />
+            <SubmitButton
+              variant="secondary"
+              className="border-border bg-primary hover:bg-primary/90 text-primary-foreground px-4 whitespace-nowrap h-10"
+              data-testid="discount-apply-button"
+              disabled={isSubmitting}
+            >
+              Apply
+            </SubmitButton>
+          </div>
 
-              <ErrorMessage
-                error={errorMessage}
-                data-testid="discount-error-message"
-              />
-            </>
-          )}
+          <ErrorMessage
+            error={errorMessage}
+            data-testid="discount-error-message"
+          />
         </form>
 
         {promotions.length > 0 && (

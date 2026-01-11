@@ -17,16 +17,18 @@ import { clx } from "@medusajs/ui"
 import User from "@modules/common/icons/user"
 
 export default async function Nav() {
-  const regions = await listRegions().then((regions: StoreRegion[]) => regions)
-  const config = await getMedusaConfig()
+  // 并行获取所有数据，减少等待时间
+  const [regions, config, customer] = await Promise.all([
+    listRegions().then((regions: StoreRegion[]) => regions),
+    getMedusaConfig(),
+    retrieveCustomer().catch(() => null),
+  ])
+  
   const headerConfig = config?.headerConfig
   const headerMenuItems = headerConfig?.menu?.menuItems || []
   
   // 获取默认区域 ID（使用第一个区域作为后备）
   const currentRegionId = regions && regions.length > 0 ? regions[0].id : undefined
-  
-  // 获取客户信息（用于侧边栏登录按钮）
-  const customer = await retrieveCustomer().catch(() => null)
   
   // Branding settings
   const brand = headerConfig?.brand

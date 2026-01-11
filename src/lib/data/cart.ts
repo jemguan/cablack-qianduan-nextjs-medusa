@@ -6,6 +6,7 @@ import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
+import { cache } from "react"
 import {
   getAuthHeaders,
   getCacheOptions,
@@ -90,8 +91,7 @@ async function tryApplyVipDiscount(cartId: string): Promise<void> {
 
     const existingPromotions = cart?.promotions || []
     const isAlreadyApplied = existingPromotions.some(
-      (p: HttpTypes.StorePromotion) => 
-        p.code?.toLowerCase() === discountCode.toLowerCase()
+      (p) => p.code?.toLowerCase() === discountCode.toLowerCase()
     )
 
     if (isAlreadyApplied) {
@@ -100,8 +100,8 @@ async function tryApplyVipDiscount(cartId: string): Promise<void> {
 
     // 获取现有的折扣码
     const existingCodes = existingPromotions
-      .filter((p: HttpTypes.StorePromotion) => p.code)
-      .map((p: HttpTypes.StorePromotion) => p.code!)
+      .filter((p) => p.code)
+      .map((p) => p.code!)
 
     // 添加 VIP 折扣码
     const newCodes = [...existingCodes, discountCode]
@@ -120,11 +120,9 @@ async function tryApplyVipDiscount(cartId: string): Promise<void> {
 }
 
 /**
- * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
- * @param cartId - optional - The ID of the cart to retrieve.
- * @returns The cart object if found, or null if not found.
+ * 内部实现：获取购物车
  */
-export async function retrieveCart(cartId?: string, fields?: string) {
+const _retrieveCartInternal = async (cartId?: string, fields?: string): Promise<HttpTypes.StoreCart | null> => {
   const id = cartId || (await getCartId())
   fields ??= "*items, *region, *items.product, *items.variant, *items.variant.images, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, +discount_total, +discount_subtotal, +item_subtotal, +item_total, +subtotal, +total, +tax_total, +shipping_subtotal, +shipping_total"
 
@@ -155,6 +153,14 @@ export async function retrieveCart(cartId?: string, fields?: string) {
     .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
     .catch(() => null)
 }
+
+/**
+ * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
+ * 使用 React cache() 在单次渲染周期内去重请求
+ * @param cartId - optional - The ID of the cart to retrieve.
+ * @returns The cart object if found, or null if not found.
+ */
+export const retrieveCart = cache(_retrieveCartInternal)
 
 export async function getOrSetCart(countryCode: string) {
   const region = await getRegion(countryCode)
