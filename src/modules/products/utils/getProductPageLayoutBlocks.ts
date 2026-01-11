@@ -12,6 +12,7 @@ import {
   handleRecentlyViewedProductsBlock,
   handleBundleSaleBlock,
   handleReviewsBlock,
+  handleBannerBlock,
 } from './blockHandlers';
 import type { LoyaltyAccount } from '@/types/loyalty';
 
@@ -207,6 +208,14 @@ function getBlockConfigForBlock(
         product,
         region
       );
+
+    case 'bannerBlock':
+      // 从 blockConfigs 获取配置，如果没有则使用 block.config
+      const bannerBlockConfig =
+        config?.blockConfigs?.['bannerBlock']?.[block.id] ||
+        block.config ||
+        {};
+      return handleBannerBlock(block, bannerBlockConfig);
 
     default:
       console.warn(`[Medusa ProductPage] Unknown block type: ${block.type}`);

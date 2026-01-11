@@ -10,6 +10,7 @@ import { parseFAQMetadata } from '../../home/components/faq-block/utils';
 import type { RecentlyViewedProductsData } from '../components/recently-viewed-products/types';
 import type { BundleSaleData } from '../components/bundle-sale/types';
 import type { ReviewsData } from '../components/reviews/types';
+import type { BannerBlockData } from '../../home/components/banner-block/types';
 import type { LoyaltyAccount } from '@/types/loyalty';
 
 /**
@@ -350,6 +351,76 @@ export function handleReviewsBlock(
       product,
       region,
       config: data,
+    },
+  };
+}
+
+/**
+ * 处理 BannerBlock Block
+ * 用于在产品页面展示 banner 图片
+ */
+export function handleBannerBlock(
+  block: {
+    id: string;
+    type: string;
+    enabled: boolean;
+    order: number;
+    config: Record<string, any>;
+  },
+  blockConfig: Record<string, any>
+): BlockConfig | null {
+  // 如果禁用，返回 null
+  if (blockConfig.enabled === false) {
+    return null;
+  }
+
+  // 构建 BannerBlockData
+  const bannerBlockData: BannerBlockData = {
+    modules: (blockConfig.modules || []).map((module: any) => {
+      // 处理图片 URL，兼容旧的 object 格式
+      let imageUrl = '';
+      if (typeof module.image === 'string') {
+        imageUrl = module.image;
+      } else if (module.image?.desktop) {
+        imageUrl = module.image.desktop;
+      }
+
+      return {
+        id: module.id || `module-${Date.now()}-${Math.random()}`,
+        image: imageUrl,
+        link: module.link,
+        linkTarget: module.linkTarget || '_self',
+        showOnDesktop: module.showOnDesktop !== false,
+        showOnMobile: module.showOnMobile !== false,
+        desktopCols: module.desktopCols !== undefined && module.desktopCols !== null
+          ? (typeof module.desktopCols === 'number' ? module.desktopCols : parseInt(String(module.desktopCols), 10) || 1)
+          : 1,
+        rowSpan: module.rowSpan !== undefined && module.rowSpan !== null
+          ? (typeof module.rowSpan === 'number' ? module.rowSpan : parseInt(String(module.rowSpan), 10) || 1)
+          : 1,
+      };
+    }),
+    gridCols: blockConfig.gridCols !== undefined && blockConfig.gridCols !== null 
+      ? (typeof blockConfig.gridCols === 'number' ? blockConfig.gridCols : parseInt(String(blockConfig.gridCols), 10) || 1)
+      : 1,
+    gridGap: blockConfig.gridGap !== undefined && blockConfig.gridGap !== null
+      ? (typeof blockConfig.gridGap === 'number' ? blockConfig.gridGap : parseInt(String(blockConfig.gridGap), 10) || 24)
+      : 24,
+    mobileGridCols: blockConfig.mobileGridCols !== undefined && blockConfig.mobileGridCols !== null
+      ? (typeof blockConfig.mobileGridCols === 'number' ? blockConfig.mobileGridCols : parseInt(String(blockConfig.mobileGridCols), 10) || 1)
+      : 1,
+    fullWidth: blockConfig.fullWidth === true,
+  };
+
+  return {
+    id: `banner-block-${block.id}`,
+    type: block.type,
+    enabled: block.enabled,
+    order: block.order,
+    config: blockConfig,
+    componentName: 'BannerBlock',
+    props: {
+      data: bannerBlockData,
     },
   };
 }
