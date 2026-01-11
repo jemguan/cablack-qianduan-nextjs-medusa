@@ -13,6 +13,7 @@ import {
   handleBundleSaleBlock,
   handleReviewsBlock,
 } from './blockHandlers';
+import type { LoyaltyAccount } from '@/types/loyalty';
 
 export interface BlockConfig {
   id: string;
@@ -31,6 +32,11 @@ export interface BlockConfig {
  * @param region 区域信息
  * @param images 产品图片
  * @param initialVariantId 初始变体 ID
+ * @param countryCode 国家代码
+ * @param htmlDescription HTML 描述
+ * @param customer 当前登录的客户
+ * @param loyaltyAccount 积分账户信息
+ * @param membershipProductIds 会员产品 ID 列表
  * @returns 排序后的 block 配置数组
  */
 export function getProductPageLayoutBlocks(
@@ -40,7 +46,10 @@ export function getProductPageLayoutBlocks(
   images: HttpTypes.StoreProductImage[],
   initialVariantId?: string,
   countryCode?: string,
-  htmlDescription?: string | null
+  htmlDescription?: string | null,
+  customer?: HttpTypes.StoreCustomer | null,
+  loyaltyAccount?: LoyaltyAccount | null,
+  membershipProductIds?: Record<string, boolean> | null
 ): BlockConfig[] {
   // 从 pageLayouts 获取 blocks
   const blocks = getPageLayoutBlocks(config, 'product');
@@ -69,6 +78,9 @@ export function getProductPageLayoutBlocks(
           layout: productPageConfig.layout || 'two-column',
           shippingReturnsConfig,
           htmlDescription,
+          customer,
+          loyaltyAccount,
+          membershipProductIds,
         },
       },
     ];
@@ -85,7 +97,10 @@ export function getProductPageLayoutBlocks(
       images,
       initialVariantId,
       countryCode,
-      htmlDescription
+      htmlDescription,
+      customer,
+      loyaltyAccount,
+      membershipProductIds
     );
     if (blockConfig) {
       blockConfigs.push(blockConfig);
@@ -113,7 +128,10 @@ function getBlockConfigForBlock(
   images: HttpTypes.StoreProductImage[],
   initialVariantId?: string,
   countryCode?: string,
-  htmlDescription?: string | null
+  htmlDescription?: string | null,
+  customer?: HttpTypes.StoreCustomer | null,
+  loyaltyAccount?: LoyaltyAccount | null,
+  membershipProductIds?: Record<string, boolean> | null
 ): BlockConfig | null {
   switch (block.type) {
     case 'productContent':
@@ -136,7 +154,10 @@ function getBlockConfigForBlock(
         region,
         images,
         initialVariantId,
-        htmlDescription
+        htmlDescription,
+        customer,
+        loyaltyAccount,
+        membershipProductIds
       );
 
     case 'faq':

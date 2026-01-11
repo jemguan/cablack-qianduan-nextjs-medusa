@@ -9,6 +9,8 @@ import { FAQBlock } from "@modules/home/components/faq-block"
 import { RecentlyViewedProductsBlock, ProductViewTracker } from "../components/recently-viewed-products"
 import { BundleSaleBlock } from "../components/bundle-sale/BundleSaleBlock"
 import { ReviewsBlock } from "../components/reviews/ReviewsBlock"
+import { retrieveCustomer } from "@lib/data/customer"
+import { getLoyaltyAccount, getLoyaltyConfig } from "@lib/data/loyalty"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
@@ -31,8 +33,17 @@ const ProductTemplate: React.FC<ProductTemplateProps> = async ({
     return notFound()
   }
 
-  // 获取配置
-  const config = await getMedusaConfig()
+  // 并行获取配置、客户信息和积分账户
+  const [config, customer, loyaltyAccountResponse, loyaltyConfigResponse] = await Promise.all([
+    getMedusaConfig(),
+    retrieveCustomer(),
+    getLoyaltyAccount(),
+    getLoyaltyConfig(),
+  ])
+
+  // 提取 loyaltyAccount 和 membershipProductIds
+  const loyaltyAccount = loyaltyAccountResponse?.account || null
+  const membershipProductIds = loyaltyConfigResponse?.config?.membership_product_ids || null
 
   // 根据 pageLayouts 配置获取产品页 blocks
   const pageBlocks = getProductPageLayoutBlocks(
@@ -42,7 +53,10 @@ const ProductTemplate: React.FC<ProductTemplateProps> = async ({
     images,
     initialVariantId,
     countryCode,
-    htmlDescription
+    htmlDescription,
+    customer,
+    loyaltyAccount,
+    membershipProductIds
   )
 
   // 组件映射

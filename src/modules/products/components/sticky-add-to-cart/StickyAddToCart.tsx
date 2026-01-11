@@ -25,6 +25,9 @@ export function StickyAddToCart({
   region,
   triggerRef,
   mobileTriggerRef,
+  customer,
+  loyaltyAccount,
+  membershipProductIds,
 }: StickyAddToCartProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
@@ -127,6 +130,9 @@ export function StickyAddToCart({
             onAddToCart={handleAddToCart}
             isAdding={isAdding}
             onClose={handleClose}
+            customer={customer}
+            loyaltyAccount={loyaltyAccount}
+            membershipProductIds={membershipProductIds}
           />
         ) : (
           <MobileStickyAddToCart
@@ -137,6 +143,9 @@ export function StickyAddToCart({
             onAddToCart={handleAddToCart}
             isAdding={isAdding}
             onClose={handleClose}
+            customer={customer}
+            loyaltyAccount={loyaltyAccount}
+            membershipProductIds={membershipProductIds}
           />
         )}
       </div>

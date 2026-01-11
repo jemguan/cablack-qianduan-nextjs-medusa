@@ -17,6 +17,7 @@ export interface LoyaltyConfig {
   points_earn_rate: number
   vip_multiplier: number
   coupon_redemption_rate: number
+  membership_product_ids?: Record<string, boolean>
 }
 
 /**

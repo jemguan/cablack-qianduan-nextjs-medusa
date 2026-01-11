@@ -5,6 +5,8 @@ import { getCurrentRegion, getCountryCode } from "@lib/data/regions"
 import { getPageTitle } from "@lib/data/page-title-config"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import SearchResults from "@modules/search/templates/search-results"
+import { retrieveCustomer } from "@lib/data/customer"
+import { getLoyaltyAccount, getLoyaltyConfig } from "@lib/data/loyalty"
 
 // 强制动态渲染，搜索页面不应该被缓存
 export const dynamic = "force-dynamic"
@@ -67,14 +69,26 @@ export default async function SearchPage(props: Props) {
   // 默认按最新上架排序
   const safeSortBy: SortOptions = sortBy || "created_at"
 
-  const { response } = await searchProducts({
-    searchTerm: searchTerm.trim(),
-    pageParam: pageNumber,
-    countryCode,
-    regionId: region.id,
-    limit: 12,
-    sortBy: safeSortBy,
-  })
+  // 并行获取搜索结果和会员数据
+  const [searchResult, customer, loyaltyAccountResponse, loyaltyConfigResponse] = await Promise.all([
+    searchProducts({
+      searchTerm: searchTerm.trim(),
+      pageParam: pageNumber,
+      countryCode,
+      regionId: region.id,
+      limit: 12,
+      sortBy: safeSortBy,
+    }),
+    retrieveCustomer(),
+    getLoyaltyAccount(),
+    getLoyaltyConfig(),
+  ])
+
+  const { response } = searchResult
+
+  // 提取 loyaltyAccount 和 membershipProductIds
+  const loyaltyAccount = loyaltyAccountResponse?.account || null
+  const membershipProductIds = loyaltyConfigResponse?.config?.membership_product_ids || null
 
   return (
     <div className="content-container py-6">
@@ -85,6 +99,9 @@ export default async function SearchPage(props: Props) {
         page={pageNumber}
         region={region}
         sortBy={safeSortBy}
+        customer={customer}
+        loyaltyAccount={loyaltyAccount}
+        membershipProductIds={membershipProductIds}
       />
     </div>
   )

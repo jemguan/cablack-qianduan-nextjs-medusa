@@ -6,6 +6,7 @@ import { Pagination } from "@modules/store/components/pagination"
 import SortProducts, { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useCallback } from "react"
+import type { LoyaltyAccount } from "@/types/loyalty"
 
 const PRODUCT_LIMIT = 12
 
@@ -16,6 +17,12 @@ interface SearchResultsProps {
   page: number
   region: HttpTypes.StoreRegion
   sortBy: SortOptions
+  /** 当前登录的客户 */
+  customer?: HttpTypes.StoreCustomer | null
+  /** 积分账户信息 */
+  loyaltyAccount?: LoyaltyAccount | null
+  /** 会员产品 ID 列表 */
+  membershipProductIds?: Record<string, boolean> | null
 }
 
 const SearchResults = ({
@@ -25,6 +32,9 @@ const SearchResults = ({
   page,
   region,
   sortBy,
+  customer,
+  loyaltyAccount,
+  membershipProductIds,
 }: SearchResultsProps) => {
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
   const router = useRouter()
@@ -123,7 +133,13 @@ const SearchResults = ({
           >
             {products.map((product) => (
               <li key={product.id}>
-                <ProductPreview product={product} region={region} />
+                <ProductPreview
+                  product={product}
+                  region={region}
+                  customer={customer}
+                  loyaltyAccount={loyaltyAccount}
+                  membershipProductIds={membershipProductIds}
+                />
               </li>
             ))}
           </ul>

@@ -3,6 +3,7 @@ import { HttpTypes } from "@medusajs/types"
 import { MedusaConfig } from "@lib/admin-api/config"
 import TwoColumnLayout from "../../templates/layouts/two-column-layout"
 import ThreeColumnLayout from "../../templates/layouts/three-column-layout"
+import { LoyaltyAccount } from "@/types/loyalty"
 
 type ProductContentProps = {
   product: HttpTypes.StoreProduct
@@ -12,6 +13,12 @@ type ProductContentProps = {
   layout?: 'two-column' | 'three-column'
   shippingReturnsConfig?: MedusaConfig['shippingReturnsConfig']
   htmlDescription?: string | null
+  /** 当前登录的客户 */
+  customer?: HttpTypes.StoreCustomer | null
+  /** 积分账户信息 */
+  loyaltyAccount?: LoyaltyAccount | null
+  /** 会员产品 ID 列表 */
+  membershipProductIds?: Record<string, boolean> | null
 }
 
 const ProductContent: React.FC<ProductContentProps> = ({
@@ -22,6 +29,9 @@ const ProductContent: React.FC<ProductContentProps> = ({
   layout = 'two-column',
   shippingReturnsConfig,
   htmlDescription,
+  customer,
+  loyaltyAccount,
+  membershipProductIds,
 }) => {
   if (layout === 'three-column') {
     return (
@@ -32,6 +42,9 @@ const ProductContent: React.FC<ProductContentProps> = ({
         initialVariantId={initialVariantId}
         shippingReturnsConfig={shippingReturnsConfig}
         htmlDescription={htmlDescription}
+        customer={customer}
+        loyaltyAccount={loyaltyAccount}
+        membershipProductIds={membershipProductIds}
       />
     )
   }
@@ -44,6 +57,9 @@ const ProductContent: React.FC<ProductContentProps> = ({
       initialVariantId={initialVariantId}
       shippingReturnsConfig={shippingReturnsConfig}
       htmlDescription={htmlDescription}
+      customer={customer}
+      loyaltyAccount={loyaltyAccount}
+      membershipProductIds={membershipProductIds}
     />
   )
 }

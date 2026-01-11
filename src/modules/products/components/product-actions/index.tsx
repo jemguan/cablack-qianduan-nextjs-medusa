@@ -6,7 +6,7 @@ import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import Divider from "@modules/common/components/divider"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { isEqual } from "lodash"
 import ProductPrice from "../product-price"
@@ -16,6 +16,7 @@ import { ProductQuantitySelector } from "../quantity-selector"
 import WishlistButton from "@modules/wishlist/components/wishlist-button"
 import ProductPointsInfo from "../product-points-info"
 import ProductPointsLoginPrompt from "../product-points-login-prompt"
+import { LoyaltyAccount } from "@/types/loyalty"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -23,6 +24,12 @@ type ProductActionsProps = {
   disabled?: boolean
   /** 移动端布局模式：隐藏价格，只显示变体选择、数量选择和按钮 */
   mobileLayout?: boolean
+  /** 当前登录的客户 */
+  customer?: HttpTypes.StoreCustomer | null
+  /** 积分账户信息 */
+  loyaltyAccount?: LoyaltyAccount | null
+  /** 会员产品 ID 列表 */
+  membershipProductIds?: Record<string, boolean> | null
 }
 
 const optionsAsKeymap = (
@@ -38,11 +45,32 @@ export default function ProductActions({
   product,
   disabled,
   mobileLayout = false,
+  customer,
+  loyaltyAccount,
+  membershipProductIds,
 }: ProductActionsProps) {
   const { options, selectedVariant, setOptionValue, setOptions } = useVariantSelection()
   const [isAdding, setIsAdding] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const countryCode = useParams().countryCode as string
+  const router = useRouter()
+
+  // 检查当前产品是否是会员产品
+  const isMembershipProduct = useMemo(() => {
+    if (!membershipProductIds || !product.id) return false
+    return membershipProductIds[product.id] === true
+  }, [membershipProductIds, product.id])
+
+  // 检查用户是否是 VIP
+  const isVip = useMemo(() => {
+    if (!loyaltyAccount) return false
+    if (!loyaltyAccount.is_member) return false
+    if (!loyaltyAccount.membership_expires_at) return false
+    return new Date(loyaltyAccount.membership_expires_at) > new Date()
+  }, [loyaltyAccount])
+
+  // 检查用户是否已登录
+  const isLoggedIn = !!customer
 
   //check if the selected options produce a valid variant
   const isValidVariant = useMemo(() => {
@@ -176,35 +204,95 @@ export default function ProductActions({
 
         {/* 加入购物车和心愿单按钮 */}
         <div className="flex gap-2">
-          <Button
-            onClick={handleAddToCart}
-            disabled={
-              !inStock ||
-              !selectedVariant ||
-              !!disabled ||
-              isAdding ||
-              !isValidVariant
-            }
-            variant="primary"
-            className={`flex-1 h-10 text-white border-none !border-2 !shadow-none ${
-              !inStock || !isValidVariant || !selectedVariant
-                ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
-                : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
-            }`}
-            style={
-              !inStock || !isValidVariant || !selectedVariant
-                ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
-                : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
-            }
-            isLoading={isAdding}
-            data-testid="add-product-button"
-          >
-            {!selectedVariant && !options
-              ? "Select variant"
-              : !inStock || !isValidVariant
-              ? "Out of Stock"
-              : "Add to Cart"}
-          </Button>
+          {/* 会员产品特殊按钮处理 */}
+          {isMembershipProduct ? (
+            // 会员产品
+            !isLoggedIn ? (
+              // 未登录：显示绿色 "Need login to buy" 按钮
+              <Button
+                onClick={() => router.push("/account")}
+                variant="primary"
+                className="flex-1 h-10 text-white border-none !border-2 !shadow-none bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 !border-green-600 hover:!border-green-700 dark:!border-green-600 dark:hover:!border-green-700"
+                style={{ borderColor: 'rgb(22 163 74)', borderWidth: '2px', borderStyle: 'solid' }}
+                data-testid="membership-login-button"
+              >
+                Need login to buy
+              </Button>
+            ) : isVip ? (
+              // VIP 用户：显示禁用按钮
+              <Button
+                disabled
+                variant="primary"
+                className="flex-1 h-10 text-white border-none !border-2 !shadow-none bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
+                style={{ borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }}
+                data-testid="membership-vip-button"
+              >
+                You are already a VIP
+              </Button>
+            ) : (
+              // 普通用户（已登录非VIP）：正常添加到购物车
+              <Button
+                onClick={handleAddToCart}
+                disabled={
+                  !inStock ||
+                  !selectedVariant ||
+                  !!disabled ||
+                  isAdding ||
+                  !isValidVariant
+                }
+                variant="primary"
+                className={`flex-1 h-10 text-white border-none !border-2 !shadow-none ${
+                  !inStock || !isValidVariant || !selectedVariant
+                    ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
+                    : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
+                }`}
+                style={
+                  !inStock || !isValidVariant || !selectedVariant
+                    ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
+                    : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
+                }
+                isLoading={isAdding}
+                data-testid="add-product-button"
+              >
+                {!selectedVariant && !options
+                  ? "Select variant"
+                  : !inStock || !isValidVariant
+                  ? "Out of Stock"
+                  : "Add to Cart"}
+              </Button>
+            )
+          ) : (
+            // 非会员产品：正常添加到购物车按钮
+            <Button
+              onClick={handleAddToCart}
+              disabled={
+                !inStock ||
+                !selectedVariant ||
+                !!disabled ||
+                isAdding ||
+                !isValidVariant
+              }
+              variant="primary"
+              className={`flex-1 h-10 text-white border-none !border-2 !shadow-none ${
+                !inStock || !isValidVariant || !selectedVariant
+                  ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
+                  : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
+              }`}
+              style={
+                !inStock || !isValidVariant || !selectedVariant
+                  ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
+                  : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
+              }
+              isLoading={isAdding}
+              data-testid="add-product-button"
+            >
+              {!selectedVariant && !options
+                ? "Select variant"
+                : !inStock || !isValidVariant
+                ? "Out of Stock"
+                : "Add to Cart"}
+            </Button>
+          )}
           <WishlistButton product={product} size="md" iconOnly />
         </div>
         {/* MobileActions 已禁用，因为 StickyAddToCart 提供了更好的移动端体验 */}

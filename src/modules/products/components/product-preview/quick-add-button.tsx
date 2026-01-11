@@ -5,9 +5,10 @@ import { HttpTypes } from "@medusajs/types"
 import { Button, clx } from "@medusajs/ui"
 import ShoppingBag from "@modules/common/icons/shopping-bag"
 import Check from "@modules/common/icons/check"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useState, useMemo } from "react"
 import { isEqual } from "lodash"
+import type { LoyaltyAccount } from "@/types/loyalty"
 
 type QuickAddButtonProps = {
   product: HttpTypes.StoreProduct
@@ -15,6 +16,12 @@ type QuickAddButtonProps = {
   options: Record<string, string | undefined>
   onOpenQuickView?: () => void
   compact?: boolean
+  /** 当前登录的客户 */
+  customer?: HttpTypes.StoreCustomer | null
+  /** 积分账户信息 */
+  loyaltyAccount?: LoyaltyAccount | null
+  /** 会员产品 ID 列表 */
+  membershipProductIds?: Record<string, boolean> | null
 }
 
 const optionsAsKeymap = (
@@ -32,11 +39,32 @@ const QuickAddButton: React.FC<QuickAddButtonProps> = ({
   options,
   onOpenQuickView,
   compact = false,
+  customer,
+  loyaltyAccount,
+  membershipProductIds,
 }) => {
   const [isAdding, setIsAdding] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const params = useParams()
   const countryCode = params?.countryCode as string
+  const router = useRouter()
+
+  // 检查当前产品是否是会员产品
+  const isMembershipProduct = useMemo(() => {
+    if (!membershipProductIds || !product.id) return false
+    return membershipProductIds[product.id] === true
+  }, [membershipProductIds, product.id])
+
+  // 检查用户是否是 VIP
+  const isVip = useMemo(() => {
+    if (!loyaltyAccount) return false
+    if (!loyaltyAccount.is_member) return false
+    if (!loyaltyAccount.membership_expires_at) return false
+    return new Date(loyaltyAccount.membership_expires_at) > new Date()
+  }, [loyaltyAccount])
+
+  // 检查用户是否已登录
+  const isLoggedIn = !!customer
 
   // Check if all options are selected
   const allOptionsSelected = useMemo(() => {
@@ -108,6 +136,43 @@ const QuickAddButton: React.FC<QuickAddButtonProps> = ({
       console.error("Failed to add to cart:", error)
     } finally {
       setIsAdding(false)
+    }
+  }
+
+  // 会员产品特殊处理
+  if (isMembershipProduct) {
+    if (!isLoggedIn) {
+      // 未登录：显示绿色 "Need login to buy" 按钮
+      return (
+        <Button
+          onClick={() => router.push("/account")}
+          variant="primary"
+          className={clx(
+            "w-full transition-all duration-200 hover:scale-105 active:scale-95 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white border-none !border-2 !border-green-600 hover:!border-green-700 dark:!border-green-600 dark:hover:!border-green-700 !shadow-none",
+            compact ? "h-8 text-xs" : "h-10"
+          )}
+          style={{ borderColor: 'rgb(22 163 74)', borderWidth: '2px', borderStyle: 'solid' }}
+        >
+          Need login to buy
+        </Button>
+      )
+    }
+
+    if (isVip) {
+      // VIP 用户：显示禁用按钮
+      return (
+        <Button
+          disabled
+          variant="primary"
+          className={clx(
+            "w-full transition-all duration-200 bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled text-white border-none !border-2 !border-ui-border-base cursor-not-allowed !shadow-none",
+            compact ? "h-8 text-xs" : "h-10"
+          )}
+          style={{ borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }}
+        >
+          You are already a VIP
+        </Button>
+      )
     }
   }
 

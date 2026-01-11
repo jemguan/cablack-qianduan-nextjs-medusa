@@ -238,6 +238,7 @@ export async function getLoyaltyConfig(): Promise<{
     points_earn_rate: number
     vip_multiplier: number
     coupon_redemption_rate: number
+    membership_product_ids?: Record<string, boolean>
   }
 } | null> {
   try {
@@ -255,6 +256,7 @@ export async function getLoyaltyConfig(): Promise<{
           points_earn_rate: number
           vip_multiplier: number
           coupon_redemption_rate: number
+          membership_product_ids?: Record<string, boolean>
         }
       }>(`/store/loyalty/config`, {
         method: "GET",

@@ -13,6 +13,7 @@ import { StickyAddToCart } from "@modules/products/components/sticky-add-to-cart
 import { MedusaConfig } from "@lib/admin-api/config"
 import ProductRating from "@modules/products/components/reviews/ProductRating"
 import ProductDescriptionAccordion from "@modules/products/components/product-description-accordion"
+import { LoyaltyAccount } from "@/types/loyalty"
 
 type ThreeColumnLayoutProps = {
   product: HttpTypes.StoreProduct
@@ -21,6 +22,12 @@ type ThreeColumnLayoutProps = {
   initialVariantId?: string
   shippingReturnsConfig?: MedusaConfig['shippingReturnsConfig']
   htmlDescription?: string | null
+  /** 当前登录的客户 */
+  customer?: HttpTypes.StoreCustomer | null
+  /** 积分账户信息 */
+  loyaltyAccount?: LoyaltyAccount | null
+  /** 会员产品 ID 列表 */
+  membershipProductIds?: Record<string, boolean> | null
 }
 
 const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
@@ -30,6 +37,9 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
   initialVariantId,
   shippingReturnsConfig,
   htmlDescription,
+  customer,
+  loyaltyAccount,
+  membershipProductIds,
 }) => {
   const actionsRef = useRef<HTMLDivElement>(null)
   const mobileActionsRef = useRef<HTMLDivElement>(null)
@@ -82,6 +92,9 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
             product={product}
             region={region}
             mobileLayout={true}
+            customer={customer}
+            loyaltyAccount={loyaltyAccount}
+            membershipProductIds={membershipProductIds}
           />
         </div>
 
@@ -116,6 +129,9 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
           <ProductActions
             product={product}
             region={region}
+            customer={customer}
+            loyaltyAccount={loyaltyAccount}
+            membershipProductIds={membershipProductIds}
           />
         </div>
       </div>
@@ -127,6 +143,9 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
         region={region}
         triggerRef={actionsRef}
         mobileTriggerRef={mobileActionsRef}
+        customer={customer}
+        loyaltyAccount={loyaltyAccount}
+        membershipProductIds={membershipProductIds}
       />
     </ProductPageClientWrapper>
   )

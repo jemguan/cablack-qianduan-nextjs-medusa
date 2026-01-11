@@ -10,6 +10,7 @@ import { parseFAQMetadata } from '../../home/components/faq-block/utils';
 import type { RecentlyViewedProductsData } from '../components/recently-viewed-products/types';
 import type { BundleSaleData } from '../components/bundle-sale/types';
 import type { ReviewsData } from '../components/reviews/types';
+import type { LoyaltyAccount } from '@/types/loyalty';
 
 /**
  * 处理 ProductContent Block
@@ -28,7 +29,10 @@ export function handleProductContentBlock(
   region: HttpTypes.StoreRegion,
   images: HttpTypes.StoreProductImage[],
   initialVariantId?: string,
-  htmlDescription?: string | null
+  htmlDescription?: string | null,
+  customer?: HttpTypes.StoreCustomer | null,
+  loyaltyAccount?: LoyaltyAccount | null,
+  membershipProductIds?: Record<string, boolean> | null
 ): BlockConfig | null {
   // 确定布局类型，默认为 two-column
   const layout = blockConfig.layout || 'two-column';
@@ -54,6 +58,9 @@ export function handleProductContentBlock(
       layout,
       shippingReturnsConfig: blockConfig.shippingReturnsConfig,
       htmlDescription,
+      customer,
+      loyaltyAccount,
+      membershipProductIds,
     },
   };
 }

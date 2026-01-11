@@ -15,6 +15,7 @@ import Image from "next/image"
 import { getImageUrl } from "@lib/util/image"
 import ProductRating from "../reviews/ProductRating"
 import WishlistButton from "@modules/wishlist/components/wishlist-button"
+import type { LoyaltyAccount } from "@/types/loyalty"
 
 const optionsAsKeymap = (
   variantOptions: HttpTypes.StoreProductVariant["options"]
@@ -30,6 +31,12 @@ type ProductPreviewProps = {
   isFeatured?: boolean
   region: HttpTypes.StoreRegion
   priority?: boolean // 是否优先加载图片（用于首屏产品）
+  /** 当前登录的客户 */
+  customer?: HttpTypes.StoreCustomer | null
+  /** 积分账户信息 */
+  loyaltyAccount?: LoyaltyAccount | null
+  /** 会员产品 ID 列表 */
+  membershipProductIds?: Record<string, boolean> | null
 }
 
 const ProductPreview = ({
@@ -37,6 +44,9 @@ const ProductPreview = ({
   isFeatured,
   region,
   priority = false,
+  customer,
+  loyaltyAccount,
+  membershipProductIds,
 }: ProductPreviewProps) => {
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false)
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
@@ -305,6 +315,9 @@ const ProductPreview = ({
               options={options}
               onOpenQuickView={() => setIsQuickViewOpen(true)}
               compact={true}
+              customer={customer}
+              loyaltyAccount={loyaltyAccount}
+              membershipProductIds={membershipProductIds}
             />
           </div>
         </div>
@@ -316,6 +329,9 @@ const ProductPreview = ({
         region={region}
         isOpen={isQuickViewOpen}
         onClose={() => setIsQuickViewOpen(false)}
+        customer={customer}
+        loyaltyAccount={loyaltyAccount}
+        membershipProductIds={membershipProductIds}
       />
     </>
   )

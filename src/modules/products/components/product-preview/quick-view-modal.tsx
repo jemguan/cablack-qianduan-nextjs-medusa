@@ -15,13 +15,20 @@ import ProductImageCarousel from "./product-image-carousel"
 import ProductBrandLink from "../product-brand-link"
 import { ProductQuantitySelector } from "../quantity-selector"
 import { addToCart } from "@lib/data/cart"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
+import type { LoyaltyAccount } from "@/types/loyalty"
 
 type QuickViewModalProps = {
   product: HttpTypes.StoreProduct
   region: HttpTypes.StoreRegion
   isOpen: boolean
   onClose: () => void
+  /** 当前登录的客户 */
+  customer?: HttpTypes.StoreCustomer | null
+  /** 积分账户信息 */
+  loyaltyAccount?: LoyaltyAccount | null
+  /** 会员产品 ID 列表 */
+  membershipProductIds?: Record<string, boolean> | null
 }
 
 const optionsAsKeymap = (
@@ -38,12 +45,33 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   region,
   isOpen,
   onClose,
+  customer,
+  loyaltyAccount,
+  membershipProductIds,
 }) => {
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
   const [quantity, setQuantity] = useState(1)
   const [isAdding, setIsAdding] = useState(false)
   const params = useParams()
   const countryCode = params?.countryCode as string
+  const router = useRouter()
+
+  // 检查当前产品是否是会员产品
+  const isMembershipProduct = useMemo(() => {
+    if (!membershipProductIds || !product.id) return false
+    return membershipProductIds[product.id] === true
+  }, [membershipProductIds, product.id])
+
+  // 检查用户是否是 VIP
+  const isVip = useMemo(() => {
+    if (!loyaltyAccount) return false
+    if (!loyaltyAccount.is_member) return false
+    if (!loyaltyAccount.membership_expires_at) return false
+    return new Date(loyaltyAccount.membership_expires_at) > new Date()
+  }, [loyaltyAccount])
+
+  // 检查用户是否已登录
+  const isLoggedIn = !!customer
 
   // Initialize options if product has only one variant
   useEffect(() => {
@@ -308,33 +336,91 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
                     {/* Add to Cart Button */}
                     <div>
-                      <Button
-                        onClick={handleAddToCart}
-                        disabled={
-                          !inStock ||
-                          !selectedVariant ||
-                          isAdding ||
-                          !isValidVariant
-                        }
-                        variant="primary"
-                        className={`w-full h-10 text-white border-none !border-2 !shadow-none ${
-                          !inStock || !isValidVariant || !selectedVariant
-                            ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
-                            : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
-                        }`}
-                        style={
-                          !inStock || !isValidVariant || !selectedVariant
-                            ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
-                            : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
-                        }
-                        isLoading={isAdding}
-                      >
-                        {!selectedVariant || !isValidVariant
-                          ? "Select variant"
-                          : !inStock
-                          ? "Out of Stock"
-                          : "Add to Cart"}
-                      </Button>
+                      {/* 会员产品特殊按钮处理 */}
+                      {isMembershipProduct ? (
+                        !isLoggedIn ? (
+                          // 未登录：显示绿色 "Need login to buy" 按钮
+                          <Button
+                            onClick={() => {
+                              onClose()
+                              router.push("/account")
+                            }}
+                            variant="primary"
+                            className="w-full h-10 text-white border-none !border-2 !shadow-none bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 !border-green-600 hover:!border-green-700 dark:!border-green-600 dark:hover:!border-green-700"
+                            style={{ borderColor: 'rgb(22 163 74)', borderWidth: '2px', borderStyle: 'solid' }}
+                          >
+                            Need login to buy
+                          </Button>
+                        ) : isVip ? (
+                          // VIP 用户：显示禁用按钮
+                          <Button
+                            disabled
+                            variant="primary"
+                            className="w-full h-10 text-white border-none !border-2 !shadow-none bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
+                            style={{ borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }}
+                          >
+                            You are already a VIP
+                          </Button>
+                        ) : (
+                          // 普通用户：正常添加到购物车
+                          <Button
+                            onClick={handleAddToCart}
+                            disabled={
+                              !inStock ||
+                              !selectedVariant ||
+                              isAdding ||
+                              !isValidVariant
+                            }
+                            variant="primary"
+                            className={`w-full h-10 text-white border-none !border-2 !shadow-none ${
+                              !inStock || !isValidVariant || !selectedVariant
+                                ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
+                                : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
+                            }`}
+                            style={
+                              !inStock || !isValidVariant || !selectedVariant
+                                ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
+                                : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
+                            }
+                            isLoading={isAdding}
+                          >
+                            {!selectedVariant || !isValidVariant
+                              ? "Select variant"
+                              : !inStock
+                              ? "Out of Stock"
+                              : "Add to Cart"}
+                          </Button>
+                        )
+                      ) : (
+                        // 非会员产品：正常按钮
+                        <Button
+                          onClick={handleAddToCart}
+                          disabled={
+                            !inStock ||
+                            !selectedVariant ||
+                            isAdding ||
+                            !isValidVariant
+                          }
+                          variant="primary"
+                          className={`w-full h-10 text-white border-none !border-2 !shadow-none ${
+                            !inStock || !isValidVariant || !selectedVariant
+                              ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
+                              : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
+                          }`}
+                          style={
+                            !inStock || !isValidVariant || !selectedVariant
+                              ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
+                              : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
+                          }
+                          isLoading={isAdding}
+                        >
+                          {!selectedVariant || !isValidVariant
+                            ? "Select variant"
+                            : !inStock
+                            ? "Out of Stock"
+                            : "Add to Cart"}
+                        </Button>
+                      )}
                     </div>
 
                     {/* View Full Details Link */}

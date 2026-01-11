@@ -3,6 +3,8 @@ import { getRegion } from "@lib/data/regions"
 import ProductPreview from "@modules/products/components/product-preview"
 import { Pagination } from "@modules/store/components/pagination"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { retrieveCustomer } from "@lib/data/customer"
+import { getLoyaltyAccount, getLoyaltyConfig } from "@lib/data/loyalty"
 
 const PRODUCT_LIMIT = 12
 
@@ -50,11 +52,21 @@ export default async function PaginatedProducts({
   // 注意：排序逻辑现在在 listProductsWithSort 中处理
   // 不再需要在这里设置 order 参数
 
-  const region = await getRegion(countryCode)
+  // 并行获取 region、customer 和 loyalty 数据
+  const [region, customer, loyaltyAccountResponse, loyaltyConfigResponse] = await Promise.all([
+    getRegion(countryCode),
+    retrieveCustomer(),
+    getLoyaltyAccount(),
+    getLoyaltyConfig(),
+  ])
 
   if (!region) {
     return null
   }
+
+  // 提取 loyaltyAccount 和 membershipProductIds
+  const loyaltyAccount = loyaltyAccountResponse?.account || null
+  const membershipProductIds = loyaltyConfigResponse?.config?.membership_product_ids || null
 
   let {
     response: { products, count },
@@ -91,7 +103,14 @@ export default async function PaginatedProducts({
               const isPriority = index < 4 && page === 1
               return (
                 <li key={p.id}>
-                  <ProductPreview product={p} region={region} priority={isPriority} />
+                  <ProductPreview
+                    product={p}
+                    region={region}
+                    priority={isPriority}
+                    customer={customer}
+                    loyaltyAccount={loyaltyAccount}
+                    membershipProductIds={membershipProductIds}
+                  />
                 </li>
               )
             })}
