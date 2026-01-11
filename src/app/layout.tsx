@@ -68,7 +68,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
         */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){window.__MEDUSA_BACKEND_URL__=${JSON.stringify(medusaBackendUrl)};try{var t=localStorage.getItem('theme-preference')||'dark',r=document.documentElement;t==='dark'&&r.classList.add('dark');r.setAttribute('data-theme',t);r.setAttribute('data-mode',t);r.style.colorScheme=t}catch(e){}scrollTo(0,0)})();`,
+            __html: `(function(){window.__MEDUSA_BACKEND_URL__=${JSON.stringify(medusaBackendUrl)};try{var t=localStorage.getItem('theme-preference')||'light',r=document.documentElement;t==='dark'&&r.classList.add('dark');r.setAttribute('data-theme',t);r.setAttribute('data-mode',t);r.style.colorScheme=t}catch(e){}scrollTo(0,0)})();`,
           }}
         />
       </head>
