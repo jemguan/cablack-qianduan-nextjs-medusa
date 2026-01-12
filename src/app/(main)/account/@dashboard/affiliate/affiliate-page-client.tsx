@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { HttpTypes } from "@medusajs/types"
 import { Copy, Check, Search, Link2, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
+import ChevronDown from "@modules/common/icons/chevron-down"
 
 type Product = {
   id: string
@@ -42,10 +43,27 @@ type StatsData = {
   recent_commissions: Array<{
     id: string
     order_id: string
+    order_display_id: number | null
     amount: number
     status: string
     created_at: string
+    void_reason: string | null
   }>
+}
+
+type PaymentRecord = {
+  paid_at: string
+  amount: number
+  commission_count: number
+  order_ids: string[]
+  order_display_ids?: number[]
+  payment_note: string | null
+}
+
+type PaymentHistoryData = {
+  payment_records: PaymentRecord[]
+  total_paid: number
+  total_commissions: number
 }
 
 export default function AffiliatePageClient({
@@ -68,9 +86,91 @@ export default function AffiliatePageClient({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [generatedProductLink, setGeneratedProductLink] = useState("")
   
+  // 支付历史状态
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryData | null>(null)
+  const [isLoadingPaymentHistory, setIsLoadingPaymentHistory] = useState(false)
+  
+  // 自动审核配置
+  const [autoApproveDays, setAutoApproveDays] = useState<number>(0)
+  
+  // 折叠状态
+  const [isCommissionsExpanded, setIsCommissionsExpanded] = useState(false)
+  const [isPaymentsExpanded, setIsPaymentsExpanded] = useState(false)
+  
+  // 分页状态
+  const [commissionsPage, setCommissionsPage] = useState(1)
+  const [paymentsPage, setPaymentsPage] = useState(1)
+  const itemsPerPage = 5
+  
   // 使用服务端传入的初始数据
   const affiliateData = initialAffiliateData
   const statsData = initialStatsData
+  
+  // 分页计算
+  const paginatedCommissions = useMemo(() => {
+    if (!statsData?.recent_commissions) return []
+    const start = (commissionsPage - 1) * itemsPerPage
+    const end = start + itemsPerPage
+    return statsData.recent_commissions.slice(start, end)
+  }, [statsData?.recent_commissions, commissionsPage])
+  
+  const paginatedPayments = useMemo(() => {
+    if (!paymentHistory?.payment_records) return []
+    const start = (paymentsPage - 1) * itemsPerPage
+    const end = start + itemsPerPage
+    return paymentHistory.payment_records.slice(start, end)
+  }, [paymentHistory?.payment_records, paymentsPage])
+  
+  const totalCommissionsPages = Math.ceil((statsData?.recent_commissions?.length || 0) / itemsPerPage)
+  const totalPaymentsPages = Math.ceil((paymentHistory?.payment_records?.length || 0) / itemsPerPage)
+
+  // 获取支付历史
+  useEffect(() => {
+    const fetchPaymentHistory = async () => {
+      setIsLoadingPaymentHistory(true)
+      try {
+        const response = await fetch("/api/affiliate/payment-history", {
+          credentials: "include",
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setPaymentHistory(data)
+        }
+      } catch (error) {
+        console.error("Error fetching payment history:", error)
+      } finally {
+        setIsLoadingPaymentHistory(false)
+      }
+    }
+    
+    if (affiliateData?.affiliate) {
+      fetchPaymentHistory()
+    }
+  }, [affiliateData])
+
+  // 获取自动审核配置
+  useEffect(() => {
+    const fetchAutoApproveConfig = async () => {
+      try {
+        const response = await fetch("/api/affiliate/auto-approve-config", {
+          credentials: "include",
+        })
+        if (response.ok) {
+          const data = await response.json()
+          const days = data.auto_approve_days || 0
+          setAutoApproveDays(days)
+        } else {
+          const errorText = await response.text()
+          console.error("[Affiliate] Failed to fetch auto approve config:", response.status, errorText)
+        }
+      } catch (error) {
+        console.error("[Affiliate] Error fetching auto approve config:", error)
+      }
+    }
+    
+    // 无论是否有 affiliate 数据都尝试获取配置（因为这是全局配置）
+    fetchAutoApproveConfig()
+  }, [])
 
   // 搜索产品
   useEffect(() => {
@@ -142,9 +242,9 @@ export default function AffiliatePageClient({
         setCopiedProductLink(text)
         setTimeout(() => setCopiedProductLink(null), 2000)
       }
-      toast.success("已复制到剪贴板")
+      toast.success("Copied to clipboard")
     } catch (error) {
-      toast.error("复制失败")
+      toast.error("Failed to copy")
     }
   }
 
@@ -154,7 +254,7 @@ export default function AffiliatePageClient({
         <div className="mb-8">
           <h1 className="text-2xl-semi">Affiliate Program</h1>
           <p className="text-base-regular text-ui-fg-subtle mt-2">
-            您还不是 Affiliate。请联系管理员申请加入。
+            You are not an Affiliate yet. Please contact the administrator to apply.
           </p>
         </div>
       </div>
@@ -173,14 +273,14 @@ export default function AffiliatePageClient({
       <div className="mb-8">
         <h1 className="text-2xl-semi">Affiliate Program</h1>
         <p className="text-base-regular text-ui-fg-subtle mt-2">
-          推广商品，赚取佣金
+          Promote products and earn commissions
         </p>
       </div>
 
       {/* 专属链接和折扣码 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="border border-ui-border-base rounded-lg p-6">
-          <h2 className="text-lg-semi mb-4">你的专属链接</h2>
+          <h2 className="text-lg-semi mb-4">Your Affiliate Link</h2>
           <div className="flex items-center gap-2">
             <input
               type="text"
@@ -198,7 +298,7 @@ export default function AffiliatePageClient({
         </div>
 
         <div className="border border-ui-border-base rounded-lg p-6">
-          <h2 className="text-lg-semi mb-4">你的专属折扣码</h2>
+          <h2 className="text-lg-semi mb-4">Your Discount Code</h2>
           <div className="flex items-center gap-2">
             <input
               type="text"
@@ -218,20 +318,20 @@ export default function AffiliatePageClient({
 
       {/* 数据概览 */}
       <div className="border border-ui-border-base rounded-lg p-6">
-        <h2 className="text-lg-semi mb-6">数据概览</h2>
+        <h2 className="text-lg-semi mb-6">Overview</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <p className="text-sm text-ui-fg-subtle mb-1">已推广订单数</p>
+            <p className="text-sm text-ui-fg-subtle mb-1">Total Orders</p>
             <p className="text-2xl font-semibold">{stats.total_orders}</p>
           </div>
           <div>
-            <p className="text-sm text-ui-fg-subtle mb-1">待结算金额</p>
+            <p className="text-sm text-ui-fg-subtle mb-1">Pending Amount</p>
             <p className="text-2xl font-semibold">
               {formatCurrency(stats.pending_amount + stats.approved_amount)}
             </p>
           </div>
           <div>
-            <p className="text-sm text-ui-fg-subtle mb-1">已提现金额</p>
+            <p className="text-sm text-ui-fg-subtle mb-1">Paid Amount</p>
             <p className="text-2xl font-semibold text-green-600">
               {formatCurrency(stats.paid_amount)}
             </p>
@@ -241,9 +341,9 @@ export default function AffiliatePageClient({
 
       {/* 提成比例 */}
       <div className="border border-ui-border-base rounded-lg p-6">
-        <h2 className="text-lg-semi mb-4">提成设置</h2>
+        <h2 className="text-lg-semi mb-4">Commission Settings</h2>
         <p className="text-base-regular">
-          你的提成比例: <span className="font-semibold">{affiliate.commission_rate}%</span>
+          Your commission rate: <span className="font-semibold">{affiliate.commission_rate}%</span>
         </p>
       </div>
 
@@ -251,11 +351,18 @@ export default function AffiliatePageClient({
       <div className="border border-ui-border-base rounded-lg p-6">
         <h2 className="text-lg-semi mb-4 flex items-center gap-2">
           <Link2 size={20} />
-          产品推广链接生成器
+          Product Link Generator
         </h2>
-        <p className="text-sm text-ui-fg-subtle mb-4">
-          搜索并选择产品，生成带有你专属推广参数的链接
-        </p>
+        <div className="mb-4 space-y-2">
+          <p className="text-sm text-ui-fg-subtle">
+            Search and select products to generate links with your affiliate parameters
+          </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+            <p className="text-sm text-blue-800">
+              💡 <strong>Tip:</strong> Enter a product title in the search box to find products, then select a product to generate your affiliate link.
+            </p>
+          </div>
+        </div>
         
         {/* 搜索框 */}
         <div className="relative mb-4">
@@ -263,7 +370,7 @@ export default function AffiliatePageClient({
             <Search size={16} className="text-ui-fg-subtle" />
             <input
               type="text"
-              placeholder="搜索产品名称..."
+              placeholder="Search product name..."
               value={productSearch}
               onChange={(e) => setProductSearch(e.target.value)}
               className="flex-1 outline-none bg-transparent text-sm"
@@ -315,13 +422,13 @@ export default function AffiliatePageClient({
                   rel="noopener noreferrer"
                   className="text-xs text-ui-fg-subtle hover:underline flex items-center gap-1"
                 >
-                  查看产品 <ExternalLink size={12} />
+                  View Product <ExternalLink size={12} />
                 </a>
               </div>
             </div>
             
             <div>
-              <label className="text-xs text-ui-fg-subtle block mb-1">你的推广链接：</label>
+              <label className="text-xs text-ui-fg-subtle block mb-1">Your Affiliate Link:</label>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
@@ -341,36 +448,244 @@ export default function AffiliatePageClient({
         )}
       </div>
 
-      {/* 最近佣金记录 */}
-      {statsData?.recent_commissions && statsData.recent_commissions.length > 0 && (
-        <div className="border border-ui-border-base rounded-lg p-6">
-          <h2 className="text-lg-semi mb-4">最近佣金记录</h2>
-          <div className="space-y-3">
-            {statsData.recent_commissions.map((commission) => (
-              <div
-                key={commission.id}
-                className="flex items-center justify-between py-2 border-b border-ui-border-base last:border-0"
-              >
-                <div>
-                  <p className="text-sm font-medium">订单 #{commission.order_id.slice(0, 8)}</p>
-                  <p className="text-xs text-ui-fg-subtle">
-                    {new Date(commission.created_at).toLocaleString("zh-CN")}
-                  </p>
+      {/* 最近佣金记录和提现记录 - 并排显示 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* 最近佣金记录 */}
+        {statsData?.recent_commissions && statsData.recent_commissions.length > 0 && (
+          <div className="border border-ui-border-base rounded-lg p-6">
+            <button
+              onClick={() => setIsCommissionsExpanded(!isCommissionsExpanded)}
+              className="w-full flex items-center justify-between mb-4 hover:opacity-70 transition-opacity"
+            >
+              <h2 className="text-lg-semi">Recent Commissions</h2>
+              <ChevronDown 
+                className={`transition-transform ${isCommissionsExpanded ? 'rotate-180' : ''}`}
+                size={20}
+              />
+            </button>
+            {isCommissionsExpanded && (
+              <>
+                {/* 指导文案 - 自动审核提示 */}
+                {autoApproveDays > 0 ? (
+                  <div className="mb-4 bg-blue-50 border border-blue-200 rounded-md p-3">
+                    <p className="text-sm text-blue-800">
+                      💡 <strong>Auto-approval:</strong> Commissions will be automatically approved after <strong>{autoApproveDays}</strong> days
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mb-4 bg-gray-50 border border-gray-200 rounded-md p-3">
+                    <p className="text-sm text-gray-600">
+                      💡 <strong>Review Note:</strong> Commissions require manual approval by an administrator
+                    </p>
+                  </div>
+                )}
+                <div className="space-y-3">
+                  {paginatedCommissions.map((commission) => {
+              // 优先使用 display_id，如果没有则使用完整的 order_id
+              const orderNumber = commission.order_display_id 
+                ? `#${commission.order_display_id}` 
+                : commission.order_id 
+                  ? `#${commission.order_id}` 
+                  : "Unknown Order"
+              const isVoid = commission.status === "VOID"
+              // 如果有 void_reason，说明有退款或调整，需要显示
+              const hasRefundInfo = !!commission.void_reason
+              
+              return (
+                <div
+                  key={commission.id}
+                  className={`flex items-start justify-between py-3 border-b border-ui-border-base last:border-0 ${
+                    isVoid ? "opacity-60" : ""
+                  }`}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-sm font-medium">Order {orderNumber}</p>
+                      {(isVoid || hasRefundInfo) && (
+                        <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded">
+                          {isVoid ? "Returned" : "Refunded"}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-ui-fg-subtle mb-1">
+                      {new Date(commission.created_at).toLocaleString("en-US")}
+                    </p>
+                    {isVoid && commission.void_reason && (
+                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                        <p className="font-medium mb-1">Void Reason:</p>
+                        <p>{commission.void_reason}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right ml-4">
+                    <p className={`text-sm font-semibold ${isVoid ? "line-through text-ui-fg-subtle" : ""}`}>
+                      {formatCurrency(commission.amount)}
+                    </p>
+                    <p className="text-xs text-ui-fg-subtle">
+                      {commission.status === "PENDING" && "Pending"}
+                      {commission.status === "APPROVED" && "Approved"}
+                      {commission.status === "PAID" && "Paid"}
+                      {commission.status === "VOID" && "Void"}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold">{formatCurrency(commission.amount)}</p>
-                  <p className="text-xs text-ui-fg-subtle">
-                    {commission.status === "PENDING" && "待审核"}
-                    {commission.status === "APPROVED" && "已审核"}
-                    {commission.status === "PAID" && "已支付"}
-                    {commission.status === "VOID" && "已作废"}
-                  </p>
+                  )
+                  })}
                 </div>
-              </div>
-            ))}
+                
+                {/* 分页控件 */}
+                {totalCommissionsPages > 1 && (
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-ui-border-base">
+                    <button
+                      onClick={() => setCommissionsPage(Math.max(1, commissionsPage - 1))}
+                      disabled={commissionsPage === 1}
+                      className="px-3 py-1 text-sm border border-ui-border-base rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ui-bg-subtle"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-ui-fg-subtle">
+                      Page {commissionsPage} / {totalCommissionsPages}
+                    </span>
+                    <button
+                      onClick={() => setCommissionsPage(Math.min(totalCommissionsPages, commissionsPage + 1))}
+                      disabled={commissionsPage === totalCommissionsPages}
+                      className="px-3 py-1 text-sm border border-ui-border-base rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ui-bg-subtle"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
+        )}
+
+        {/* 提现记录 */}
+        <div className="border border-ui-border-base rounded-lg p-6">
+          <button
+            onClick={() => setIsPaymentsExpanded(!isPaymentsExpanded)}
+            className="w-full flex items-center justify-between mb-4 hover:opacity-70 transition-opacity"
+          >
+            <h2 className="text-lg-semi">Payment History</h2>
+            <ChevronDown 
+              className={`transition-transform ${isPaymentsExpanded ? 'rotate-180' : ''}`}
+              size={20}
+            />
+          </button>
+          {isLoadingPaymentHistory ? (
+            <div className="text-center py-8">
+              <p className="text-sm text-ui-fg-subtle">Loading...</p>
+            </div>
+          ) : paymentHistory && paymentHistory.payment_records.length > 0 ? (
+            isPaymentsExpanded && (
+              <div className="space-y-4">
+                {/* 指导文案 */}
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+                  <p className="text-sm text-blue-800">
+                    💡 <strong>Payment Note:</strong> Please contact the administrator to request a withdrawal. The withdrawal amount is your pending balance (approved commissions).
+                  </p>
+                </div>
+                
+                {/* 统计摘要 */}
+                <div className="bg-ui-bg-subtle rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-ui-fg-subtle">Total Paid:</p>
+                    <p className="text-lg font-semibold text-green-600">
+                      {formatCurrency(paymentHistory.total_paid)}
+                    </p>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-ui-fg-subtle">Payment Count:</p>
+                    <p className="text-sm font-medium">
+                      {paymentHistory.payment_records.length} times
+                    </p>
+                  </div>
+                </div>
+
+                {/* 提现记录列表 */}
+                <div className="space-y-3">
+                  {paginatedPayments.map((record, index) => (
+                <div
+                  key={record.paid_at || index}
+                  className="border border-ui-border-base rounded-lg p-4 space-y-2 hover:bg-ui-bg-subtle transition-colors"
+                >
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-ui-fg-subtle">
+                      {new Date(record.paid_at).toLocaleString("en-US", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">
+                      Paid
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-ui-fg-subtle">
+                      {record.commission_count} commission{record.commission_count !== 1 ? 's' : ''}
+                    </p>
+                    <p className="text-lg font-semibold text-green-600">
+                      {formatCurrency(record.amount)}
+                    </p>
+                  </div>
+                  {record.order_display_ids && record.order_display_ids.length > 0 ? (
+                    <div className="text-xs text-ui-fg-subtle mt-1">
+                      Orders: {record.order_display_ids.slice(0, 3).map(id => `#${id}`).join(", ")}
+                      {record.order_display_ids.length > 3 && ` and ${record.order_display_ids.length} more`}
+                    </div>
+                  ) : record.order_ids && record.order_ids.length > 0 ? (
+                    <div className="text-xs text-ui-fg-subtle mt-1">
+                      Orders: {record.order_ids.slice(0, 3).map(id => `#${id.slice(0, 8)}`).join(", ")}
+                      {record.order_ids.length > 3 && ` and ${record.order_ids.length} more`}
+                    </div>
+                  ) : null}
+                  </div>
+                  ))}
+                </div>
+                
+                {/* 分页控件 */}
+                {totalPaymentsPages > 1 && (
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-ui-border-base">
+                    <button
+                      onClick={() => setPaymentsPage(Math.max(1, paymentsPage - 1))}
+                      disabled={paymentsPage === 1}
+                      className="px-3 py-1 text-sm border border-ui-border-base rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ui-bg-subtle"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-ui-fg-subtle">
+                      Page {paymentsPage} / {totalPaymentsPages}
+                    </span>
+                    <button
+                      onClick={() => setPaymentsPage(Math.min(totalPaymentsPages, paymentsPage + 1))}
+                      disabled={paymentsPage === totalPaymentsPages}
+                      className="px-3 py-1 text-sm border border-ui-border-base rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ui-bg-subtle"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
+          ) : isPaymentsExpanded ? (
+            <div className="space-y-4">
+              {/* 指导文案 */}
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                <p className="text-sm text-blue-800">
+                  💡 <strong>Payment Note:</strong> Please contact the administrator to request a withdrawal. The withdrawal amount is your pending balance (approved commissions).
+                </p>
+              </div>
+              
+              <div className="text-center py-8">
+                <p className="text-sm text-ui-fg-subtle">No payment records yet</p>
+              </div>
+            </div>
+          ) : null}
         </div>
-      )}
+      </div>
     </div>
   )
 }

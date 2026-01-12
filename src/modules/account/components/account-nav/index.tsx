@@ -40,17 +40,9 @@ const AccountNav = ({
       }
 
       // 检查是否是 Affiliate
+      // 使用 API route 代理请求，服务端可以访问 httpOnly cookie
       try {
-        const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-        }
-        if (publishableKey) {
-          headers["x-publishable-api-key"] = publishableKey
-        }
-        
-        const response = await fetch("/store/affiliate/me", {
-          headers,
+        const response = await fetch("/api/affiliate/me", {
           credentials: "include",
         })
         
@@ -60,6 +52,7 @@ const AccountNav = ({
         }
       } catch (error) {
         // 忽略错误，默认不显示 Affiliate 入口
+        console.error("[AccountNav] Error checking affiliate status:", error)
       }
     }
     fetchConfig()
