@@ -529,7 +529,13 @@ export async function initiatePaymentSession(
   }
 }
 
-export async function applyPromotions(codes: string[]): Promise<{ success: boolean; cart?: any }> {
+export async function applyPromotions(codes: string[]): Promise<{ 
+  success: boolean
+  cart?: any
+  appliedCodes?: string[]
+  requestedCodes?: string[]
+  errors?: any
+}> {
   const cartId = await getCartId()
 
   if (!cartId) {
@@ -547,7 +553,7 @@ export async function applyPromotions(codes: string[]): Promise<{ success: boole
   // 使用专门的 promotions 端点
   // SDK 会自动处理 JSON 序列化，不需要手动 JSON.stringify
   try {
-    const response = await sdk.client.fetch<{ cart: any }>(`/store/carts/${cartId}/promotions`, {
+    const response = await sdk.client.fetch<{ cart: any; errors?: any }>(`/store/carts/${cartId}/promotions`, {
       method: "POST",
       headers,
       body: {
@@ -561,7 +567,48 @@ export async function applyPromotions(codes: string[]): Promise<{ success: boole
     const fulfillmentCacheTag = await getCacheTag("fulfillment")
     revalidateTag(fulfillmentCacheTag)
 
-    return { success: true, cart: response?.cart }
+    // 检查响应中的 promotions，确认哪些折扣码被成功应用
+    const appliedPromotions = response?.cart?.promotions || []
+    const appliedCodes = appliedPromotions
+      .filter((p: any) => p.code)
+      .map((p: any) => p.code.toLowerCase())
+
+    // 为了更准确地验证，重新获取购物车以确认折扣码是否真的被应用
+    // 这对于检测"使用次数达上限"等情况很重要
+    let verifiedCart = response?.cart
+    try {
+      const verifiedCartResponse = await sdk.client.fetch<{ cart: any }>(
+        `/store/carts/${cartId}?fields=*promotions`,
+        {
+          method: "GET",
+          headers,
+        }
+      )
+      verifiedCart = verifiedCartResponse?.cart
+      
+      // 更新应用的折扣码列表
+      const verifiedPromotions = verifiedCart?.promotions || []
+      const verifiedAppliedCodes = verifiedPromotions
+        .filter((p: any) => p.code)
+        .map((p: any) => p.code.toLowerCase())
+      
+      return { 
+        success: true, 
+        cart: verifiedCart, 
+        appliedCodes: verifiedAppliedCodes,
+        requestedCodes: codes.map(c => c.toLowerCase()),
+        errors: response?.errors
+      }
+    } catch (verifyError) {
+      // 如果验证失败，使用原始响应
+      return { 
+        success: true, 
+        cart: response?.cart, 
+        appliedCodes,
+        requestedCodes: codes.map(c => c.toLowerCase()),
+        errors: response?.errors
+      }
+    }
   } catch (error: any) {
     // 如果是 promotion 相关的错误，返回失败而不是抛出
     if (error?.message?.includes("promotion") || error?.message?.includes("code")) {
