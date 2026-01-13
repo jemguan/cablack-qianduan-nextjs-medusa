@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Transition } from '@headlessui/react';
 import { useResponsiveRender } from '@lib/hooks/useResponsiveRender';
 import { useVariantSelection } from '@modules/products/contexts/variant-selection-context';
+import { useOptionTemplateSelection } from '@modules/products/contexts/option-template-selection-context';
 import { addToCart } from '@lib/data/cart';
 import { useParams } from 'next/navigation';
 import { isElementScrolledOut } from './utils';
@@ -28,6 +29,7 @@ export function StickyAddToCart({
   customer,
   loyaltyAccount,
   membershipProductIds,
+  optionTemplates = [],
 }: StickyAddToCartProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
@@ -35,6 +37,7 @@ export function StickyAddToCart({
   const [isAdding, setIsAdding] = useState(false);
   const { isDesktop, isHydrated } = useResponsiveRender();
   const { selectedVariant } = useVariantSelection();
+  const { selectedChoicesByTemplate } = useOptionTemplateSelection();
   const countryCode = useParams().countryCode as string;
 
   // 获取当前应该使用的 ref（移动端或桌面端）
@@ -79,9 +82,44 @@ export function StickyAddToCart({
     };
   }, [handleScroll]);
 
+  // 检查必选选项是否已选择
+  const { isValidOptionSelections, missingRequiredOptions } = useMemo(() => {
+    if (!optionTemplates || optionTemplates.length === 0) {
+      return { isValidOptionSelections: true, missingRequiredOptions: [] as string[] }
+    }
+
+    const missing: string[] = []
+
+    optionTemplates.forEach((template) => {
+      if (!template.is_active || !template.options) return
+
+      template.options.forEach((option) => {
+        if (option.is_required) {
+          const selectedChoices = selectedChoicesByTemplate[template.id] || []
+          // 检查该选项下是否有选择被选中
+          const hasSelection = (option.choices || []).some((choice) =>
+            selectedChoices.includes(choice.id)
+          )
+          if (!hasSelection) {
+            missing.push(`${template.name} - ${option.name}`)
+          }
+        }
+      })
+    })
+
+    return {
+      isValidOptionSelections: missing.length === 0,
+      missingRequiredOptions: missing,
+    }
+  }, [optionTemplates, selectedChoicesByTemplate])
+
   // 处理加入购物车
   const handleAddToCart = useCallback(async () => {
     if (!selectedVariant?.id) {
+      return;
+    }
+
+    if (!isValidOptionSelections) {
       return;
     }
 
@@ -99,7 +137,7 @@ export function StickyAddToCart({
     } finally {
       setIsAdding(false);
     }
-  }, [selectedVariant, quantity, countryCode]);
+  }, [selectedVariant, quantity, countryCode, isValidOptionSelections]);
 
   // hydration 之前返回 null，避免 SSR 渲染两个组件
   if (!isHydrated) {
@@ -133,6 +171,8 @@ export function StickyAddToCart({
             customer={customer}
             loyaltyAccount={loyaltyAccount}
             membershipProductIds={membershipProductIds}
+            isValidOptionSelections={isValidOptionSelections}
+            missingRequiredOptions={missingRequiredOptions}
           />
         ) : (
           <MobileStickyAddToCart
@@ -146,6 +186,8 @@ export function StickyAddToCart({
             customer={customer}
             loyaltyAccount={loyaltyAccount}
             membershipProductIds={membershipProductIds}
+            isValidOptionSelections={isValidOptionSelections}
+            missingRequiredOptions={missingRequiredOptions}
           />
         )}
       </div>

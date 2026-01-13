@@ -112,7 +112,7 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
         </div>
       </div>
 
-      {/* 粘性购物栏 */}
+      {/* 粘性购物栏 - 注意：StickyAddToCart 会从 ProductActions 内部读取选项选择状态 */}
       <StickyAddToCart
         product={product}
         region={region}
@@ -121,6 +121,7 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
         customer={customer}
         loyaltyAccount={loyaltyAccount}
         membershipProductIds={membershipProductIds}
+        optionTemplates={optionTemplates}
       />
     </ProductPageClientWrapper>
   )

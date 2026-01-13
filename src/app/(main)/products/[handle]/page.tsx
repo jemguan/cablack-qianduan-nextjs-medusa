@@ -5,7 +5,7 @@ import { listProducts } from "@lib/data/products"
 import { getCurrentRegion, getCountryCode } from "@lib/data/regions"
 import { getProductHtmlDescription } from "@lib/data/product-html-description"
 import { getPageTitle } from "@lib/data/page-title-config"
-import ProductTemplate from "@modules/products/templates"
+import ProductTemplateWrapper from "@modules/products/templates/product-template-wrapper"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 import { ReviewStatsProvider } from "@modules/products/components/reviews/ReviewStatsContext"
 import { HttpTypes } from "@medusajs/types"
@@ -13,6 +13,9 @@ import Schema from "@modules/common/components/seo/Schema"
 import { getBaseURL } from "@lib/util/env"
 import { getProductBrand } from "@lib/data/brands"
 import { getProductOptionTemplates } from "@lib/data/option-templates"
+import { retrieveCustomer } from "@lib/data/customer"
+import { getLoyaltyAccount, getLoyaltyConfig } from "@lib/data/loyalty"
+import { getMedusaConfig } from "@lib/admin-api/config"
 
 type Props = {
   params: Promise<{ handle: string }>
@@ -195,6 +198,16 @@ export default async function ProductPage(props: Props) {
   // Fetch brand information for SEO
   const brand = await getProductBrand(pricedProduct.id)
 
+  // 获取客户和积分信息
+  const customer = await retrieveCustomer()
+  const loyaltyAccountResponse = await getLoyaltyAccount()
+  const loyaltyConfigResponse = await getLoyaltyConfig()
+  const loyaltyAccount = loyaltyAccountResponse?.account || null
+  const membershipProductIds = loyaltyConfigResponse?.config?.membership_product_ids || null
+
+  // 获取 Medusa config
+  const medusaConfig = await getMedusaConfig()
+
   return (
     <ReviewStatsProvider>
       {/* Structural Data for SEO */}
@@ -215,7 +228,7 @@ export default async function ProductPage(props: Props) {
       </div>
 
       {/* Product content */}
-      <ProductTemplate
+      <ProductTemplateWrapper
         product={pricedProduct}
         region={region}
         countryCode={countryCode}
@@ -223,6 +236,10 @@ export default async function ProductPage(props: Props) {
         initialVariantId={selectedVariantId}
         htmlDescription={htmlDescription}
         optionTemplates={optionTemplates}
+        customer={customer}
+        loyaltyAccount={loyaltyAccount}
+        membershipProductIds={membershipProductIds}
+        medusaConfig={medusaConfig}
       />
     </ReviewStatsProvider>
   )

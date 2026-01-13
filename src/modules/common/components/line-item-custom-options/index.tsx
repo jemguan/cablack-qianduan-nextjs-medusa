@@ -1,10 +1,11 @@
 "use client"
 
-import { Text } from "@medusajs/ui"
-import { useEffect, useState } from "react"
+import { Text, Button } from "@medusajs/ui"
+import { useEffect, useState, useMemo } from "react"
 import { getOptionValuesByIds } from "@lib/data/option-values"
 import { getImageUrl } from "@lib/util/image"
 import Image from "next/image"
+import { ChevronDownMini, ChevronUpMini } from "@medusajs/icons"
 
 // Choice 类型 - 对应后端的 template_choice
 type Choice = {
@@ -25,6 +26,16 @@ type Choice = {
   }
 }
 
+// 新格式：内嵌的选择信息（从 metadata 直接传递）
+type EmbeddedChoice = {
+  id: string
+  title: string
+  price_adjustment: number | string
+  image_url?: string | null
+  option_name: string
+  template_title: string
+}
+
 type LineItemCustomOptionsProps = {
   item: {
     id: string
@@ -32,15 +43,31 @@ type LineItemCustomOptionsProps = {
   }
   currencyCode?: string
   className?: string
+  forceSingleColumn?: boolean
 }
 
 const LineItemCustomOptions = ({
   item,
   currencyCode = "USD",
   className = "",
+  forceSingleColumn = false,
 }: LineItemCustomOptionsProps) => {
   const [choices, setChoices] = useState<Choice[]>([])
   const [loading, setLoading] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  // 检测是否为移动端
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     const metadata = item.metadata as Record<string, any> | undefined
@@ -50,7 +77,42 @@ const LineItemCustomOptions = ({
       return
     }
 
-    // 提取选择 ID
+    // 检查是否是新的内嵌格式（包含完整信息）
+    const firstOption = customOptions[0]
+    const isEmbeddedFormat =
+      typeof firstOption === "object" &&
+      firstOption !== null &&
+      "price_adjustment" in firstOption &&
+      "option_name" in firstOption
+
+    if (isEmbeddedFormat) {
+      // 新格式：直接使用内嵌的选择信息
+      const embeddedChoices = customOptions as EmbeddedChoice[]
+
+      // 转换为 Choice 格式以保持组件兼容性
+      const transformedChoices: Choice[] = embeddedChoices.map((ec) => ({
+        id: ec.id,
+        title: ec.title,
+        subtitle: null,
+        hint_text: null,
+        price_adjustment: ec.price_adjustment,
+        image_url: ec.image_url || null,
+        sort_order: 0,
+        option: {
+          id: ec.id,
+          name: ec.option_name,
+          template: {
+            id: ec.id,
+            title: ec.template_title,
+          },
+        },
+      }))
+
+      setChoices(transformedChoices)
+      return
+    }
+
+    // 旧格式：只有选择 ID，需要通过 API 获取详情
     const choiceIds = customOptions
       .map((opt: any) => {
         if (typeof opt === "string") {
@@ -107,7 +169,7 @@ const LineItemCustomOptions = ({
 
   // 按模板和选项分组
   // 结构: Map<templateId, Map<optionId, Choice[]>>
-  const groupedChoices = new Map<string, { 
+  const groupedChoices = new Map<string, {
     templateTitle: string
     options: Map<string, { optionName: string; choices: Choice[] }>
   }>()
@@ -136,72 +198,108 @@ const LineItemCustomOptions = ({
     templateGroup.options.get(optionId)!.choices.push(choice)
   })
 
+  // 转换为数组以便处理
+  const groupedChoicesArray = Array.from(groupedChoices.entries())
+
+  // 手机端限制显示3个模板（无论是否 forceSingleColumn）
+  const visibleTemplates = isMobile && !isExpanded
+    ? groupedChoicesArray.slice(0, 3)
+    : groupedChoicesArray
+
+  // 移动端超过3个模板时显示展开按钮
+  const hasMoreTemplates = isMobile && groupedChoicesArray.length > 3
+
+  // 确定网格列数
+  const gridCols = forceSingleColumn ? 'grid-cols-1' : (isMobile ? 'grid-cols-1' : 'grid-cols-2')
+
   return (
     <div className={`flex flex-col gap-2 mt-2 ${className}`}>
-      {Array.from(groupedChoices.entries()).map(([templateId, templateData]) => (
-        <div key={templateId} className="flex flex-col gap-1.5">
-          <Text className="text-xs font-medium text-muted-foreground">
-            {templateData.templateTitle}:
-          </Text>
-          <div className="flex flex-col gap-1 pl-2">
-            {Array.from(templateData.options.entries()).map(([optionId, optionData]) => (
-              <div key={optionId} className="flex flex-col gap-0.5">
-                {/* 选项名称（如果有多个选项） */}
-                {templateData.options.size > 1 && optionData.optionName && (
-                  <Text className="text-xs text-muted-foreground italic">
-                    {optionData.optionName}:
-                  </Text>
-                )}
-                
-                {/* 选择列表 */}
-                {optionData.choices.map((choice) => {
-                  const priceText = formatPrice(choice.price_adjustment)
-                  return (
-                    <div
-                      key={choice.id}
-                      className="flex items-center gap-2 text-xs pl-1"
-                    >
-                      {/* 选择图片 */}
-                      {choice.image_url && (() => {
-                        const imageUrl = getImageUrl(choice.image_url)
-                        if (!imageUrl) return null
-                        return (
-                          <div className="relative w-6 h-6 flex-shrink-0 rounded overflow-hidden bg-ui-bg-base border border-border">
-                            <Image
-                              src={imageUrl}
-                              alt={choice.title}
-                              fill
-                              className="object-cover"
-                              sizes="24px"
-                            />
-                          </div>
-                        )
-                      })()}
+      {/* 一行显示2个模板（桌面端）或1个模板（移动端/强制单列） */}
+      <div className={`grid gap-2 ${gridCols}`}>
+        {visibleTemplates.map(([templateId, templateData]) => (
+          <div key={templateId} className="flex flex-col gap-1.5 p-2 rounded border border-border/50 bg-muted/30">
+            <Text className="text-xs font-medium text-muted-foreground">
+              {templateData.templateTitle}:
+            </Text>
 
-                      {/* 选择标题和价格 */}
-                      <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                        <Text className="text-xs text-foreground truncate">
-                          {choice.title}
-                          {choice.subtitle && (
-                            <span className="text-muted-foreground ml-1">
-                              ({choice.subtitle})
-                            </span>
-                          )}
-                        </Text>
-                        {priceText && (
-                          <Text className="text-xs text-muted-foreground flex-shrink-0">
-                            {priceText}
+            {/* 每个模板里的选择一行1个 */}
+            <div className="flex flex-col gap-1">
+              {Array.from(templateData.options.entries()).map(([optionId, optionData]) => (
+                <div key={optionId} className="flex flex-col gap-0.5">
+                  {/* 选项名称（如果有多个选项） */}
+                  {templateData.options.size > 1 && optionData.optionName && (
+                    <Text className="text-xs text-muted-foreground italic">
+                      {optionData.optionName}:
+                    </Text>
+                  )}
+
+                  {/* 选择列表 - 一行1个 */}
+                  {optionData.choices.map((choice) => {
+                    const priceText = formatPrice(choice.price_adjustment)
+                    return (
+                      <div
+                        key={choice.id}
+                        className="flex items-center gap-2 text-xs p-1.5 rounded bg-muted/50 border border-border/30"
+                      >
+                        {/* 选择图片 */}
+                        {choice.image_url && (() => {
+                          const imageUrl = getImageUrl(choice.image_url)
+                          if (!imageUrl) return null
+                          return (
+                            <div className="relative w-8 h-8 flex-shrink-0 rounded-full overflow-hidden bg-ui-bg-base border border-border">
+                              <Image
+                                src={imageUrl}
+                                alt={choice.title}
+                                fill
+                                className="object-cover"
+                                sizes="32px"
+                              />
+                            </div>
+                          )
+                        })()}
+
+                        {/* 选择标题和价格 */}
+                        <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                          <Text className="text-xs text-foreground truncate leading-tight">
+                            {choice.title}
                           </Text>
-                        )}
+                          {priceText && (
+                            <Text className="text-xs text-muted-foreground flex-shrink-0 font-medium">
+                              {priceText}
+                            </Text>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )
-                })}
-              </div>
-            ))}
+                    )
+                  })}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
+
+      {/* 展开/收起按钮（仅移动端且超过3个模板时显示） */}
+      {hasMoreTemplates && (
+        <Button
+          variant="transparent"
+          size="small"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full text-xs flex items-center justify-center gap-1"
+        >
+          {isExpanded ? (
+            <>
+              <ChevronUpMini className="w-3 h-3" />
+              <span>收起</span>
+            </>
+          ) : (
+            <>
+              <ChevronDownMini className="w-3 h-3" />
+              <span>显示更多 ({groupedChoicesArray.length - 3})</span>
+            </>
+          )}
+        </Button>
+      )}
     </div>
   )
 }

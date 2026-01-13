@@ -3,7 +3,7 @@
 import { addToCart } from "@lib/data/cart"
 import { useIntersection } from "@lib/hooks/use-in-view"
 import { HttpTypes } from "@medusajs/types"
-import { Button } from "@medusajs/ui"
+import { Button, Text } from "@medusajs/ui"
 import Divider from "@modules/common/components/divider"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
 import OptionTemplateSelect from "@modules/products/components/product-actions/option-template-select"
@@ -13,6 +13,7 @@ import { isEqual } from "lodash"
 import ProductPrice from "../product-price"
 // import MobileActions from "./mobile-actions" // 已禁用，使用 StickyAddToCart 替代
 import { useVariantSelection } from "@modules/products/contexts/variant-selection-context"
+import { useOptionTemplateSelection } from "@modules/products/contexts/option-template-selection-context"
 import { ProductQuantitySelector } from "../quantity-selector"
 import WishlistButton from "@modules/wishlist/components/wishlist-button"
 import ProductPointsInfo from "../product-points-info"
@@ -55,12 +56,9 @@ export default function ProductActions({
   optionTemplates = [],
 }: ProductActionsProps) {
   const { options, selectedVariant, setOptionValue, setOptions } = useVariantSelection()
+  const { selectedChoicesByTemplate, updateTemplateSelection } = useOptionTemplateSelection()
   const [isAdding, setIsAdding] = useState(false)
   const [quantity, setQuantity] = useState(1)
-  // 选项模板选择状态：{ templateId: choiceId[] }
-  const [selectedChoicesByTemplate, setSelectedChoicesByTemplate] = useState<
-    Record<string, string[]>
-  >({})
   const countryCode = useParams().countryCode as string
   const router = useRouter()
 
@@ -138,18 +136,66 @@ export default function ProductActions({
 
     const defaultSelections: Record<string, string[]> = {}
 
+    // 收集所有对比选项组
+    const comparisonGroups = new Map<string, string[]>() // templateId -> [optionId1, optionId2]
+
+    optionTemplates.forEach((template) => {
+      if (!template.is_active || !template.options) return
+
+      template.options.forEach((option) => {
+        if (option.is_comparison && option.comparison_option_id) {
+          const groupKey = [option.id, option.comparison_option_id].sort().join("-")
+          if (!comparisonGroups.has(groupKey)) {
+            comparisonGroups.set(groupKey, [])
+          }
+          const group = comparisonGroups.get(groupKey)!
+          if (!group.includes(option.id)) {
+            group.push(option.id)
+          }
+          // 也添加被引用的选项
+          if (!group.includes(option.comparison_option_id)) {
+            group.push(option.comparison_option_id)
+          }
+        }
+      })
+    })
+
     optionTemplates.forEach((template) => {
       if (!template.is_active || !template.options) return
 
       const templateChoices: string[] = []
 
-      template.options.forEach((option) => {
+      // 按 sort_order 排序选项
+      const sortedOptions = [...template.options].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+
+      sortedOptions.forEach((option) => {
         if (!option.choices || option.choices.length === 0) return
 
-        // 查找默认选择
-        const defaultChoice = option.choices.find((choice) => choice.is_default)
-        if (defaultChoice) {
-          templateChoices.push(defaultChoice.id)
+        // 检查该选项是否属于对比选项组
+        const isInComparisonGroup = Array.from(comparisonGroups.values()).some((group) =>
+          group.includes(option.id)
+        )
+
+        // 如果是对比选项组中的选项，只选择第一个有默认值的选项
+        if (isInComparisonGroup) {
+          // 检查当前选项是否已经有选择（只检查当前选项的选择）
+          const currentOptionHasSelection = templateChoices.some((choiceId) => {
+            return option.choices?.some((c) => c.id === choiceId)
+          })
+
+          // 如果当前选项还没有选择，且有默认值，则添加
+          if (!currentOptionHasSelection) {
+            const defaultChoice = option.choices.find((choice) => choice.is_default)
+            if (defaultChoice) {
+              templateChoices.push(defaultChoice.id)
+            }
+          }
+        } else {
+          // 非对比选项，正常处理默认选择
+          const defaultChoice = option.choices.find((choice) => choice.is_default)
+          if (defaultChoice) {
+            templateChoices.push(defaultChoice.id)
+          }
         }
       })
 
@@ -160,29 +206,169 @@ export default function ProductActions({
 
     // 只在有默认选择且当前没有选择时设置
     if (Object.keys(defaultSelections).length > 0) {
-      setSelectedChoicesByTemplate((prev) => {
-        // 如果已经有选择了，不覆盖
-        const hasExistingSelections = Object.values(prev).some(
-          (choices) => choices.length > 0
-        )
-        if (hasExistingSelections) return prev
-        return defaultSelections
-      })
+      // 检查是否已经有选择
+      const hasExistingSelections = Object.values(selectedChoicesByTemplate).some(
+        (choices) => choices.length > 0
+      )
+      if (!hasExistingSelections) {
+        // 逐个设置默认选择
+        Object.entries(defaultSelections).forEach(([templateId, choices]) => {
+          updateTemplateSelection(templateId, choices)
+        })
+      }
     }
-  }, [optionTemplates])
+  }, [optionTemplates, selectedChoicesByTemplate, updateTemplateSelection])
 
   // 处理选项模板选择变化
   const handleTemplateSelectionChange = (templateId: string, choiceIds: string[]) => {
-    setSelectedChoicesByTemplate((prev) => ({
-      ...prev,
-      [templateId]: choiceIds,
-    }))
+    updateTemplateSelection(templateId, choiceIds)
   }
 
-  // 收集所有选中的选择 ID（扁平化）
-  const getAllSelectedChoiceIds = useMemo(() => {
-    return Object.values(selectedChoicesByTemplate).flat()
-  }, [selectedChoicesByTemplate])
+  // 收集所有选中的选择信息（包含完整详情，用于添加到购物车）
+  const getAllSelectedChoicesWithDetails = useMemo(() => {
+    const allChoices: Array<{
+      id: string
+      title: string
+      price_adjustment: number | string
+      image_url?: string | null
+      option_name: string
+      template_title: string
+    }> = []
+
+    if (!optionTemplates || optionTemplates.length === 0) {
+      return allChoices
+    }
+
+    console.log("[添加到购物车] selectedChoicesByTemplate:", JSON.stringify(selectedChoicesByTemplate))
+
+    optionTemplates.forEach((template) => {
+      if (!template.is_active || !template.options) return
+
+      const selectedChoiceIds = selectedChoicesByTemplate[template.id] || []
+      console.log(`[添加到购物车] 模板 ${template.title}: selectedChoiceIds=${JSON.stringify(selectedChoiceIds)}`)
+
+      template.options.forEach((option) => {
+        if (!option.choices || option.choices.length === 0) return
+
+        option.choices.forEach((choice) => {
+          const isSelected = selectedChoiceIds.includes(choice.id)
+          console.log(`[添加到购物车]   选项 ${option.name} -> 选择 ${choice.title} (${choice.id}): isSelected=${isSelected}`)
+
+          if (isSelected) {
+            allChoices.push({
+              id: choice.id,
+              title: choice.title,
+              price_adjustment: choice.price_adjustment,
+              image_url: choice.image_url || undefined,
+              option_name: option.name,
+              template_title: template.title,
+            })
+          }
+        })
+      })
+    })
+
+    console.log(`[添加到购物车] 最终 allChoices:`, allChoices.map(c => ({id: c.id, title: c.title, option: c.option_name})))
+    return allChoices
+  }, [optionTemplates, selectedChoicesByTemplate])
+
+  // 检查必选选项是否已选择
+  const { isValidOptionSelections, missingRequiredOptions } = useMemo(() => {
+    if (!optionTemplates || optionTemplates.length === 0) {
+      return { isValidOptionSelections: true, missingRequiredOptions: [] }
+    }
+
+    const missing: string[] = []
+
+    // 收集所有对比选项组（只处理一次）
+    const comparisonGroups = new Map<string, {
+      templateId: string
+      templateName: string
+      optionIds: string[]
+      optionNames: string[]
+    }>()
+
+    optionTemplates.forEach((template) => {
+      if (!template.is_active || !template.options) return
+
+      template.options.forEach((option) => {
+        // 处理对比选项组：收集所有相关的选项（包括 is_comparison: false 的选项）
+        if (option.is_comparison && option.comparison_option_id) {
+          const groupKey = [option.id, option.comparison_option_id].sort().join("-")
+          if (!comparisonGroups.has(groupKey)) {
+            comparisonGroups.set(groupKey, {
+              templateId: template.id,
+              templateName: template.title,
+              optionIds: [],
+              optionNames: [],
+            })
+          }
+          const group = comparisonGroups.get(groupKey)!
+
+          // 添加当前选项（is_comparison: true）
+          if (!group.optionIds.includes(option.id)) {
+            group.optionIds.push(option.id)
+            group.optionNames.push(option.name)
+          }
+
+          // 查找并添加对比的选项（is_comparison 可能是 false）
+          const comparedOption = template.options?.find((o) => o.id === option.comparison_option_id)
+          if (comparedOption && !group.optionIds.includes(comparedOption.id)) {
+            group.optionIds.push(comparedOption.id)
+            group.optionNames.push(comparedOption.name)
+          }
+        }
+      })
+    })
+
+    // 验证普通必选选项（排除对比选项组中的所有选项）
+    optionTemplates.forEach((template) => {
+      if (!template.is_active || !template.options) return
+
+      const selectedChoices = selectedChoicesByTemplate[template.id] || []
+
+      template.options.forEach((option) => {
+        // 检查该选项是否属于对比选项组
+        const isInComparisonGroup = Array.from(comparisonGroups.values()).some((group) =>
+          group.optionIds.includes(option.id)
+        )
+
+        if (option.is_required && !isInComparisonGroup) {
+          const hasSelection = (option.choices || []).some((choice) =>
+            selectedChoices.includes(choice.id)
+          )
+          if (!hasSelection) {
+            missing.push(`${template.title} - ${option.name}`)
+          }
+        }
+      })
+    })
+
+    // 验证对比选项组（组内任选一个即可）
+    comparisonGroups.forEach((group) => {
+      const selectedChoices = selectedChoicesByTemplate[group.templateId] || []
+
+      // 检查组内是否有任何选项被选中
+      const groupHasSelection = group.optionIds.some((optionId) => {
+        const option = optionTemplates
+          .find((t) => t.id === group.templateId)
+          ?.options?.find((o) => o.id === optionId)
+        return (option?.choices || []).some((choice) =>
+          selectedChoices.includes(choice.id)
+        )
+      })
+
+      if (!groupHasSelection) {
+        const optionNames = group.optionNames.join(" / ")
+        missing.push(`${group.templateName} - ${optionNames} (任选其一)`)
+      }
+    })
+
+    return {
+      isValidOptionSelections: missing.length === 0,
+      missingRequiredOptions: missing,
+    }
+  }, [optionTemplates, selectedChoicesByTemplate])
 
   // add the selected variant to the cart
   const handleAddToCart = async () => {
@@ -193,10 +379,18 @@ export default function ProductActions({
     setIsAdding(true)
 
     try {
-      // 构建 metadata，包含选中的选择 ID
+      // 构建 metadata，包含选中的选择完整信息（用于正确计算价格）
       const metadata: Record<string, any> = {}
-      if (getAllSelectedChoiceIds.length > 0) {
-        metadata.custom_options = getAllSelectedChoiceIds
+      if (getAllSelectedChoicesWithDetails.length > 0) {
+        // 传递完整的选项信息，包括价格调整
+        metadata.custom_options = getAllSelectedChoicesWithDetails.map((choice) => ({
+          id: choice.id,
+          title: choice.title,
+          price_adjustment: choice.price_adjustment,
+          image_url: choice.image_url || null,
+          option_name: choice.option_name,
+          template_title: choice.template_title,
+        }))
       }
 
       await addToCart({
@@ -289,6 +483,18 @@ export default function ProductActions({
           disabled={!!disabled || isAdding || !selectedVariant || !isValidVariant}
         />
 
+        {/* 必选选项错误提示 */}
+        {!isValidOptionSelections && missingRequiredOptions.length > 0 && (
+          <div className="p-3 rounded-lg bg-ui-bg-subtle border border-ui-border-base">
+            <Text className="text-ui-fg-error text-sm font-medium">请选择以下选项：</Text>
+            <ul className="mt-1 text-sm text-ui-fg-subtle list-disc list-inside">
+              {missingRequiredOptions.map((option, index) => (
+                <li key={index}>{option}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* 加入购物车和心愿单按钮 */}
         <div className="flex gap-2">
           {/* 会员产品特殊按钮处理 */}
@@ -325,16 +531,17 @@ export default function ProductActions({
                   !selectedVariant ||
                   !!disabled ||
                   isAdding ||
-                  !isValidVariant
+                  !isValidVariant ||
+                  !isValidOptionSelections
                 }
                 variant="primary"
                 className={`flex-1 h-10 text-white border-none !border-2 !shadow-none ${
-                  !inStock || !isValidVariant || !selectedVariant
+                  !inStock || !isValidVariant || !selectedVariant || !isValidOptionSelections
                     ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
                     : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
                 }`}
                 style={
-                  !inStock || !isValidVariant || !selectedVariant
+                  !inStock || !isValidVariant || !selectedVariant || !isValidOptionSelections
                     ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
                     : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
                 }
@@ -345,6 +552,8 @@ export default function ProductActions({
                   ? "Select variant"
                   : !inStock || !isValidVariant
                   ? "Out of Stock"
+                  : !isValidOptionSelections
+                  ? "Select Options"
                   : "Add to Cart"}
               </Button>
             )
@@ -357,16 +566,17 @@ export default function ProductActions({
                 !selectedVariant ||
                 !!disabled ||
                 isAdding ||
-                !isValidVariant
+                !isValidVariant ||
+                !isValidOptionSelections
               }
               variant="primary"
               className={`flex-1 h-10 text-white border-none !border-2 !shadow-none ${
-                !inStock || !isValidVariant || !selectedVariant
+                !inStock || !isValidVariant || !selectedVariant || !isValidOptionSelections
                   ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
                   : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
               }`}
               style={
-                !inStock || !isValidVariant || !selectedVariant
+                !inStock || !isValidVariant || !selectedVariant || !isValidOptionSelections
                   ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
                   : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
               }
@@ -377,6 +587,8 @@ export default function ProductActions({
                 ? "Select variant"
                 : !inStock || !isValidVariant
                 ? "Out of Stock"
+                : !isValidOptionSelections
+                ? "Select Options"
                 : "Add to Cart"}
             </Button>
           )}

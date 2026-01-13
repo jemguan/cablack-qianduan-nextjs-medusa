@@ -1,9 +1,13 @@
 "use client"
 
 import { clx } from "@medusajs/ui"
-import React, { useMemo, useState } from "react"
+import React, { useMemo, useState, useEffect } from "react"
 import Image from "next/image"
 import { getImageUrl } from "@lib/util/image"
+import { Tooltip, TooltipProvider } from "@medusajs/ui"
+import useEmblaCarousel from "embla-carousel-react"
+import ChevronLeft from "@modules/common/icons/chevron-left"
+import ChevronRight from "@modules/common/icons/chevron-right"
 import type { Choice, Option, OptionTemplate } from "@lib/data/option-templates"
 
 type OptionTemplateSelectProps = {
@@ -21,6 +25,19 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
 }) => {
   // 追踪对比选项的当前选择（用于 is_comparison 功能）
   const [comparisonSelections, setComparisonSelections] = useState<Record<string, string>>({})
+  
+  // 检测是否为移动端（小于640px）
+  const [isMobile, setIsMobile] = useState(false)
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // 获取排序后的选项
   const sortedOptions = useMemo(() => {
@@ -53,6 +70,12 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
       }
     })
     
+    // 确保所有组内的选项按 sort_order 排序
+    groups.forEach((options, groupKey) => {
+      const sortedGroupOptions = [...options].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+      groups.set(groupKey, sortedGroupOptions)
+    })
+    
     return groups
   }, [sortedOptions])
 
@@ -74,10 +97,42 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
     let newSelectedIds = [...selectedChoiceIds]
 
     if (option.selection_type === "single") {
-      // 单选：先移除该选项下的所有已选择，再添加新选择
+      // 单选逻辑
       const optionChoiceIds = (option.choices || []).map((c) => c.id)
+
+      // 先移除该选项下的所有已选择
       newSelectedIds = newSelectedIds.filter((id) => !optionChoiceIds.includes(id))
-      
+
+      // 如果是对比选项，需要同时移除同组其他选项的已选择
+      if (option.is_comparison && option.comparison_option_id) {
+        const groupKey = [option.id, option.comparison_option_id].sort().join("-")
+        const groupOptions = comparisonGroups.get(groupKey) || []
+
+        // 移除同组所有选项的已选择
+        groupOptions.forEach((groupOption) => {
+          if (groupOption.id !== option.id) {
+            const groupOptionChoiceIds = (groupOption.choices || []).map((c) => c.id)
+            newSelectedIds = newSelectedIds.filter((id) => !groupOptionChoiceIds.includes(id))
+          }
+        })
+      }
+
+      // 另外：如果当前选项是被其他对比选项引用的选项，也需要清除引用它的选项的选择
+      // 这样当用户直接在"不可动眼"中选择时，也能清除"可动眼"的选择
+      template.options.forEach((otherOption) => {
+        if (otherOption.id !== option.id && otherOption.is_comparison && otherOption.comparison_option_id === option.id) {
+          const groupKey = [otherOption.id, option.id].sort().join("-")
+          const groupOptions = comparisonGroups.get(groupKey) || []
+
+          groupOptions.forEach((groupOption) => {
+            if (groupOption.id !== option.id) {
+              const groupOptionChoiceIds = (groupOption.choices || []).map((c) => c.id)
+              newSelectedIds = newSelectedIds.filter((id) => !groupOptionChoiceIds.includes(id))
+            }
+          })
+        }
+      })
+
       if (!isSelected) {
         newSelectedIds.push(choiceId)
       }
@@ -94,11 +149,41 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
   }
 
   // 处理对比选项的切换
-  const handleComparisonSwitch = (groupKey: string, selectedOptionId: string) => {
+  const handleComparisonSwitch = (groupKey: string, selectedOptionId: string, groupOptions: Option[]) => {
+    const oldSelectedOptionId = comparisonSelections[groupKey] || groupOptions[0]?.id
+    const newSelectedOption = groupOptions.find((o) => o.id === selectedOptionId)
+
+    // 清除旧选项的选择
+    let newSelectedIds = [...selectedChoiceIds]
+    if (oldSelectedOptionId) {
+      const oldOption = groupOptions.find((o) => o.id === oldSelectedOptionId)
+      if (oldOption) {
+        const oldOptionChoiceIds = (oldOption.choices || []).map((c) => c.id)
+        newSelectedIds = newSelectedIds.filter((id) => !oldOptionChoiceIds.includes(id))
+      }
+    }
+
+    // 检查新选项中是否已经有选中的选择
+    const newOptionSelectedChoiceIds = (newSelectedOption?.choices || [])
+      .filter((c) => selectedChoiceIds.includes(c.id))
+      .map((c) => c.id)
+
+    // 如果新选项中没有已选中的选择，自动选择第一个有 is_default 的选择
+    if (newOptionSelectedChoiceIds.length === 0) {
+      const defaultChoice = newSelectedOption?.choices?.find((c) => c.is_default)
+      if (defaultChoice) {
+        newSelectedIds.push(defaultChoice.id)
+      }
+    }
+
+    // 更新本地状态
     setComparisonSelections((prev) => ({
       ...prev,
       [groupKey]: selectedOptionId,
     }))
+
+    // 通知父组件
+    onSelectionChange(template.id, newSelectedIds)
   }
 
   // 格式化价格增量显示（分转元）
@@ -116,125 +201,71 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
   const renderChoice = (choice: Choice, option: Option) => {
     const isSelected = selectedChoiceIds.includes(choice.id)
     const priceText = formatPriceAdjustment(choice.price_adjustment)
-    const isSingleSelect = option.selection_type === "single"
+
+    // 构建 tooltip 内容
+    const tooltipContent = (
+      <div className="flex flex-col gap-1">
+        <span className="font-medium">{choice.title}</span>
+        {choice.hint_text && (
+          <span className="text-xs text-ui-fg-muted">{choice.hint_text}</span>
+        )}
+      </div>
+    )
 
     return (
-      <button
-        key={choice.id}
-        onClick={() => handleChoiceSelect(option, choice.id)}
-        disabled={disabled}
-        className={clx(
-          "flex items-start gap-3 p-3 rounded-lg border-2 transition-all duration-150 text-left w-full",
-          {
-            "border-ui-border-interactive bg-ui-bg-interactive": isSelected,
-            "border-ui-border-base bg-ui-bg-subtle hover:border-ui-border-interactive/50 hover:shadow-elevation-card-rest":
-              !isSelected && !disabled,
-            "opacity-50 cursor-not-allowed": disabled,
-          }
-        )}
-        data-testid={`choice-${choice.id}`}
-      >
-        {/* 选择指示器 */}
-        <div className="flex-shrink-0 mt-0.5">
-          {isSingleSelect ? (
-            // 单选 - 圆形
-            <div
-              className={clx(
-                "w-4 h-4 rounded-full border-2 flex items-center justify-center",
-                {
-                  "border-ui-fg-interactive": isSelected,
-                  "border-ui-border-strong": !isSelected,
-                }
-              )}
-            >
-              {isSelected && (
-                <div className="w-2 h-2 rounded-full bg-ui-fg-interactive" />
-              )}
-            </div>
-          ) : (
-            // 多选 - 方形
-            <div
-              className={clx(
-                "w-4 h-4 rounded border-2 flex items-center justify-center",
-                {
-                  "border-ui-fg-interactive bg-ui-fg-interactive": isSelected,
-                  "border-ui-border-strong": !isSelected,
-                }
-              )}
-            >
-              {isSelected && (
-                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
-                  <path
-                    d="M2 6L5 9L10 3"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              )}
-            </div>
+      <Tooltip key={choice.id} content={tooltipContent} sideOffset={8}>
+        <button
+          onClick={() => handleChoiceSelect(option, choice.id)}
+          disabled={disabled}
+          className={clx(
+            "flex flex-col items-center gap-1 transition-all duration-150 text-center flex-shrink-0",
+            {
+              "w-[calc(16.66%-6px)]": !isMobile,   // 桌面端：6个/行
+              "w-[calc(33.333%-6px)]": isMobile, // 移动端：3个/行
+              "opacity-50 cursor-not-allowed": disabled,
+            }
           )}
-        </div>
-
-        {/* 选择图片 */}
-        {choice.image_url && (() => {
-          const imageUrl = getImageUrl(choice.image_url)
-          if (!imageUrl) return null
-          return (
-            <div className="relative w-14 h-14 flex-shrink-0 rounded overflow-hidden bg-ui-bg-base">
-              <Image
-                src={imageUrl}
-                alt={choice.title}
-                fill
-                className="object-cover"
-                sizes="56px"
-              />
-            </div>
-          )
-        })()}
-
-        {/* 选择内容 */}
-        <div className="flex-1 flex flex-col gap-y-0.5 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className={clx("text-sm font-medium", {
-                    "text-ui-fg-base": isSelected,
-                    "text-ui-fg-subtle": !isSelected,
-                  })}
-                >
-                  {choice.title}
-                </span>
-                {choice.is_default && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-ui-tag-green-bg text-ui-tag-green-text font-medium">
-                    默认
-                  </span>
+          data-testid={`choice-${choice.id}`}
+        >
+          {/* 选择图片 */}
+          {choice.image_url && (() => {
+            const imageUrl = getImageUrl(choice.image_url)
+            if (!imageUrl) return null
+            return (
+              <div
+                className={clx(
+                  "relative w-full aspect-square mx-auto overflow-hidden bg-ui-bg-base",
+                  {
+                    "rounded-full border-2": true,
+                    "border-ui-border-interactive": isSelected,
+                    "border border-transparent": !isSelected,
+                  }
                 )}
-              </div>
-              {choice.subtitle && (
-                <span className="text-xs text-ui-fg-muted">{choice.subtitle}</span>
-              )}
-            </div>
-            {priceText && (
-              <span
-                className={clx("text-sm font-medium flex-shrink-0", {
-                  "text-ui-fg-interactive": isSelected,
-                  "text-ui-fg-muted": !isSelected,
-                })}
               >
-                {priceText}
-              </span>
-            )}
-          </div>
+                <Image
+                  src={imageUrl}
+                  alt={choice.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 639px) 33vw, 16vw"
+                />
+              </div>
+            )
+          })()}
 
-          {/* 提示文字 */}
-          {choice.hint_text && (
-            <span className="text-xs text-ui-fg-muted">{choice.hint_text}</span>
+          {/* 价格 */}
+          {priceText && (
+            <span
+              className={clx("text-xs font-medium truncate w-full", {
+                "text-ui-fg-interactive": isSelected,
+                "text-ui-fg-muted": !isSelected,
+              })}
+            >
+              {priceText}
+            </span>
           )}
-        </div>
-      </button>
+        </button>
+      </Tooltip>
     )
   }
 
@@ -248,10 +279,32 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
       return null
     }
 
+    // 获取当前选项中被选中的选择
+    const selectedChoices = sortedChoices.filter((choice) =>
+      selectedChoiceIds.includes(choice.id)
+    )
+
+    // 轮播配置 - 移动端和桌面端都不循环
+    const [emblaRef, emblaApi] = useEmblaCarousel({
+      loop: false,
+      align: "start",
+      slidesToScroll: "auto",
+      dragFree: true,
+      containScroll: "trimSnaps",
+    })
+
+    const scrollPrev = () => {
+      if (emblaApi) emblaApi.scrollPrev()
+    }
+
+    const scrollNext = () => {
+      if (emblaApi) emblaApi.scrollNext()
+    }
+
     return (
       <div key={option.id} className="flex flex-col gap-y-3">
         {/* 选项标题 */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium text-ui-fg-base">{option.name}</span>
           {option.is_required && (
             <span className="text-xs text-ui-fg-error">*</span>
@@ -259,17 +312,50 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
           {option.selection_type === "multiple" && (
             <span className="text-xs text-ui-fg-muted">(可多选)</span>
           )}
+          {/* 显示选中的选择标题 */}
+          {selectedChoices.length > 0 && (
+            <span className="text-sm text-ui-fg-interactive">
+              {option.selection_type === "multiple"
+                ? `(${selectedChoices.length}个已选)`
+                : `: ${selectedChoices[0]?.title}`}
+            </span>
+          )}
+        </div>
+
+        {/* 选择列表轮播 */}
+        <div className="relative">
+          {/* 轮播容器 */}
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex gap-x-2">
+              {sortedChoices.map((choice) => renderChoice(choice, option))}
+            </div>
+          </div>
+
+          {/* 导航按钮 - 只在桌面端显示（移动端不显示箭头） */}
+          {!isMobile && sortedChoices.length > 5 && (
+            <>
+              <button
+                onClick={scrollPrev}
+                className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-ui-bg-base border border-ui-border-base shadow-md hover:bg-ui-bg-subtle z-10 -translate-x-1/2"
+                aria-label="Previous"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={scrollNext}
+                className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-ui-bg-base border border-ui-border-base shadow-md hover:bg-ui-bg-subtle z-10 translate-x-1/2"
+                aria-label="Next"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </>
+          )}
         </div>
 
         {/* 选项提示 */}
         {option.hint_text && (
-          <span className="text-xs text-ui-fg-muted -mt-1">{option.hint_text}</span>
+          <span className="text-xs text-ui-fg-muted">{option.hint_text}</span>
         )}
-
-        {/* 选择列表 */}
-        <div className="flex flex-col gap-y-2">
-          {sortedChoices.map((choice) => renderChoice(choice, option))}
-        </div>
       </div>
     )
   }
@@ -288,7 +374,7 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
           {options.map((option) => (
             <button
               key={option.id}
-              onClick={() => handleComparisonSwitch(groupKey, option.id)}
+              onClick={() => handleComparisonSwitch(groupKey, option.id, options)}
               className={clx(
                 "flex-1 px-3 py-1.5 rounded text-sm font-medium transition-all",
                 {
@@ -321,35 +407,29 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
   const renderedComparisonGroups = new Set<string>()
   
   return (
-    <div className="flex flex-col gap-y-6">
-      {/* 模板标题和描述 */}
-      <div className="flex flex-col gap-y-1">
-        <span className="text-base font-medium">{template.title}</span>
-        {template.description && (
-          <span className="text-sm text-ui-fg-subtle">{template.description}</span>
-        )}
-      </div>
-
-      {/* 选项列表 */}
+    <TooltipProvider>
       <div className="flex flex-col gap-y-6">
-        {sortedOptions.map((option) => {
-          const groupKey = getComparisonGroupKey(option.id)
-          
-          if (groupKey) {
-            // 对比选项组 - 只渲染一次
-            if (renderedComparisonGroups.has(groupKey)) {
-              return null
+        {/* 选项列表 */}
+        <div className="flex flex-col gap-y-6">
+          {sortedOptions.map((option) => {
+            const groupKey = getComparisonGroupKey(option.id)
+            
+            if (groupKey) {
+              // 对比选项组 - 只渲染一次
+              if (renderedComparisonGroups.has(groupKey)) {
+                return null
+              }
+              renderedComparisonGroups.add(groupKey)
+              const groupOptions = comparisonGroups.get(groupKey) || []
+              return renderComparisonGroup(groupKey, groupOptions)
             }
-            renderedComparisonGroups.add(groupKey)
-            const groupOptions = comparisonGroups.get(groupKey) || []
-            return renderComparisonGroup(groupKey, groupOptions)
-          }
-          
-          // 普通选项
-          return renderOption(option)
-        })}
+            
+            // 普通选项
+            return renderOption(option)
+          })}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   )
 }
 

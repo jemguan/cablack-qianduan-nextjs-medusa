@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { Button } from '@medusajs/ui';
+import { Button, Text } from '@medusajs/ui';
 import { HttpTypes } from '@medusajs/types';
 import {
   Select,
@@ -13,6 +13,7 @@ import {
 import { getProductPrice } from '@lib/util/get-product-price';
 import { getImageUrl } from '@lib/util/image';
 import { useVariantSelection } from '@modules/products/contexts/variant-selection-context';
+import { useOptionTemplateSelection } from '@modules/products/contexts/option-template-selection-context';
 import { QuantitySelector } from './QuantitySelector';
 import { GlassCard } from '@/lib/ui/glass-effect';
 import { isEqual } from 'lodash';
@@ -43,6 +44,10 @@ type DesktopStickyAddToCartProps = {
   loyaltyAccount?: LoyaltyAccount | null;
   /** 会员产品 ID 列表 */
   membershipProductIds?: Record<string, boolean> | null;
+  /** 选项选择是否有效 */
+  isValidOptionSelections: boolean;
+  /** 缺失的必选选项列表 */
+  missingRequiredOptions: string[];
 };
 
 const optionsAsKeymap = (
@@ -69,6 +74,8 @@ export function DesktopStickyAddToCart({
   customer,
   loyaltyAccount,
   membershipProductIds,
+  isValidOptionSelections,
+  missingRequiredOptions,
 }: DesktopStickyAddToCartProps) {
   const { options, selectedVariant, setOptionValue } = useVariantSelection();
   const router = useRouter();
@@ -321,16 +328,17 @@ export function DesktopStickyAddToCart({
                     !inStock ||
                     !selectedVariant ||
                     isAdding ||
-                    !isValidVariant
+                    !isValidVariant ||
+                    !isValidOptionSelections
                   }
                   variant="primary"
                   className={`h-8 px-4 text-white border-none !border-2 !shadow-none ${
-                    !inStock || !isValidVariant || !selectedVariant
+                    !inStock || !isValidVariant || !selectedVariant || !isValidOptionSelections
                       ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
                       : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
                   }`}
                   style={
-                    !inStock || !isValidVariant || !selectedVariant
+                    !inStock || !isValidVariant || !selectedVariant || !isValidOptionSelections
                       ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
                       : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
                   }
@@ -340,6 +348,8 @@ export function DesktopStickyAddToCart({
                     ? 'Select variant'
                     : !inStock
                     ? 'Out of Stock'
+                    : !isValidOptionSelections
+                    ? 'Select Options'
                     : 'Add to Cart'}
                 </Button>
               )
@@ -351,16 +361,17 @@ export function DesktopStickyAddToCart({
                   !inStock ||
                   !selectedVariant ||
                   isAdding ||
-                  !isValidVariant
+                  !isValidVariant ||
+                  !isValidOptionSelections
                 }
                 variant="primary"
                 className={`h-8 px-4 text-white border-none !border-2 !shadow-none ${
-                  !inStock || !isValidVariant || !selectedVariant
+                  !inStock || !isValidVariant || !selectedVariant || !isValidOptionSelections
                     ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
                     : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
                 }`}
                 style={
-                  !inStock || !isValidVariant || !selectedVariant
+                  !inStock || !isValidVariant || !selectedVariant || !isValidOptionSelections
                     ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
                     : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
                 }
@@ -370,10 +381,21 @@ export function DesktopStickyAddToCart({
                   ? 'Select variant'
                   : !inStock
                   ? 'Out of Stock'
+                  : !isValidOptionSelections
+                  ? 'Select Options'
                   : 'Add to Cart'}
               </Button>
             )}
           </div>
+
+          {/* 必选选项错误提示 */}
+          {!isValidOptionSelections && missingRequiredOptions.length > 0 && (
+            <div className="flex-shrink-0 ml-2">
+              <Text className="text-xs text-ui-fg-error whitespace-nowrap">
+                Select required options
+              </Text>
+            </div>
+          )}
         </div>
       </div>
     </GlassCard>

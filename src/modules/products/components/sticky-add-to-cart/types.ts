@@ -1,5 +1,6 @@
 import type { HttpTypes } from '@medusajs/types';
 import type { LoyaltyAccount } from '@/types/loyalty';
+import type { OptionTemplate } from '@lib/data/option-templates';
 
 /**
  * 粘性购物栏组件属性
@@ -19,5 +20,7 @@ export interface StickyAddToCartProps {
   loyaltyAccount?: LoyaltyAccount | null;
   /** 会员产品 ID 列表 */
   membershipProductIds?: Record<string, boolean> | null;
+  /** 选项模板列表 */
+  optionTemplates?: OptionTemplate[];
 }
 

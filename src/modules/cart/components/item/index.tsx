@@ -77,6 +77,8 @@ const Item = ({ item, type = "full", currencyCode, isMobile = false }: ItemProps
               <div className="text-muted-foreground text-xs mb-2">
                 <LineItemOptions variant={item.variant} data-testid="product-variant" />
               </div>
+              {/* 自定义选项 - 移动端 */}
+              <LineItemCustomOptions item={item} currencyCode={currencyCode} />
               <div className="flex items-center justify-between gap-2">
               <div className="text-foreground font-bold text-lg">
                 <LineItemPrice
@@ -158,7 +160,23 @@ const Item = ({ item, type = "full", currencyCode, isMobile = false }: ItemProps
         <div className="text-muted-foreground text-xs mt-1 truncate">
           <LineItemOptions variant={item.variant} data-testid="product-variant" />
         </div>
-        <LineItemCustomOptions item={item} currencyCode={currencyCode} />
+        {/* checkout 页面预览模式强制单列 */}
+        <LineItemCustomOptions
+          item={item}
+          currencyCode={currencyCode}
+          forceSingleColumn={type === "preview"}
+        />
+        {/* checkout 页面预览模式：将价格信息移到选项下方 */}
+        {type === "preview" && (
+          <div className="mt-2">
+            <LineItemPrice
+              item={item}
+              style="tight"
+              currencyCode={currencyCode}
+              showPreTaxPrice={true}
+            />
+          </div>
+        )}
       </Table.Cell>
 
       {type === "full" && (
@@ -190,14 +208,17 @@ const Item = ({ item, type = "full", currencyCode, isMobile = false }: ItemProps
       )}
 
       <Table.Cell className="text-right px-4">
-        <div className="text-foreground font-bold text-lg">
-          <LineItemPrice
-            item={item}
-            style="tight"
-            currencyCode={currencyCode}
-            showPreTaxPrice={true}
-          />
-        </div>
+        {/* checkout 预览模式：价格已移到选项下方，这里不显示 */}
+        {type !== "preview" && (
+          <div className="text-foreground font-bold text-lg">
+            <LineItemPrice
+              item={item}
+              style="tight"
+              currencyCode={currencyCode}
+              showPreTaxPrice={true}
+            />
+          </div>
+        )}
       </Table.Cell>
     </Table.Row>
   )
