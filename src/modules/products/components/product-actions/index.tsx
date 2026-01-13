@@ -6,6 +6,7 @@ import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import Divider from "@modules/common/components/divider"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
+import OptionTemplateSelect from "@modules/products/components/product-actions/option-template-select"
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { isEqual } from "lodash"
@@ -17,6 +18,39 @@ import WishlistButton from "@modules/wishlist/components/wishlist-button"
 import ProductPointsInfo from "../product-points-info"
 import ProductPointsLoginPrompt from "../product-points-login-prompt"
 import { LoyaltyAccount } from "@/types/loyalty"
+
+// 选择（Choice）- 最底层，用户实际选择的项目
+type Choice = {
+  id: string
+  title: string
+  subtitle?: string | null
+  hint_text?: string | null
+  price_adjustment: number | string
+  image_url?: string | null
+  sort_order: number
+}
+
+// 选项（Option）- 中间层，包含多个选择
+type Option = {
+  id: string
+  name: string
+  hint_text?: string | null
+  selection_type: "single" | "multiple"
+  is_required: boolean
+  is_comparison: boolean
+  comparison_option_id?: string | null
+  sort_order: number
+  choices?: Choice[]
+}
+
+// 模板（Template）- 顶层，包含多个选项
+type OptionTemplate = {
+  id: string
+  title: string
+  description?: string | null
+  is_active: boolean
+  options?: Option[]
+}
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -30,6 +64,8 @@ type ProductActionsProps = {
   loyaltyAccount?: LoyaltyAccount | null
   /** 会员产品 ID 列表 */
   membershipProductIds?: Record<string, boolean> | null
+  /** 选项模板列表 */
+  optionTemplates?: OptionTemplate[]
 }
 
 const optionsAsKeymap = (
@@ -48,10 +84,15 @@ export default function ProductActions({
   customer,
   loyaltyAccount,
   membershipProductIds,
+  optionTemplates = [],
 }: ProductActionsProps) {
   const { options, selectedVariant, setOptionValue, setOptions } = useVariantSelection()
   const [isAdding, setIsAdding] = useState(false)
   const [quantity, setQuantity] = useState(1)
+  // 选项模板选择状态：{ templateId: choiceId[] }
+  const [selectedChoicesByTemplate, setSelectedChoicesByTemplate] = useState<
+    Record<string, string[]>
+  >({})
   const countryCode = useParams().countryCode as string
   const router = useRouter()
 
@@ -123,6 +164,19 @@ export default function ProductActions({
     setQuantity(1)
   }, [selectedVariant?.id])
 
+  // 处理选项模板选择变化
+  const handleTemplateSelectionChange = (templateId: string, choiceIds: string[]) => {
+    setSelectedChoicesByTemplate((prev) => ({
+      ...prev,
+      [templateId]: choiceIds,
+    }))
+  }
+
+  // 收集所有选中的选择 ID（扁平化）
+  const getAllSelectedChoiceIds = useMemo(() => {
+    return Object.values(selectedChoicesByTemplate).flat()
+  }, [selectedChoicesByTemplate])
+
   // add the selected variant to the cart
   const handleAddToCart = async () => {
     if (!selectedVariant?.id) {
@@ -132,10 +186,17 @@ export default function ProductActions({
     setIsAdding(true)
 
     try {
+      // 构建 metadata，包含选中的选择 ID
+      const metadata: Record<string, any> = {}
+      if (getAllSelectedChoiceIds.length > 0) {
+        metadata.custom_options = getAllSelectedChoiceIds
+      }
+
       await addToCart({
         variantId: selectedVariant.id,
         quantity,
         countryCode,
+        metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
       })
     } catch (error) {
       console.error("Failed to add to cart:", error)
@@ -167,6 +228,22 @@ export default function ProductActions({
                 </div>
               )
             })}
+            {!mobileLayout && <Divider />}
+          </div>
+        )}
+
+        {/* 选项模板选择器 */}
+        {optionTemplates.length > 0 && (
+          <div className="flex flex-col gap-y-6">
+            {optionTemplates.map((template) => (
+              <OptionTemplateSelect
+                key={template.id}
+                template={template}
+                selectedChoiceIds={selectedChoicesByTemplate[template.id] || []}
+                onSelectionChange={handleTemplateSelectionChange}
+                disabled={!!disabled || isAdding}
+              />
+            ))}
             {!mobileLayout && <Divider />}
           </div>
         )}

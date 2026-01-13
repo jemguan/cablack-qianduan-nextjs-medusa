@@ -12,6 +12,7 @@ import { HttpTypes } from "@medusajs/types"
 import Schema from "@modules/common/components/seo/Schema"
 import { getBaseURL } from "@lib/util/env"
 import { getProductBrand } from "@lib/data/brands"
+import { getProductOptionTemplates } from "@lib/data/option-templates"
 
 type Props = {
   params: Promise<{ handle: string }>
@@ -144,6 +145,9 @@ export default async function ProductPage(props: Props) {
   // 获取产品 HTML 描述
   const htmlDescription = await getProductHtmlDescription(pricedProduct.id)
 
+  // 获取产品选项模板
+  const optionTemplates = await getProductOptionTemplates(pricedProduct.id)
+
   // Build breadcrumb items
   const breadcrumbItems = [
     { label: "Home", href: "/", name: "Home", url: "/" },
@@ -218,6 +222,7 @@ export default async function ProductPage(props: Props) {
         images={images || []}
         initialVariantId={selectedVariantId}
         htmlDescription={htmlDescription}
+        optionTemplates={optionTemplates}
       />
     </ReviewStatsProvider>
   )

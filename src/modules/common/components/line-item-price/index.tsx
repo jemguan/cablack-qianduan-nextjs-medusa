@@ -1,7 +1,8 @@
 import { getPercentageDiff } from "@lib/util/get-percentage-diff"
 import { convertToLocale } from "@lib/util/money"
+import { hasCustomOptionsPrice } from "@lib/util/has-custom-options-price"
 import { HttpTypes } from "@medusajs/types"
-import { clx } from "@medusajs/ui"
+import { clx, Text } from "@medusajs/ui"
 
 type LineItemPriceProps = {
   item: HttpTypes.StoreCartLineItem | HttpTypes.StoreOrderLineItem
@@ -70,6 +71,7 @@ const LineItemPrice = ({
   }
 
   const hasReducedPrice = shouldShowComparePrice && currentPrice < originalPrice
+  const hasOptionsPrice = hasCustomOptionsPrice(item)
 
   return (
     <div className="flex flex-col gap-x-2 text-ui-fg-subtle items-end">
@@ -97,17 +99,24 @@ const LineItemPrice = ({
             )}
           </>
         )}
-        <span
-          className={clx("text-base-regular", {
-            "text-ui-fg-interactive": hasReducedPrice,
-          })}
-          data-testid="product-price"
-        >
-          {convertToLocale({
-            amount: currentPrice,
-            currency_code: currencyCode,
-          })}
-        </span>
+        <div className="flex flex-col gap-0.5">
+          <span
+            className={clx("text-base-regular", {
+              "text-ui-fg-interactive": hasReducedPrice,
+            })}
+            data-testid="product-price"
+          >
+            {convertToLocale({
+              amount: currentPrice,
+              currency_code: currencyCode,
+            })}
+          </span>
+          {hasOptionsPrice && (
+            <Text className="text-xs text-muted-foreground" data-testid="price-includes-options">
+              Price includes extra options
+            </Text>
+          )}
+        </div>
       </div>
     </div>
   )

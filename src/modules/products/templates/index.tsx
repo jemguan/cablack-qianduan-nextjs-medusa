@@ -13,6 +13,21 @@ import { BannerBlock } from "@modules/home/components/banner-block"
 import { retrieveCustomer } from "@lib/data/customer"
 import { getLoyaltyAccount, getLoyaltyConfig } from "@lib/data/loyalty"
 
+type OptionTemplate = {
+  id: string
+  title: string
+  description?: string | null
+  is_active: boolean
+  options?: Array<{
+    id: string
+    label: string
+    image_url?: string | null
+    hint_text?: string | null
+    price_adjustment: number | string
+    sort_order: number
+  }>
+}
+
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
   region: HttpTypes.StoreRegion
@@ -20,6 +35,7 @@ type ProductTemplateProps = {
   images: HttpTypes.StoreProductImage[]
   initialVariantId?: string
   htmlDescription?: string | null
+  optionTemplates?: OptionTemplate[]
 }
 
 const ProductTemplate: React.FC<ProductTemplateProps> = async ({
@@ -29,6 +45,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = async ({
   images,
   initialVariantId,
   htmlDescription,
+  optionTemplates = [],
 }) => {
   if (!product || !product.id) {
     return notFound()
@@ -57,7 +74,8 @@ const ProductTemplate: React.FC<ProductTemplateProps> = async ({
     htmlDescription,
     customer,
     loyaltyAccount,
-    membershipProductIds
+    membershipProductIds,
+    optionTemplates
   )
 
   // 组件映射

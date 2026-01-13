@@ -26,6 +26,21 @@ export interface BlockConfig {
   props?: Record<string, any>;
 }
 
+type OptionTemplate = {
+  id: string
+  title: string
+  description?: string | null
+  is_active: boolean
+  options?: Array<{
+    id: string
+    label: string
+    image_url?: string | null
+    hint_text?: string | null
+    price_adjustment: number | string
+    sort_order: number
+  }>
+}
+
 /**
  * 获取产品页的布局 blocks
  * @param config Medusa 配置
@@ -38,6 +53,7 @@ export interface BlockConfig {
  * @param customer 当前登录的客户
  * @param loyaltyAccount 积分账户信息
  * @param membershipProductIds 会员产品 ID 列表
+ * @param optionTemplates 选项模板列表
  * @returns 排序后的 block 配置数组
  */
 export function getProductPageLayoutBlocks(
@@ -50,7 +66,8 @@ export function getProductPageLayoutBlocks(
   htmlDescription?: string | null,
   customer?: HttpTypes.StoreCustomer | null,
   loyaltyAccount?: LoyaltyAccount | null,
-  membershipProductIds?: Record<string, boolean> | null
+  membershipProductIds?: Record<string, boolean> | null,
+  optionTemplates?: OptionTemplate[]
 ): BlockConfig[] {
   // 从 pageLayouts 获取 blocks
   const blocks = getPageLayoutBlocks(config, 'product');
@@ -82,6 +99,7 @@ export function getProductPageLayoutBlocks(
           customer,
           loyaltyAccount,
           membershipProductIds,
+          optionTemplates: optionTemplates || [],
         },
       },
     ];
@@ -101,7 +119,8 @@ export function getProductPageLayoutBlocks(
       htmlDescription,
       customer,
       loyaltyAccount,
-      membershipProductIds
+      membershipProductIds,
+      optionTemplates
     );
     if (blockConfig) {
       blockConfigs.push(blockConfig);
@@ -132,7 +151,8 @@ function getBlockConfigForBlock(
   htmlDescription?: string | null,
   customer?: HttpTypes.StoreCustomer | null,
   loyaltyAccount?: LoyaltyAccount | null,
-  membershipProductIds?: Record<string, boolean> | null
+  membershipProductIds?: Record<string, boolean> | null,
+  optionTemplates?: OptionTemplate[]
 ): BlockConfig | null {
   switch (block.type) {
     case 'productContent':
@@ -158,7 +178,8 @@ function getBlockConfigForBlock(
         htmlDescription,
         customer,
         loyaltyAccount,
-        membershipProductIds
+        membershipProductIds,
+        optionTemplates
       );
 
     case 'faq':

@@ -8,6 +8,7 @@ import ErrorMessage from "@modules/checkout/components/error-message"
 import DeleteButton from "@modules/common/components/delete-button"
 import LineItemOptions from "@modules/common/components/line-item-options"
 import LineItemPrice from "@modules/common/components/line-item-price"
+import LineItemCustomOptions from "@modules/common/components/line-item-custom-options"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Spinner from "@modules/common/icons/spinner"
 import Thumbnail from "@modules/products/components/thumbnail"
@@ -157,6 +158,7 @@ const Item = ({ item, type = "full", currencyCode, isMobile = false }: ItemProps
         <div className="text-muted-foreground text-xs mt-1 truncate">
           <LineItemOptions variant={item.variant} data-testid="product-variant" />
         </div>
+        <LineItemCustomOptions item={item} currencyCode={currencyCode} />
       </Table.Cell>
 
       {type === "full" && (

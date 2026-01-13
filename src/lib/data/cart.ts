@@ -124,7 +124,7 @@ async function tryApplyVipDiscount(cartId: string): Promise<void> {
  */
 const _retrieveCartInternal = async (cartId?: string, fields?: string): Promise<HttpTypes.StoreCart | null> => {
   const id = cartId || (await getCartId())
-  fields ??= "*items, *region, *items.product, *items.variant, *items.variant.images, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, +discount_total, +discount_subtotal, +item_subtotal, +item_total, +subtotal, +total, +tax_total, +shipping_subtotal, +shipping_total"
+  fields ??= "*items, *region, *items.product, *items.variant, *items.variant.images, *items.thumbnail, *items.metadata, +items.total, +items.unit_price, *promotions, +shipping_methods.name, +discount_total, +discount_subtotal, +item_subtotal, +item_total, +subtotal, +total, +tax_total, +shipping_subtotal, +shipping_total"
 
   if (!id) {
     return null

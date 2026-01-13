@@ -5,6 +5,21 @@ import TwoColumnLayout from "../../templates/layouts/two-column-layout"
 import ThreeColumnLayout from "../../templates/layouts/three-column-layout"
 import { LoyaltyAccount } from "@/types/loyalty"
 
+type OptionTemplate = {
+  id: string
+  title: string
+  description?: string | null
+  is_active: boolean
+  options?: Array<{
+    id: string
+    label: string
+    image_url?: string | null
+    hint_text?: string | null
+    price_adjustment: number | string
+    sort_order: number
+  }>
+}
+
 type ProductContentProps = {
   product: HttpTypes.StoreProduct
   region: HttpTypes.StoreRegion
@@ -19,6 +34,8 @@ type ProductContentProps = {
   loyaltyAccount?: LoyaltyAccount | null
   /** 会员产品 ID 列表 */
   membershipProductIds?: Record<string, boolean> | null
+  /** 选项模板列表 */
+  optionTemplates?: OptionTemplate[]
 }
 
 const ProductContent: React.FC<ProductContentProps> = ({
@@ -32,6 +49,7 @@ const ProductContent: React.FC<ProductContentProps> = ({
   customer,
   loyaltyAccount,
   membershipProductIds,
+  optionTemplates = [],
 }) => {
   if (layout === 'three-column') {
     return (
@@ -45,6 +63,7 @@ const ProductContent: React.FC<ProductContentProps> = ({
         customer={customer}
         loyaltyAccount={loyaltyAccount}
         membershipProductIds={membershipProductIds}
+        optionTemplates={optionTemplates}
       />
     )
   }
@@ -60,6 +79,7 @@ const ProductContent: React.FC<ProductContentProps> = ({
       customer={customer}
       loyaltyAccount={loyaltyAccount}
       membershipProductIds={membershipProductIds}
+      optionTemplates={optionTemplates}
     />
   )
 }

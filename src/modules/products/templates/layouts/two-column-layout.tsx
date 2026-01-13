@@ -13,6 +13,21 @@ import { MedusaConfig } from "@lib/admin-api/config"
 import ProductDescriptionAccordion from "@modules/products/components/product-description-accordion"
 import { LoyaltyAccount } from "@/types/loyalty"
 
+type OptionTemplate = {
+  id: string
+  title: string
+  description?: string | null
+  is_active: boolean
+  options?: Array<{
+    id: string
+    label: string
+    image_url?: string | null
+    hint_text?: string | null
+    price_adjustment: number | string
+    sort_order: number
+  }>
+}
+
 type TwoColumnLayoutProps = {
   product: HttpTypes.StoreProduct
   region: HttpTypes.StoreRegion
@@ -26,6 +41,8 @@ type TwoColumnLayoutProps = {
   loyaltyAccount?: LoyaltyAccount | null
   /** 会员产品 ID 列表 */
   membershipProductIds?: Record<string, boolean> | null
+  /** 选项模板列表 */
+  optionTemplates?: OptionTemplate[]
 }
 
 const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
@@ -38,6 +55,7 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
   customer,
   loyaltyAccount,
   membershipProductIds,
+  optionTemplates = [],
 }) => {
   const actionsRef = useRef<HTMLDivElement>(null)
   const mobileActionsRef = useRef<HTMLDivElement>(null)
@@ -75,6 +93,7 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
             customer={customer}
             loyaltyAccount={loyaltyAccount}
             membershipProductIds={membershipProductIds}
+            optionTemplates={optionTemplates}
           />
         </div>
 
@@ -86,6 +105,7 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
             customer={customer}
             loyaltyAccount={loyaltyAccount}
             membershipProductIds={membershipProductIds}
+            optionTemplates={optionTemplates}
           />
         </div>
 

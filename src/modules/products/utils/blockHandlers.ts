@@ -13,6 +13,21 @@ import type { ReviewsData } from '../components/reviews/types';
 import type { BannerBlockData } from '../../home/components/banner-block/types';
 import type { LoyaltyAccount } from '@/types/loyalty';
 
+type OptionTemplate = {
+  id: string
+  title: string
+  description?: string | null
+  is_active: boolean
+  options?: Array<{
+    id: string
+    label: string
+    image_url?: string | null
+    hint_text?: string | null
+    price_adjustment: number | string
+    sort_order: number
+  }>
+}
+
 /**
  * 处理 ProductContent Block
  * 这是产品页的核心内容区域，包含产品图片、信息、操作等
@@ -33,7 +48,8 @@ export function handleProductContentBlock(
   htmlDescription?: string | null,
   customer?: HttpTypes.StoreCustomer | null,
   loyaltyAccount?: LoyaltyAccount | null,
-  membershipProductIds?: Record<string, boolean> | null
+  membershipProductIds?: Record<string, boolean> | null,
+  optionTemplates?: OptionTemplate[]
 ): BlockConfig | null {
   // 确定布局类型，默认为 two-column
   const layout = blockConfig.layout || 'two-column';
@@ -62,6 +78,7 @@ export function handleProductContentBlock(
       customer,
       loyaltyAccount,
       membershipProductIds,
+      optionTemplates: optionTemplates || [],
     },
   };
 }
