@@ -12,21 +12,7 @@ import type { BundleSaleData } from '../components/bundle-sale/types';
 import type { ReviewsData } from '../components/reviews/types';
 import type { BannerBlockData } from '../../home/components/banner-block/types';
 import type { LoyaltyAccount } from '@/types/loyalty';
-
-type OptionTemplate = {
-  id: string
-  title: string
-  description?: string | null
-  is_active: boolean
-  options?: Array<{
-    id: string
-    label: string
-    image_url?: string | null
-    hint_text?: string | null
-    price_adjustment: number | string
-    sort_order: number
-  }>
-}
+import type { OptionTemplate } from '@lib/data/option-templates';
 
 /**
  * 处理 ProductContent Block

@@ -18,39 +18,7 @@ import WishlistButton from "@modules/wishlist/components/wishlist-button"
 import ProductPointsInfo from "../product-points-info"
 import ProductPointsLoginPrompt from "../product-points-login-prompt"
 import { LoyaltyAccount } from "@/types/loyalty"
-
-// 选择（Choice）- 最底层，用户实际选择的项目
-type Choice = {
-  id: string
-  title: string
-  subtitle?: string | null
-  hint_text?: string | null
-  price_adjustment: number | string
-  image_url?: string | null
-  sort_order: number
-}
-
-// 选项（Option）- 中间层，包含多个选择
-type Option = {
-  id: string
-  name: string
-  hint_text?: string | null
-  selection_type: "single" | "multiple"
-  is_required: boolean
-  is_comparison: boolean
-  comparison_option_id?: string | null
-  sort_order: number
-  choices?: Choice[]
-}
-
-// 模板（Template）- 顶层，包含多个选项
-type OptionTemplate = {
-  id: string
-  title: string
-  description?: string | null
-  is_active: boolean
-  options?: Option[]
-}
+import type { OptionTemplate } from "@lib/data/option-templates"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -164,6 +132,45 @@ export default function ProductActions({
     setQuantity(1)
   }, [selectedVariant?.id])
 
+  // 初始化选项模板的默认选择
+  useEffect(() => {
+    if (!optionTemplates || optionTemplates.length === 0) return
+
+    const defaultSelections: Record<string, string[]> = {}
+
+    optionTemplates.forEach((template) => {
+      if (!template.is_active || !template.options) return
+
+      const templateChoices: string[] = []
+
+      template.options.forEach((option) => {
+        if (!option.choices || option.choices.length === 0) return
+
+        // 查找默认选择
+        const defaultChoice = option.choices.find((choice) => choice.is_default)
+        if (defaultChoice) {
+          templateChoices.push(defaultChoice.id)
+        }
+      })
+
+      if (templateChoices.length > 0) {
+        defaultSelections[template.id] = templateChoices
+      }
+    })
+
+    // 只在有默认选择且当前没有选择时设置
+    if (Object.keys(defaultSelections).length > 0) {
+      setSelectedChoicesByTemplate((prev) => {
+        // 如果已经有选择了，不覆盖
+        const hasExistingSelections = Object.values(prev).some(
+          (choices) => choices.length > 0
+        )
+        if (hasExistingSelections) return prev
+        return defaultSelections
+      })
+    }
+  }, [optionTemplates])
+
   // 处理选项模板选择变化
   const handleTemplateSelectionChange = (templateId: string, choiceIds: string[]) => {
     setSelectedChoicesByTemplate((prev) => ({
@@ -232,8 +239,11 @@ export default function ProductActions({
           </div>
         )}
 
-        {/* 选项模板选择器 */}
-        {optionTemplates.length > 0 && (
+        {/* 选项模板选择器 - 只渲染有有效选项（带 choices）的模板 */}
+        {optionTemplates.some((template) =>
+          template.is_active &&
+          template.options?.some((option) => option.choices && option.choices.length > 0)
+        ) && (
           <div className="flex flex-col gap-y-6">
             {optionTemplates.map((template) => (
               <OptionTemplateSelect

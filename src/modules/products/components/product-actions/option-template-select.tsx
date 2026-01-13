@@ -198,14 +198,21 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
         <div className="flex-1 flex flex-col gap-y-0.5 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex flex-col">
-              <span
-                className={clx("text-sm font-medium", {
-                  "text-ui-fg-base": isSelected,
-                  "text-ui-fg-subtle": !isSelected,
-                })}
-              >
-                {choice.title}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={clx("text-sm font-medium", {
+                    "text-ui-fg-base": isSelected,
+                    "text-ui-fg-subtle": !isSelected,
+                  })}
+                >
+                  {choice.title}
+                </span>
+                {choice.is_default && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-ui-tag-green-bg text-ui-tag-green-text font-medium">
+                    默认
+                  </span>
+                )}
+              </div>
               {choice.subtitle && (
                 <span className="text-xs text-ui-fg-muted">{choice.subtitle}</span>
               )}
@@ -301,7 +308,12 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
     )
   }
 
-  if (!template.is_active || sortedOptions.length === 0) {
+  // 过滤出有 choices 的选项
+  const optionsWithChoices = sortedOptions.filter(
+    (option) => option.choices && option.choices.length > 0
+  )
+
+  if (!template.is_active || optionsWithChoices.length === 0) {
     return null
   }
 

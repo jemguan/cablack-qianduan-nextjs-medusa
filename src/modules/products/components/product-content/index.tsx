@@ -4,21 +4,7 @@ import { MedusaConfig } from "@lib/admin-api/config"
 import TwoColumnLayout from "../../templates/layouts/two-column-layout"
 import ThreeColumnLayout from "../../templates/layouts/three-column-layout"
 import { LoyaltyAccount } from "@/types/loyalty"
-
-type OptionTemplate = {
-  id: string
-  title: string
-  description?: string | null
-  is_active: boolean
-  options?: Array<{
-    id: string
-    label: string
-    image_url?: string | null
-    hint_text?: string | null
-    price_adjustment: number | string
-    sort_order: number
-  }>
-}
+import type { OptionTemplate } from "@lib/data/option-templates"
 
 type ProductContentProps = {
   product: HttpTypes.StoreProduct

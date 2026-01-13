@@ -12,6 +12,7 @@ type Choice = {
   price_adjustment: number | string
   image_url?: string | null
   sort_order: number
+  is_default?: boolean
 }
 
 // 选项（Option）- 中间层，包含多个选择

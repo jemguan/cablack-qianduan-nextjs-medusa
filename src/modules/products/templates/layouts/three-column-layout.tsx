@@ -14,6 +14,7 @@ import { MedusaConfig } from "@lib/admin-api/config"
 import ProductRating from "@modules/products/components/reviews/ProductRating"
 import ProductDescriptionAccordion from "@modules/products/components/product-description-accordion"
 import { LoyaltyAccount } from "@/types/loyalty"
+import type { OptionTemplate } from "@lib/data/option-templates"
 
 type ThreeColumnLayoutProps = {
   product: HttpTypes.StoreProduct
@@ -28,6 +29,8 @@ type ThreeColumnLayoutProps = {
   loyaltyAccount?: LoyaltyAccount | null
   /** 会员产品 ID 列表 */
   membershipProductIds?: Record<string, boolean> | null
+  /** 选项模板列表 */
+  optionTemplates?: OptionTemplate[]
 }
 
 const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
@@ -40,6 +43,7 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
   customer,
   loyaltyAccount,
   membershipProductIds,
+  optionTemplates = [],
 }) => {
   const actionsRef = useRef<HTMLDivElement>(null)
   const mobileActionsRef = useRef<HTMLDivElement>(null)
@@ -95,6 +99,7 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
             customer={customer}
             loyaltyAccount={loyaltyAccount}
             membershipProductIds={membershipProductIds}
+            optionTemplates={optionTemplates}
           />
         </div>
 
@@ -132,6 +137,7 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
             customer={customer}
             loyaltyAccount={loyaltyAccount}
             membershipProductIds={membershipProductIds}
+            optionTemplates={optionTemplates}
           />
         </div>
       </div>

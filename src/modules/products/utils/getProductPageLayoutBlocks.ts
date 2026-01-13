@@ -15,6 +15,7 @@ import {
   handleBannerBlock,
 } from './blockHandlers';
 import type { LoyaltyAccount } from '@/types/loyalty';
+import type { OptionTemplate } from '@lib/data/option-templates';
 
 export interface BlockConfig {
   id: string;
@@ -24,21 +25,6 @@ export interface BlockConfig {
   config: Record<string, any>;
   componentName?: string; // 组件名称，用于动态导入
   props?: Record<string, any>;
-}
-
-type OptionTemplate = {
-  id: string
-  title: string
-  description?: string | null
-  is_active: boolean
-  options?: Array<{
-    id: string
-    label: string
-    image_url?: string | null
-    hint_text?: string | null
-    price_adjustment: number | string
-    sort_order: number
-  }>
 }
 
 /**

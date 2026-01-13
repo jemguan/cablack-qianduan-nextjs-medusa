@@ -13,20 +13,7 @@ import { BannerBlock } from "@modules/home/components/banner-block"
 import { retrieveCustomer } from "@lib/data/customer"
 import { getLoyaltyAccount, getLoyaltyConfig } from "@lib/data/loyalty"
 
-type OptionTemplate = {
-  id: string
-  title: string
-  description?: string | null
-  is_active: boolean
-  options?: Array<{
-    id: string
-    label: string
-    image_url?: string | null
-    hint_text?: string | null
-    price_adjustment: number | string
-    sort_order: number
-  }>
-}
+import type { OptionTemplate } from "@lib/data/option-templates"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
