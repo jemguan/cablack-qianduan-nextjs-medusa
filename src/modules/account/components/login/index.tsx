@@ -4,6 +4,7 @@ import ErrorMessage from "@modules/checkout/components/error-message"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import Input from "@modules/common/components/input"
 import GoogleLoginButton from "@modules/account/components/google-login-button"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { useActionState } from "react"
 
 type Props = {
@@ -55,6 +56,15 @@ const Login = ({ setCurrentView }: Props) => {
             required
             data-testid="password-input"
           />
+        </div>
+        <div className="flex items-center justify-end mt-2">
+          <LocalizedClientLink
+            href="/account/request-password-reset"
+            className="text-small-regular text-ui-fg-muted hover:text-ui-fg-subtle underline"
+            data-testid="forgot-password-link"
+          >
+            Forgot password?
+          </LocalizedClientLink>
         </div>
         <ErrorMessage error={message} data-testid="login-error-message" />
         <SubmitButton data-testid="sign-in-button" className="w-full mt-6">

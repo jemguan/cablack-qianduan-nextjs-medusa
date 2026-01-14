@@ -22,18 +22,25 @@ type Props = {
 export const PRODUCT_LIMIT = 12
 
 export async function generateStaticParams() {
-  const { collections } = await listCollections({
-    fields: "*products",
-  })
+  try {
+    const { collections } = await listCollections({
+      fields: "*products",
+    })
 
-  if (!collections) {
+    if (!collections) {
+      return []
+    }
+
+    // No countryCode in URL anymore, just generate handles
+    return collections.map((collection: StoreCollection) => ({
+      handle: collection.handle,
+    }))
+  } catch (error) {
+    // 构建时如果无法连接到后端，返回空数组
+    // Next.js 会使用动态渲染而不是静态生成
+    console.warn('Failed to generate static params for collections:', error)
     return []
   }
-
-  // No countryCode in URL anymore, just generate handles
-  return collections.map((collection: StoreCollection) => ({
-    handle: collection.handle,
-  }))
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {

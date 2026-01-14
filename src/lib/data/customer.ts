@@ -141,6 +141,7 @@ export async function signup(_currentState: unknown, formData: FormData) {
       password: password,
     })
 
+    // 先设置 token，这样创建客户时可以认证
     await setAuthToken(token as string)
 
     const headers = {
@@ -153,17 +154,20 @@ export async function signup(_currentState: unknown, formData: FormData) {
       headers
     )
 
-    const loginToken = await sdk.auth.login("customer", "emailpass", {
-      email: customerForm.email,
-      password,
-    })
-
-    await setAuthToken(loginToken as string)
+    // 等待一下，确保 customer.created 事件和订阅者已经处理完成
+    // 给订阅者时间找到 auth_identity 并发送验证邮件
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
     const customerCacheTag = await getCacheTag("customers")
     revalidateTag(customerCacheTag)
 
-    await transferCart()
+    // 注意：虽然设置了 token，但用户可能还没有完全登录
+    // 移除 token，让用户手动登录，这样可以看到验证提示
+    // 或者保留 token，但前端不自动重定向
+    await removeAuthToken()
+
+    // 不立即转移购物车，等用户登录后再转移
+    // await transferCart()
 
     return createdCustomer
   } catch (error: any) {
@@ -223,7 +227,7 @@ export async function transferCart() {
   const headers = await getAuthHeaders()
 
   // 检查是否有认证 token（用户必须已登录）
-  if (!headers.authorization) {
+  if (!("authorization" in headers)) {
     throw new Error("User must be authenticated to transfer cart")
   }
 
@@ -432,4 +436,272 @@ export const updateCustomerAddress = async (
     .catch((err) => {
       return { success: false, error: err.toString() }
     })
+}
+
+/**
+ * 请求重置密码
+ * 发送密码重置请求到 Medusa，会触发邮件发送
+ */
+export async function requestPasswordReset(
+  _currentState: unknown,
+  formData: FormData
+): Promise<string | null> {
+  const email = formData.get("email") as string
+
+  if (!email) {
+    return "Email is required"
+  }
+
+  // 验证邮箱格式
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) {
+    return "Please enter a valid email address"
+  }
+
+  try {
+    // 调用 Medusa SDK 的 resetPassword 方法
+    // 这会发送 POST 请求到 /auth/customer/emailpass/reset-password
+    // 后端会触发 auth.password_reset 事件，订阅者会发送邮件
+    await sdk.auth.resetPassword("customer", "emailpass", {
+      identifier: email,
+    })
+
+    // 即使邮箱不存在，也返回成功消息（防止邮箱枚举攻击）
+    // 实际错误会在后端日志中记录
+    return null
+  } catch (error: any) {
+    // 记录错误但不暴露给用户（防止邮箱枚举）
+    if (process.env.NODE_ENV === "development") {
+      console.error("[Password Reset] Error requesting password reset:", error)
+    }
+    
+    // 即使出错也返回成功消息，防止邮箱枚举
+    // 实际错误会在后端日志中记录
+    return null
+  }
+}
+
+/**
+ * 重置密码
+ * 使用重置令牌更新客户密码
+ */
+export async function resetPassword(
+  _currentState: unknown,
+  formData: FormData
+): Promise<string | null> {
+  const token = formData.get("token") as string
+  const email = formData.get("email") as string
+  const password = formData.get("password") as string
+  const confirmPassword = formData.get("confirm_password") as string
+
+  if (!token) {
+    return "Reset token is required"
+  }
+
+  if (!email) {
+    return "Email is required"
+  }
+
+  if (!password) {
+    return "Password is required"
+  }
+
+  if (password !== confirmPassword) {
+    return "Passwords do not match"
+  }
+
+  if (password.length < 8) {
+    return "Password must be at least 8 characters long"
+  }
+
+  try {
+    // 调用 Medusa SDK 的 updateProvider 方法
+    // token 作为第三个参数传递（会在 Authorization header 中使用）
+    await sdk.auth.updateProvider("customer", "emailpass", {
+      email: email,
+      password: password,
+    }, token)
+
+    return null
+  } catch (error: any) {
+    // 处理错误
+    const errorMessage = error?.message || error?.toString() || "Failed to reset password"
+    
+    // 检查是否是令牌无效或过期
+    if (errorMessage.includes("token") || errorMessage.includes("invalid") || errorMessage.includes("expired")) {
+      return "Invalid or expired reset token. Please request a new password reset."
+    }
+
+    return errorMessage
+  }
+}
+
+/**
+ * 验证邮箱
+ * 使用验证令牌验证客户邮箱
+ */
+export async function verifyEmail(
+  token: string,
+  email: string
+): Promise<{ success: boolean; message: string }> {
+  if (!token) {
+    return { success: false, message: "Verification token is required" }
+  }
+
+  if (!email) {
+    return { success: false, message: "Email is required" }
+  }
+
+  try {
+    const baseUrl = process.env.MEDUSA_BACKEND_URL || 
+                   process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || 
+                   "http://localhost:9000"
+
+    // 准备请求头，包含 publishable key
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    }
+
+    const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+    if (publishableKey) {
+      headers["x-publishable-api-key"] = publishableKey
+    }
+
+    const response = await fetch(`${baseUrl}/store/customers/verify-email`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        token,
+        email,
+      }),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Failed to verify email",
+      }
+    }
+
+    return {
+      success: true,
+      message: data.message || "Email verified successfully",
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error?.message || "Failed to verify email",
+    }
+  }
+}
+
+/**
+ * 获取邮箱验证状态
+ */
+export async function getEmailVerificationStatus(): Promise<{
+  email_verified: boolean
+  has_verification_token: boolean
+  verification_token_expires_at: string | null
+}> {
+  try {
+    const baseUrl = process.env.MEDUSA_BACKEND_URL || 
+                   process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || 
+                   "http://localhost:9000"
+
+    const headers = await getAuthHeaders()
+    if (!("authorization" in headers)) {
+      return {
+        email_verified: false,
+        has_verification_token: false,
+        verification_token_expires_at: null,
+      }
+    }
+
+    const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+    const requestHeaders: Record<string, string> = {
+      ...headers,
+      "Content-Type": "application/json",
+    }
+    if (publishableKey) {
+      requestHeaders["x-publishable-api-key"] = publishableKey
+    }
+
+    const response = await fetch(`${baseUrl}/store/customers/email-verification-status`, {
+      method: "GET",
+      headers: requestHeaders,
+    })
+
+    if (!response.ok) {
+      return {
+        email_verified: false,
+        has_verification_token: false,
+        verification_token_expires_at: null,
+      }
+    }
+
+    return await response.json()
+  } catch (error: any) {
+    return {
+      email_verified: false,
+      has_verification_token: false,
+      verification_token_expires_at: null,
+    }
+  }
+}
+
+/**
+ * 重新发送验证邮件
+ */
+export async function resendVerificationEmail(): Promise<{
+  success: boolean
+  message: string
+}> {
+  try {
+    const baseUrl = process.env.MEDUSA_BACKEND_URL || 
+                   process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || 
+                   "http://localhost:9000"
+
+    const headers = await getAuthHeaders()
+    if (!("authorization" in headers)) {
+      return {
+        success: false,
+        message: "Authentication required",
+      }
+    }
+
+    const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+    const requestHeaders: Record<string, string> = {
+      ...headers,
+      "Content-Type": "application/json",
+    }
+    if (publishableKey) {
+      requestHeaders["x-publishable-api-key"] = publishableKey
+    }
+
+    const response = await fetch(`${baseUrl}/store/customers/resend-verification-email`, {
+      method: "POST",
+      headers: requestHeaders,
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || "Failed to resend verification email",
+      }
+    }
+
+    return {
+      success: true,
+      message: data.message || "Verification email sent successfully",
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error?.message || "Failed to resend verification email",
+    }
+  }
 }

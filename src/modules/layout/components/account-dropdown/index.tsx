@@ -170,6 +170,16 @@ const AccountDropdown = () => {
                         data-testid="password-input"
                       />
                     </div>
+                    <div className="flex items-center justify-end mt-2">
+                      <LocalizedClientLink
+                        href="/account/request-password-reset"
+                        className="text-small-regular text-ui-fg-muted hover:text-ui-fg-subtle underline"
+                        onClick={close}
+                        data-testid="forgot-password-link"
+                      >
+                        Forgot password?
+                      </LocalizedClientLink>
+                    </div>
                     <ErrorMessage error={message} data-testid="login-error-message" />
                     <SubmitButton data-testid="sign-in-button" className="w-full mt-4">
                       Sign in
@@ -177,13 +187,14 @@ const AccountDropdown = () => {
                   </form>
                   <span className="text-center text-ui-fg-base text-small-regular mt-4">
                     Not a member?{" "}
-                    <button
-                      onClick={() => setCurrentView(LOGIN_VIEW.REGISTER)}
+                    <LocalizedClientLink
+                      href="/account?view=register"
                       className="underline hover:text-primary transition-colors"
+                      onClick={close}
                       data-testid="register-button"
                     >
                       Join us
-                    </button>
+                    </LocalizedClientLink>
                     .
                   </span>
                 </div>
@@ -193,11 +204,11 @@ const AccountDropdown = () => {
                     Please visit the account page to register.
                   </p>
                   <LocalizedClientLink
-                    href="/account"
+                    href="/account?view=register"
                     className="text-small-regular underline hover:text-primary transition-colors mb-2"
                     onClick={close}
                   >
-                    Go to account page
+                    Go to register page
                   </LocalizedClientLink>
                   <button
                     onClick={() => setCurrentView(LOGIN_VIEW.SIGN_IN)}

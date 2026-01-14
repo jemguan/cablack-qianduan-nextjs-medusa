@@ -3,6 +3,7 @@ import { FaUser, FaMapMarkerAlt, FaChevronDown, FaBox } from "react-icons/fa"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
+import EmailVerificationBanner from "@modules/account/components/email-verification-banner"
 
 type OverviewProps = {
   customer: HttpTypes.StoreCustomer | null
@@ -12,6 +13,7 @@ type OverviewProps = {
 const Overview = ({ customer, orders }: OverviewProps) => {
   return (
     <div data-testid="overview-page-wrapper">
+      <EmailVerificationBanner />
       <div className="hidden small:block">
         <div className="text-xl-semi flex justify-between items-center mb-4 text-foreground">
           <span data-testid="welcome-message" data-value={customer?.first_name}>
