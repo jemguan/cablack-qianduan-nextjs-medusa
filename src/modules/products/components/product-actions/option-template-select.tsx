@@ -236,6 +236,7 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
             isSelected={isSelected}
             isFirstVisible={isFirstVisible}
             sizeClassName="w-full aspect-square mx-auto"
+            borderColorSelected="border-orange-600 border-4"
           />
 
           {/* 价格 */}
