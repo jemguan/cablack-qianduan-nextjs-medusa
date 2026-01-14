@@ -332,7 +332,7 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
           </div>
 
           {/* 导航按钮 - 只在桌面端显示（移动端不显示箭头） */}
-          {!isMobile && sortedChoices.length > 5 && (
+          {!isMobile && sortedChoices.length > 6 && (
             <>
               <button
                 onClick={scrollPrev}
@@ -367,26 +367,32 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
 
     if (!selectedOption) return null
 
+    // 过滤出有 choices 的有效选项
+    const validOptions = options.filter((o) => o.choices && o.choices.length > 0)
+    const showSwitcher = validOptions.length > 1
+
     return (
       <div key={groupKey} className="flex flex-col gap-y-3">
-        {/* 对比选项切换器 */}
-        <div className="flex items-center gap-2 p-1 bg-ui-bg-base rounded-lg border border-ui-border-base">
-          {options.map((option) => (
-            <button
-              key={option.id}
-              onClick={() => handleComparisonSwitch(groupKey, option.id, options)}
-              className={clx(
-                "flex-1 px-3 py-1.5 rounded text-sm font-medium transition-all",
-                {
-                  "bg-ui-bg-interactive text-ui-fg-on-color": selectedOptionId === option.id,
-                  "text-ui-fg-subtle hover:text-ui-fg-base": selectedOptionId !== option.id,
-                }
-              )}
-            >
-              {option.name}
-            </button>
-          ))}
-        </div>
+        {/* 对比选项切换器 - 只有多个有效选项时才显示 */}
+        {showSwitcher && (
+          <div className="flex items-center gap-2 p-1 bg-ui-bg-base rounded-lg border border-ui-border-base">
+            {options.map((option) => (
+              <button
+                key={option.id}
+                onClick={() => handleComparisonSwitch(groupKey, option.id, options)}
+                className={clx(
+                  "flex-1 px-3 py-1.5 rounded text-sm font-medium transition-all",
+                  {
+                    "bg-ui-bg-interactive text-ui-fg-on-color": selectedOptionId === option.id,
+                    "text-ui-fg-subtle hover:text-ui-fg-base": selectedOptionId !== option.id,
+                  }
+                )}
+              >
+                {option.name}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* 显示选中选项的选择 */}
         {renderOption(selectedOption)}
@@ -421,6 +427,7 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
               }
               renderedComparisonGroups.add(groupKey)
               const groupOptions = comparisonGroups.get(groupKey) || []
+              
               return renderComparisonGroup(groupKey, groupOptions)
             }
             

@@ -136,19 +136,21 @@ export default function ProductActions({
 
     const defaultSelections: Record<string, string[]> = {}
 
-    // 收集所有对比选项组
-    const comparisonGroups = new Map<string, string[]>() // templateId -> [optionId1, optionId2]
+    // 收集所有对比选项组（按模板分组）
+    const comparisonGroupsByTemplate = new Map<string, Map<string, string[]>>() // templateId -> groupKey -> [optionId1, optionId2]
 
     optionTemplates.forEach((template) => {
       if (!template.is_active || !template.options) return
 
+      const templateGroups = new Map<string, string[]>()
+
       template.options.forEach((option) => {
         if (option.is_comparison && option.comparison_option_id) {
           const groupKey = [option.id, option.comparison_option_id].sort().join("-")
-          if (!comparisonGroups.has(groupKey)) {
-            comparisonGroups.set(groupKey, [])
+          if (!templateGroups.has(groupKey)) {
+            templateGroups.set(groupKey, [])
           }
-          const group = comparisonGroups.get(groupKey)!
+          const group = templateGroups.get(groupKey)!
           if (!group.includes(option.id)) {
             group.push(option.id)
           }
@@ -158,6 +160,10 @@ export default function ProductActions({
           }
         }
       })
+
+      if (templateGroups.size > 0) {
+        comparisonGroupsByTemplate.set(template.id, templateGroups)
+      }
     })
 
     optionTemplates.forEach((template) => {
@@ -168,24 +174,42 @@ export default function ProductActions({
       // 按 sort_order 排序选项
       const sortedOptions = [...template.options].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
 
+      // 获取当前模板的对比选项组
+      const templateGroups = comparisonGroupsByTemplate.get(template.id)
+      const processedComparisonGroups = new Set<string>() // 已处理过的对比组
+
       sortedOptions.forEach((option) => {
         if (!option.choices || option.choices.length === 0) return
 
         // 检查该选项是否属于对比选项组
-        const isInComparisonGroup = Array.from(comparisonGroups.values()).some((group) =>
-          group.includes(option.id)
-        )
+        let groupKeyForOption: string | null = null
+        if (templateGroups) {
+          for (const [key, group] of templateGroups.entries()) {
+            if (group.includes(option.id)) {
+              groupKeyForOption = key
+              break
+            }
+          }
+        }
 
-        // 如果是对比选项组中的选项，只选择第一个有默认值的选项
+        const isInComparisonGroup = groupKeyForOption !== null
+
+        // 如果是对比选项组中的选项，只选择组内第一个选项的默认值
         if (isInComparisonGroup) {
-          // 检查当前选项是否已经有选择（只检查当前选项的选择）
-          const currentOptionHasSelection = templateChoices.some((choiceId) => {
-            return option.choices?.some((c) => c.id === choiceId)
-          })
+          // 如果这个组已经处理过，跳过
+          if (processedComparisonGroups.has(groupKeyForOption!)) {
+            return
+          }
+          processedComparisonGroups.add(groupKeyForOption!)
 
-          // 如果当前选项还没有选择，且有默认值，则添加
-          if (!currentOptionHasSelection) {
-            const defaultChoice = option.choices.find((choice) => choice.is_default)
+          // 找到组内第一个选项（按 sort_order）
+          const group = templateGroups!.get(groupKeyForOption!)!
+          const groupOptions = sortedOptions.filter(o => group.includes(o.id))
+          const firstOptionInGroup = groupOptions[0]
+
+          // 只为组内第一个选项设置默认值
+          if (firstOptionInGroup && firstOptionInGroup.id === option.id) {
+            const defaultChoice = firstOptionInGroup.choices?.find((c) => c.is_default)
             if (defaultChoice) {
               templateChoices.push(defaultChoice.id)
             }
@@ -239,20 +263,16 @@ export default function ProductActions({
       return allChoices
     }
 
-    console.log("[添加到购物车] selectedChoicesByTemplate:", JSON.stringify(selectedChoicesByTemplate))
-
     optionTemplates.forEach((template) => {
       if (!template.is_active || !template.options) return
 
       const selectedChoiceIds = selectedChoicesByTemplate[template.id] || []
-      console.log(`[添加到购物车] 模板 ${template.title}: selectedChoiceIds=${JSON.stringify(selectedChoiceIds)}`)
 
       template.options.forEach((option) => {
         if (!option.choices || option.choices.length === 0) return
 
         option.choices.forEach((choice) => {
           const isSelected = selectedChoiceIds.includes(choice.id)
-          console.log(`[添加到购物车]   选项 ${option.name} -> 选择 ${choice.title} (${choice.id}): isSelected=${isSelected}`)
 
           if (isSelected) {
             allChoices.push({
@@ -268,7 +288,6 @@ export default function ProductActions({
       })
     })
 
-    console.log(`[添加到购物车] 最终 allChoices:`, allChoices.map(c => ({id: c.id, title: c.title, option: c.option_name})))
     return allChoices
   }, [optionTemplates, selectedChoicesByTemplate])
 
@@ -338,7 +357,7 @@ export default function ProductActions({
             selectedChoices.includes(choice.id)
           )
           if (!hasSelection) {
-            missing.push(`${template.title} - ${option.name}`)
+            missing.push(option.name)
           }
         }
       })
@@ -360,7 +379,7 @@ export default function ProductActions({
 
       if (!groupHasSelection) {
         const optionNames = group.optionNames.join(" / ")
-        missing.push(`${group.templateName} - ${optionNames} (任选其一)`)
+        missing.push(`${optionNames} (Select one)`)
       }
     })
 
@@ -486,7 +505,7 @@ export default function ProductActions({
         {/* 必选选项错误提示 */}
         {!isValidOptionSelections && missingRequiredOptions.length > 0 && (
           <div className="p-3 rounded-lg bg-ui-bg-subtle border border-ui-border-base">
-            <Text className="text-ui-fg-error text-sm font-medium">请选择以下选项：</Text>
+            <Text className="text-ui-fg-error text-sm font-medium">Please select the following options:</Text>
             <ul className="mt-1 text-sm text-ui-fg-subtle list-disc list-inside">
               {missingRequiredOptions.map((option, index) => (
                 <li key={index}>{option}</li>
