@@ -14,7 +14,7 @@ import LineItemOptions from "@modules/common/components/line-item-options"
 import LineItemPrice from "@modules/common/components/line-item-price"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Thumbnail from "@modules/products/components/thumbnail"
-import ShoppingBag from "@modules/common/icons/shopping-bag"
+import { FaShoppingBag } from "react-icons/fa"
 import { usePathname } from "next/navigation"
 import { Fragment, useEffect, useRef, useState } from "react"
 import { useAffiliateTracking } from "@modules/cart/hooks/use-affiliate-tracking"
@@ -98,7 +98,7 @@ const CartDropdown = ({
             aria-label={`Cart (${totalItems} items)`}
           >
             <div className="relative">
-              <ShoppingBag size="20" />
+              <FaShoppingBag size={20} />
               {totalItems > 0 && (
                 <span className="absolute bottom-0 right-0 bg-primary text-primary-foreground text-[8px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5 leading-none transform translate-x-1/2 translate-y-1/2">
                   {totalItems > 9 ? '9+' : totalItems}

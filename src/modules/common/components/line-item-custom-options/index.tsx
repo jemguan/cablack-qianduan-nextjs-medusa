@@ -283,12 +283,12 @@ const LineItemCustomOptions = ({
           {isExpanded ? (
             <>
               <ChevronUpMini className="w-3 h-3" />
-              <span>收起</span>
+              <span>Show Less</span>
             </>
           ) : (
             <>
               <ChevronDownMini className="w-3 h-3" />
-              <span>显示更多 ({groupedChoicesArray.length - 3})</span>
+              <span>Show More ({groupedChoicesArray.length - 3})</span>
             </>
           )}
         </Button>

@@ -1,6 +1,5 @@
 import { Container } from "@medusajs/ui"
-
-import ChevronDown from "@modules/common/icons/chevron-down"
+import { FaUser, FaMapMarkerAlt, FaChevronDown, FaBox } from "react-icons/fa"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
@@ -29,11 +28,16 @@ const Overview = ({ customer, orders }: OverviewProps) => {
             </span>
           </span>
         </div>
-        <div className="flex flex-col py-8 border-t border-border">
-          <div className="flex flex-col gap-y-4 h-full col-span-1 row-span-2 flex-1">
-            <div className="flex items-start gap-x-16 mb-6">
-              <div className="flex flex-col gap-y-4">
-                <h3 className="text-large-semi text-foreground">Profile</h3>
+        <div className="flex flex-col py-4 small:py-8 border-t border-border/50">
+          <div className="flex flex-col gap-y-4 small:gap-y-6 h-full col-span-1 row-span-2 flex-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 small:mb-6">
+              <div className="bg-card border border-border/50 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <FaUser className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="text-base-semi text-foreground">Profile</h3>
+                </div>
                 <div className="flex items-end gap-x-2">
                   <span
                     className="text-3xl-semi leading-none text-foreground"
@@ -42,14 +46,19 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                   >
                     {getProfileCompletion(customer)}%
                   </span>
-                  <span className="uppercase text-base-regular text-muted-foreground">
+                  <span className="uppercase text-sm text-muted-foreground mb-1">
                     Completed
                   </span>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-y-4">
-                <h3 className="text-large-semi text-foreground">Addresses</h3>
+              <div className="bg-card border border-border/50 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <FaMapMarkerAlt className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="text-base-semi text-foreground">Addresses</h3>
+                </div>
                 <div className="flex items-end gap-x-2">
                   <span
                     className="text-3xl-semi leading-none text-foreground"
@@ -58,7 +67,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                   >
                     {customer?.addresses?.length || 0}
                   </span>
-                  <span className="uppercase text-base-regular text-muted-foreground">
+                  <span className="uppercase text-sm text-muted-foreground mb-1">
                     Saved
                   </span>
                 </div>
@@ -67,10 +76,11 @@ const Overview = ({ customer, orders }: OverviewProps) => {
 
             <div className="flex flex-col gap-y-4">
               <div className="flex items-center gap-x-2">
+                <FaBox className="w-5 h-5 text-muted-foreground" />
                 <h3 className="text-large-semi text-foreground">Recent orders</h3>
               </div>
               <ul
-                className="flex flex-col gap-y-4"
+                className="flex flex-col gap-y-3"
                 data-testid="orders-wrapper"
               >
                 {orders && orders.length > 0 ? (
@@ -83,8 +93,10 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                       >
                         <LocalizedClientLink
                           href={`/account/orders/details/${order.id}`}
+                          className="block focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg"
+                          aria-label={`View order #${order.display_id} details`}
                         >
-                          <Container className="bg-muted/50 hover:bg-muted transition-colors flex justify-between items-center p-4 border border-border">
+                          <Container className="bg-card hover:bg-muted/50 transition-all duration-200 flex justify-between items-center p-4 border border-border/50 rounded-lg shadow-sm hover:shadow-md cursor-pointer group">
                             <div className="grid grid-cols-3 grid-rows-2 text-small-regular gap-x-4 flex-1 text-foreground">
                               <span className="font-semibold text-muted-foreground">Date placed</span>
                               <span className="font-semibold text-muted-foreground">
@@ -93,16 +105,17 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                               <span className="font-semibold text-muted-foreground">
                                 Total amount
                               </span>
-                              <span data-testid="order-created-date">
+                              <span data-testid="order-created-date" className="text-foreground">
                                 {new Date(order.created_at).toDateString()}
                               </span>
                               <span
                                 data-testid="order-id"
                                 data-value={order.display_id}
+                                className="text-foreground font-medium"
                               >
                                 #{order.display_id}
                               </span>
-                              <span data-testid="order-amount">
+                              <span data-testid="order-amount" className="text-foreground font-medium">
                                 {convertToLocale({
                                   amount: order.total,
                                   currency_code: order.currency_code,
@@ -110,13 +123,14 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                               </span>
                             </div>
                             <button
-                              className="flex items-center justify-between text-muted-foreground"
+                              className="flex items-center justify-between text-muted-foreground group-hover:text-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md p-1"
                               data-testid="open-order-button"
+                              aria-label={`Go to order #${order.display_id} details`}
                             >
                               <span className="sr-only">
                                 Go to order #{order.display_id}
                               </span>
-                              <ChevronDown className="-rotate-90" />
+                              <FaChevronDown className="-rotate-90 w-5 h-5" />
                             </button>
                           </Container>
                         </LocalizedClientLink>
@@ -124,7 +138,13 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                     )
                   })
                 ) : (
-                  <span data-testid="no-orders-message" className="text-muted-foreground">No recent orders</span>
+                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center" data-testid="no-orders-message">
+                    <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                      <FaBox className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-base-regular text-muted-foreground mb-2">No recent orders</p>
+                    <p className="text-sm text-muted-foreground">Start shopping to see your orders here</p>
+                  </div>
                 )}
               </ul>
             </div>

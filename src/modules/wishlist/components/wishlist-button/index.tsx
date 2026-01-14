@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { HttpTypes } from "@medusajs/types"
 import { clx } from "@medusajs/ui"
-import Heart from "@modules/common/icons/heart"
+import { FaHeart, FaRegHeart } from "react-icons/fa"
 import { useWishlistOptional } from "@lib/context/wishlist-context"
 
 interface WishlistButtonProps {
@@ -81,15 +81,23 @@ const WishlistButton = ({
         )}
         aria-label={isInList ? "Remove from wishlist" : "Add to wishlist"}
       >
-        <Heart
-          size={iconSize}
-          filled={isInList}
-          color="currentColor"
-          className={clx(
-            "transition-transform duration-200",
-            isUpdating && "animate-pulse"
-          )}
-        />
+        {isInList ? (
+          <FaHeart
+            size={parseInt(iconSize)}
+            className={clx(
+              "transition-transform duration-200",
+              isUpdating && "animate-pulse"
+            )}
+          />
+        ) : (
+          <FaRegHeart
+            size={parseInt(iconSize)}
+            className={clx(
+              "transition-transform duration-200",
+              isUpdating && "animate-pulse"
+            )}
+          />
+        )}
       </button>
     )
   }
@@ -111,15 +119,23 @@ const WishlistButton = ({
         )}
         aria-label={isInList ? "Remove from wishlist" : "Add to wishlist"}
       >
-        <Heart
-          size={iconSize}
-          filled={isInList}
-          color="currentColor"
-          className={clx(
-            "transition-transform duration-200",
-            isUpdating && "animate-pulse"
-          )}
-        />
+        {isInList ? (
+          <FaHeart
+            size={parseInt(iconSize)}
+            className={clx(
+              "transition-transform duration-200",
+              isUpdating && "animate-pulse"
+            )}
+          />
+        ) : (
+          <FaRegHeart
+            size={parseInt(iconSize)}
+            className={clx(
+              "transition-transform duration-200",
+              isUpdating && "animate-pulse"
+            )}
+          />
+        )}
       </button>
     )
   }
@@ -141,15 +157,23 @@ const WishlistButton = ({
       )}
       aria-label={isInList ? "Remove from wishlist" : "Add to wishlist"}
     >
-      <Heart
-        size={iconSize}
-        filled={isInList}
-        color="currentColor"
-        className={clx(
-          "transition-transform duration-200",
-          isUpdating && "animate-pulse"
-        )}
-      />
+      {isInList ? (
+        <FaHeart
+          size={parseInt(iconSize)}
+          className={clx(
+            "transition-transform duration-200",
+            isUpdating && "animate-pulse"
+          )}
+        />
+      ) : (
+        <FaRegHeart
+          size={parseInt(iconSize)}
+          className={clx(
+            "transition-transform duration-200",
+            isUpdating && "animate-pulse"
+          )}
+        />
+      )}
       <span className="text-sm font-medium">
         {isInList ? "In Wishlist" : "Add to Wishlist"}
       </span>

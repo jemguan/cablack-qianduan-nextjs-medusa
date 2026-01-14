@@ -93,6 +93,18 @@
     -webkit-touch-callout: none;
   }
   
+  /* 尊重用户的动画偏好设置 */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  
   /* 移动端优化：防止长时间点击进入文本选择模式 */
   @media (max-width: 768px) {
     * {
@@ -201,7 +213,7 @@
   }
 
   .content-container {
-    @apply max-w-[1440px] w-full mx-auto px-6;
+    @apply max-w-[1440px] w-full mx-auto px-4 small:px-6;
   }
 
   .contrast-btn {

@@ -3,8 +3,7 @@
 import type {ThemeToggleProps} from './types';
 import {useTheme} from './ThemeContext';
 import {THEME_CONFIG} from './config';
-import Sun from '@modules/common/icons/sun';
-import Moon from '@modules/common/icons/moon';
+import { FaSun, FaMoon } from 'react-icons/fa';
 
 /**
  * 主题切换按钮组件
@@ -32,9 +31,9 @@ export function ThemeToggle({
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       {isDark ? (
-        <Sun size={iconSize} />
+        <FaSun size={iconSize} />
       ) : (
-        <Moon size={iconSize} />
+        <FaMoon size={iconSize} />
       )}
       
       {showLabel && (

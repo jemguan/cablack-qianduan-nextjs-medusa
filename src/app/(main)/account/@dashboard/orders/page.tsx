@@ -30,7 +30,7 @@ export default async function Orders({ searchParams }: OrdersPageProps) {
 
   return (
     <div className="w-full" data-testid="orders-page-wrapper">
-      <div className="mb-8 flex flex-col gap-y-4">
+      <div className="mb-4 small:mb-8 flex flex-col gap-y-3 small:gap-y-4">
         <h1 className="text-2xl-semi">Orders</h1>
         <p className="text-base-regular">
           View your previous orders and their status. You can also create

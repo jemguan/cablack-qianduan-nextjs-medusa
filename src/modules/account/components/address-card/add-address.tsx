@@ -1,6 +1,6 @@
 "use client"
 
-import { Plus } from "@medusajs/icons"
+import { FaPlus } from "react-icons/fa"
 import { Button, Heading } from "@medusajs/ui"
 import { useEffect, useState, useActionState } from "react"
 
@@ -49,12 +49,15 @@ const AddAddress = ({
   return (
     <>
       <button
-        className="border border-border rounded-lg p-5 min-h-[220px] h-full w-full flex flex-col justify-between bg-card hover:bg-muted/50 transition-all group"
+        className="border border-border/50 rounded-xl p-6 min-h-[220px] h-full w-full flex flex-col justify-between bg-card hover:bg-muted/50 hover:border-border transition-all duration-200 group cursor-pointer shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
         onClick={open}
         data-testid="add-address-button"
+        aria-label="Add new address"
       >
         <span className="text-base-semi text-foreground">New address</span>
-        <Plus className="text-muted-foreground group-hover:text-foreground transition-colors" />
+        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-200">
+          <FaPlus className="w-6 h-6 text-primary group-hover:text-primary" />
+        </div>
       </button>
 
       <Modal isOpen={state} close={close} data-testid="add-address-modal">
@@ -139,6 +142,8 @@ const AddAddress = ({
               <div
                 className="text-rose-500 text-small-regular py-2"
                 data-testid="address-error"
+                role="alert"
+                aria-live="assertive"
               >
                 {formState.error}
               </div>
@@ -150,12 +155,19 @@ const AddAddress = ({
                 type="reset"
                 variant="secondary"
                 onClick={close}
-                className="h-10"
+                className="h-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                 data-testid="cancel-button"
+                aria-label="Cancel adding address"
               >
                 Cancel
               </Button>
-              <SubmitButton data-testid="save-button">Save</SubmitButton>
+              <SubmitButton 
+                data-testid="save-button"
+                className="min-h-[44px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                aria-label="Save address"
+              >
+                Save
+              </SubmitButton>
             </div>
           </Modal.Footer>
         </form>

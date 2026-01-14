@@ -46,20 +46,23 @@ export default function LoyaltyPageClient({
   }, [])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 small:space-y-6">
       {/* 标签页 */}
-      <div className="border-b border-border">
-        <nav className="flex gap-6 -mb-px overflow-x-auto">
+      <div className="border-b border-border/50">
+        <nav className="flex gap-4 small:gap-8 -mb-px overflow-x-auto">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={clsx(
-                "py-3 px-1 text-sm font-medium border-b-2 whitespace-nowrap transition-colors",
+                "py-3 px-1 text-sm font-medium border-b-2 whitespace-nowrap transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px]",
                 activeTab === tab.id
                   ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border/50"
               )}
+              aria-label={`Switch to ${tab.label} tab`}
+              aria-selected={activeTab === tab.id}
+              role="tab"
             >
               {tab.label}
             </button>

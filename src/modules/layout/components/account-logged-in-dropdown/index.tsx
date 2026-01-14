@@ -6,17 +6,13 @@ import {
   PopoverPanel,
   Transition,
 } from "@headlessui/react"
-import { ArrowRightOnRectangle } from "@medusajs/icons"
+import { FaSignOutAlt, FaUser, FaMapMarkerAlt, FaBox, FaHeart, FaStar, FaUsers } from "react-icons/fa"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 import { signout } from "@lib/data/customer"
 import { getLoyaltyAccount } from "@lib/data/loyalty"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import User from "@modules/common/icons/user"
-import MapPin from "@modules/common/icons/map-pin"
-import Package from "@modules/common/icons/package"
-import Heart from "@modules/common/icons/heart"
 import Spinner from "@modules/common/icons/spinner"
 import { Fragment } from "react"
 
@@ -24,24 +20,9 @@ interface AccountLoggedInDropdownProps {
   customer: HttpTypes.StoreCustomer
 }
 
-// 积分图标
+// 积分图标 - 使用星形图标
 const PointsIcon = ({ size = 18 }: { size?: number }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 6v12" />
-    <path d="M8 10h8" />
-    <path d="M8 14h8" />
-  </svg>
+  <FaStar size={size} />
 )
 
 const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => {
@@ -50,11 +31,13 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
   const [isMember, setIsMember] = useState(false)
   const [points, setPoints] = useState(0)
   const [isPointsEnabled, setIsPointsEnabled] = useState(false)
+  const [isAffiliate, setIsAffiliate] = useState(false)
   const router = useRouter()
 
-  // 获取积分账户信息
+  // 获取积分账户信息和 Affiliate 状态
   useEffect(() => {
-    const fetchLoyalty = async () => {
+    const fetchConfig = async () => {
+      // 获取积分配置
       try {
         const data = await getLoyaltyAccount()
         if (data?.config) {
@@ -67,8 +50,23 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
       } catch (error) {
         // 忽略错误，默认不显示积分相关内容
       }
+
+      // 检查是否是 Affiliate
+      try {
+        const response = await fetch("/api/affiliate/me", {
+          credentials: "include",
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          setIsAffiliate(!!data?.affiliate)
+        }
+      } catch (error) {
+        // 忽略错误，默认不显示 Affiliate 入口
+        console.error("[AccountLoggedInDropdown] Error checking affiliate status:", error)
+      }
     }
-    fetchLoyalty()
+    fetchConfig()
   }, [])
 
   const open = () => setAccountDropdownOpen(true)
@@ -98,7 +96,7 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
           aria-label="Account"
           data-testid="nav-account-link"
         >
-          <User size="20" />
+          <FaUser size={20} />
         </PopoverButton>
         <Transition
           show={accountDropdownOpen}
@@ -150,7 +148,7 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                   onClick={close}
                   data-testid="account-overview-link"
                 >
-                  <User size="18" />
+                  <FaUser size={18} />
                   <span>Overview</span>
                 </LocalizedClientLink>
 
@@ -160,7 +158,7 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                   onClick={close}
                   data-testid="account-profile-link"
                 >
-                  <User size="18" />
+                  <FaUser size={18} />
                   <span>Profile</span>
                 </LocalizedClientLink>
 
@@ -170,7 +168,7 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                   onClick={close}
                   data-testid="account-addresses-link"
                 >
-                  <MapPin size="18" />
+                  <FaMapMarkerAlt size={18} />
                   <span>Addresses</span>
                 </LocalizedClientLink>
 
@@ -180,7 +178,7 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                   onClick={close}
                   data-testid="account-orders-link"
                 >
-                  <Package size="18" />
+                  <FaBox size={18} />
                   <span>Orders</span>
                 </LocalizedClientLink>
 
@@ -190,7 +188,7 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                   onClick={close}
                   data-testid="account-wishlist-link"
                 >
-                  <Heart size="18" />
+                  <FaHeart size={18} />
                   <span>Wishlist</span>
                 </LocalizedClientLink>
 
@@ -204,6 +202,19 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                   >
                     <PointsIcon size={18} />
                     <span>Points</span>
+                  </LocalizedClientLink>
+                )}
+
+                {/* Affiliate Program 入口 - 仅对 Affiliate 显示 */}
+                {isAffiliate && (
+                  <LocalizedClientLink
+                    href="/account/affiliate"
+                    className="flex items-center gap-x-3 py-2 px-2 text-base-regular text-ui-fg-subtle hover:text-ui-fg-base hover:bg-ui-bg-base-hover rounded-md transition-colors"
+                    onClick={close}
+                    data-testid="account-affiliate-link"
+                  >
+                    <FaUsers size={18} />
+                    <span>Affiliate Program</span>
                   </LocalizedClientLink>
                 )}
 
@@ -221,7 +232,7 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                   {isLoggingOut ? (
                     <Spinner size="18" />
                   ) : (
-                    <ArrowRightOnRectangle className="w-[18px] h-[18px]" />
+                    <FaSignOutAlt size={18} />
                   )}
                   <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
                 </button>

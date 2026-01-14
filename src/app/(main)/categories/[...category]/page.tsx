@@ -20,16 +20,23 @@ type Props = {
 }
 
 export async function generateStaticParams() {
-  const product_categories = await listCategories()
+  try {
+    const product_categories = await listCategories()
 
-  if (!product_categories) {
+    if (!product_categories) {
+      return []
+    }
+
+    // No countryCode in URL anymore, just generate category handles
+    return product_categories.map((category: any) => ({
+      category: [category.handle],
+    }))
+  } catch (error) {
+    // 构建时如果无法连接到后端，返回空数组
+    // Next.js 会使用动态渲染而不是静态生成
+    console.warn('Failed to generate static params for categories:', error)
     return []
   }
-
-  // No countryCode in URL anymore, just generate category handles
-  return product_categories.map((category: any) => ({
-    category: [category.handle],
-  }))
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {

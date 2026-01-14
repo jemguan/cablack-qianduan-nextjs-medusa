@@ -7,6 +7,9 @@ import { addToCart, applyPromotions } from "@lib/data/cart"
 import clsx from "clsx"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { FaCopy, FaBox } from "react-icons/fa"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { listProducts } from "@lib/data/products"
 
 interface RedeemProductsProps {
   rules: RewardRule[]
@@ -40,6 +43,39 @@ export default function RedeemProducts({
   const [isLoadingRewards, setIsLoadingRewards] = useState(true)
   const [rewardPage, setRewardPage] = useState(1)
   const rewardPageSize = 6
+  const [productHandles, setProductHandles] = useState<Record<string, string>>({})
+
+  // 加载产品 handles
+  useEffect(() => {
+    const loadProductHandles = async () => {
+      const productIds = rules
+        .map((rule) => rule.product_id)
+        .filter((id): id is string => id !== null)
+      
+      if (productIds.length === 0) return
+
+      try {
+        const { response } = await listProducts({
+          queryParams: {
+            id: productIds,
+            limit: productIds.length,
+            fields: "+handle",
+          },
+        })
+
+        const handles: Record<string, string> = {}
+        response.products?.forEach((product) => {
+          if (product.id && product.handle) {
+            handles[product.id] = product.handle
+          }
+        })
+        setProductHandles(handles)
+      } catch (error) {
+        console.error("Failed to load product handles:", error)
+      }
+    }
+    loadProductHandles()
+  }, [rules])
 
   // 加载已兑换的商品折扣码
   useEffect(() => {
@@ -234,7 +270,7 @@ export default function RedeemProducts({
       )}
 
       {/* Product List */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 small:gap-4">
         {rules.map((rule) => {
           const canAfford = account.points >= rule.required_points
           const inStock = rule.in_stock !== false // 默认为 true（兼容旧数据）
@@ -245,74 +281,111 @@ export default function RedeemProducts({
             <div
               key={rule.id}
               className={clsx(
-                "rounded-lg border p-4 transition-all relative",
+                "rounded-lg border p-3 small:p-4 transition-all relative bg-card",
                 canRedeem
-                  ? "border-border hover:border-primary/50 hover:shadow-sm"
-                  : "border-border opacity-60"
+                  ? "border-border/50 hover:border-primary/50 hover:shadow-sm"
+                  : "border-border/50 opacity-60"
               )}
             >
-              {/* Out of Stock Label */}
-              {!inStock && (
-                <div className="absolute top-2 right-2 px-2 py-0.5 bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 text-xs rounded-full font-medium">
-                  Out of Stock
-                </div>
-              )}
-
-              <div className="flex gap-4">
-                {/* Product Image */}
-                <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                  {rule.product_thumbnail ? (
-                    <Image
-                      src={rule.product_thumbnail}
-                      alt={rule.product_title || "Product"}
-                      width={80}
-                      height={80}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-8 w-8"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                        />
-                      </svg>
-                    </div>
-                  )}
-                </div>
+              {/* Mobile: Horizontal Layout with image on left, Desktop: Horizontal Layout */}
+              <div className="flex flex-row gap-3 small:gap-4">
+                {/* Product Image - Clickable link to product page */}
+                {rule.product_id && productHandles[rule.product_id] ? (
+                  <LocalizedClientLink
+                    href={`/products/${productHandles[rule.product_id]}`}
+                    className="w-24 small:w-20 h-24 small:h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+                    aria-label={`View ${rule.product_title || "product"} details`}
+                  >
+                    {rule.product_thumbnail ? (
+                      <Image
+                        src={rule.product_thumbnail}
+                        alt={rule.product_title || "Product"}
+                        width={96}
+                        height={96}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-8 w-8"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </LocalizedClientLink>
+                ) : (
+                  <div className="w-24 small:w-20 h-24 small:h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                    {rule.product_thumbnail ? (
+                      <Image
+                        src={rule.product_thumbnail}
+                        alt={rule.product_title || "Product"}
+                        width={96}
+                        height={96}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-8 w-8"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Product Info */}
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium truncate">
-                    {rule.product_title || "Unknown Product"}
-                  </h4>
-                  {rule.variant_title && (
-                    <p className="text-xs text-muted-foreground truncate">
-                      {rule.variant_title}
-                    </p>
-                  )}
-                  <div className="mt-2 flex items-center gap-2 flex-wrap">
-                    <span className="text-primary font-bold">
-                      {rule.required_points.toLocaleString()} pts
-                    </span>
-                    {rule.daily_limit && (
-                      <span className="text-xs text-muted-foreground">
-                        Limit {rule.daily_limit}/day
-                      </span>
+                <div className="flex-1 min-w-0 flex flex-col justify-between">
+                  <div>
+                    {rule.product_id && productHandles[rule.product_id] ? (
+                      <LocalizedClientLink
+                        href={`/products/${productHandles[rule.product_id]}`}
+                        className="block group"
+                      >
+                        <h4 className="font-medium text-sm small:text-base line-clamp-2 mb-1 group-hover:text-primary transition-colors">
+                          {rule.product_title || "Unknown Product"}
+                        </h4>
+                      </LocalizedClientLink>
+                    ) : (
+                      <h4 className="font-medium text-sm small:text-base line-clamp-2 mb-1">
+                        {rule.product_title || "Unknown Product"}
+                      </h4>
                     )}
-                    {inStock && typeof rule.stock_quantity === "number" && rule.stock_quantity > 0 && rule.stock_quantity <= 5 && (
-                      <span className="text-xs text-orange-600 dark:text-orange-400">
-                        Only {rule.stock_quantity} left
-                      </span>
+                    {rule.variant_title && (
+                      <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
+                        {rule.variant_title}
+                      </p>
                     )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-primary font-bold text-base small:text-lg">
+                        {rule.required_points.toLocaleString()} pts
+                      </span>
+                      {rule.daily_limit && (
+                        <span className="text-xs text-muted-foreground">
+                          Limit {rule.daily_limit}/day
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -322,16 +395,21 @@ export default function RedeemProducts({
                 onClick={() => handleRedeem(rule)}
                 disabled={!canRedeem || isLoading}
                 className={clsx(
-                  "w-full mt-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                  "w-full mt-3 small:mt-4 py-2.5 small:py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
                   canRedeem && !isLoading
                     ? "bg-primary text-primary-foreground hover:bg-primary/90"
                     : "bg-muted text-muted-foreground cursor-not-allowed"
                 )}
+                aria-label={
+                  isSelected && isLoading
+                    ? "Redeeming product"
+                    : canAfford
+                    ? `Redeem ${rule.product_title} for ${rule.required_points} points`
+                    : `Not enough points to redeem ${rule.product_title}`
+                }
               >
                 {isSelected && isLoading
                   ? "Redeeming..."
-                  : !inStock
-                  ? "Out of Stock"
                   : canAfford
                   ? "Redeem Now"
                   : "Not Enough Points"}
@@ -342,22 +420,9 @@ export default function RedeemProducts({
       </div>
 
       {/* Redeemed Products List */}
-      <div className="mt-8 pt-6 border-t border-border">
-        <h4 className="text-base font-medium mb-4 flex items-center gap-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 text-primary"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-            />
-          </svg>
+      <div className="mt-6 small:mt-8 pt-4 small:pt-6 border-t border-border">
+        <h4 className="text-base font-medium mb-3 small:mb-4 flex items-center gap-2">
+          <FaBox className="h-5 w-5 text-primary" />
           My Product Codes
         </h4>
 
@@ -393,10 +458,10 @@ export default function RedeemProducts({
                 .map((reward, index) => (
                 <div
                   key={`${reward.code}-${index}`}
-                  className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg border border-border hover:border-primary/50 transition-colors"
+                  className="flex flex-col small:flex-row items-start small:items-center gap-3 small:gap-4 p-3 small:p-4 bg-muted/30 rounded-lg border border-border hover:border-primary/50 transition-colors"
                 >
                   {/* Product Image */}
-                  <div className="w-14 h-14 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                  <div className="w-full small:w-14 h-32 small:h-14 bg-muted rounded-lg overflow-hidden flex-shrink-0">
                     {reward.product_thumbnail ? (
                       <Image
                         src={reward.product_thumbnail}
@@ -425,16 +490,16 @@ export default function RedeemProducts({
                     )}
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className="font-mono font-bold text-base text-primary select-all">
+                  <div className="flex-1 min-w-0 w-full small:w-auto">
+                    <div className="flex items-center gap-2 small:gap-3 flex-wrap mb-1">
+                      <span className="font-mono font-bold text-sm small:text-base text-primary select-all break-all">
                         {reward.code}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground truncate mt-0.5">
+                    <p className="text-xs small:text-sm text-muted-foreground line-clamp-2 small:truncate mb-2 small:mb-0">
                       {reward.product_title}
                     </p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 small:gap-3 text-xs text-muted-foreground flex-wrap">
                       <span>{reward.points_used.toLocaleString()} pts used</span>
                       <span>·</span>
                       <span>
@@ -448,22 +513,10 @@ export default function RedeemProducts({
                   </div>
                   <button
                     onClick={() => handleCopyCode(reward.code)}
-                    className="px-3 py-1.5 text-sm border border-border rounded-md hover:bg-muted transition-colors flex items-center gap-1"
+                    className="w-full small:w-auto px-3 py-2 small:py-1.5 text-sm border border-border rounded-md hover:bg-muted transition-colors flex items-center justify-center gap-1 min-h-[44px] small:min-h-0 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    aria-label={`Copy code ${reward.code}`}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                      />
-                    </svg>
+                    <FaCopy className="h-4 w-4" />
                     Copy
                   </button>
                 </div>

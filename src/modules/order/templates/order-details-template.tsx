@@ -18,14 +18,14 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
   order,
 }) => {
   return (
-    <div className="flex flex-col justify-center gap-y-4">
+    <div className="flex flex-col justify-center gap-y-6">
       <div className="flex gap-2 justify-between items-center">
-        <h1 className="text-2xl-semi">Order details</h1>
+        <h1 className="text-2xl-semi text-foreground">Order details</h1>
         <Button
           asChild
           variant="secondary"
           size="small"
-          className="group inline-flex items-center gap-2"
+          className="group inline-flex items-center gap-2 bg-muted hover:bg-muted/80 text-foreground border-border hover:border-primary/50 transition-all duration-200 cursor-pointer"
           data-testid="back-to-overview-button"
         >
           <LocalizedClientLink href="/account/orders">
@@ -35,7 +35,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
         </Button>
       </div>
       <div
-        className="flex flex-col gap-4 h-full bg-card w-full"
+        className="flex flex-col gap-6 h-full bg-card w-full"
         data-testid="order-details-container"
       >
         <OrderDetails order={order} showStatus />

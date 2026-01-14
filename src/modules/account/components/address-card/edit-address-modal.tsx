@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState, useActionState } from "react"
-import { PencilSquare as Edit, Trash } from "@medusajs/icons"
+import { FaEdit, FaTrash } from "react-icons/fa"
 import { Button, Heading, Text, clx } from "@medusajs/ui"
 
 import useToggleState from "@lib/hooks/use-toggle-state"
@@ -65,10 +65,10 @@ const EditAddress: React.FC<EditAddressProps> = ({
     <>
       <div
         className={clx(
-          "border rounded-lg p-5 min-h-[220px] h-full w-full flex flex-col justify-between transition-all bg-card shadow-sm hover:shadow-md",
+          "border rounded-xl p-6 min-h-[220px] h-full w-full flex flex-col justify-between transition-all duration-200 bg-card shadow-sm hover:shadow-md",
           {
-            "border-primary ring-1 ring-primary": isActive,
-            "border-border": !isActive,
+            "border-primary ring-2 ring-primary/20": isActive,
+            "border-border/50 hover:border-border": !isActive,
           }
         )}
         data-testid="address-container"
@@ -102,21 +102,23 @@ const EditAddress: React.FC<EditAddressProps> = ({
             </span>
           </Text>
         </div>
-        <div className="flex items-center gap-x-4 border-t border-border pt-4">
+        <div className="flex items-center gap-x-4 border-t border-border/50 pt-4">
           <button
-            className="text-small-regular text-muted-foreground hover:text-foreground flex items-center gap-x-2 transition-colors"
+            className="text-small-regular text-muted-foreground hover:text-foreground flex items-center gap-x-2 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md px-2 py-1 min-h-[44px] min-w-[44px]"
             onClick={open}
             data-testid="address-edit-button"
+            aria-label={`Edit address for ${address.first_name} ${address.last_name}`}
           >
-            <Edit className="w-4 h-4" />
+            <FaEdit className="w-4 h-4" />
             Edit
           </button>
           <button
-            className="text-small-regular text-muted-foreground hover:text-destructive flex items-center gap-x-2 transition-colors"
+            className="text-small-regular text-muted-foreground hover:text-destructive flex items-center gap-x-2 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2 rounded-md px-2 py-1 min-h-[44px] min-w-[44px]"
             onClick={removeAddress}
             data-testid="address-delete-button"
+            aria-label={`Remove address for ${address.first_name} ${address.last_name}`}
           >
-            {removing ? <Spinner /> : <Trash className="w-4 h-4" />}
+            {removing ? <Spinner className="w-4 h-4" /> : <FaTrash className="w-4 h-4" />}
             Remove
           </button>
         </div>
@@ -212,7 +214,11 @@ const EditAddress: React.FC<EditAddressProps> = ({
               />
             </div>
             {formState.error && (
-              <div className="text-rose-500 text-small-regular py-2">
+              <div 
+                className="text-rose-500 text-small-regular py-2"
+                role="alert"
+                aria-live="assertive"
+              >
                 {formState.error}
               </div>
             )}
@@ -223,12 +229,19 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 type="reset"
                 variant="secondary"
                 onClick={close}
-                className="h-10 bg-muted hover:bg-muted/80 text-foreground border-border"
+                className="h-10 min-h-[44px] bg-muted hover:bg-muted/80 text-foreground border-border focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                 data-testid="cancel-button"
+                aria-label="Cancel editing address"
               >
                 Cancel
               </Button>
-              <SubmitButton data-testid="save-button">Save</SubmitButton>
+              <SubmitButton 
+                data-testid="save-button"
+                className="min-h-[44px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                aria-label="Save address changes"
+              >
+                Save
+              </SubmitButton>
             </div>
           </Modal.Footer>
         </form>

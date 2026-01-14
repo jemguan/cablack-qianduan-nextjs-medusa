@@ -3,8 +3,7 @@
 import { addToCart } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button, clx } from "@medusajs/ui"
-import ShoppingBag from "@modules/common/icons/shopping-bag"
-import Check from "@modules/common/icons/check"
+import { FaShoppingBag, FaCheck } from "react-icons/fa"
 import { useParams, useRouter } from "next/navigation"
 import { useState, useMemo } from "react"
 import { isEqual } from "lodash"
@@ -227,12 +226,12 @@ const QuickAddButton: React.FC<QuickAddButtonProps> = ({
     >
       {isSuccess ? (
         <span className="flex items-center gap-2">
-          <Check size="16" />
+          <FaCheck size={16} />
           Added
         </span>
       ) : (
         <span className="flex items-center gap-2">
-          <ShoppingBag size="16" />
+          <FaShoppingBag size={16} />
           Add to Cart
         </span>
       )}

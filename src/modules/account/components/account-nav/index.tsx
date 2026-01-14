@@ -1,15 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { clx } from "@medusajs/ui"
-import { ArrowRightOnRectangle } from "@medusajs/icons"
 import { usePathname } from "next/navigation"
+import { FaSignOutAlt, FaChevronDown, FaUser, FaMapMarkerAlt, FaBox, FaHeart, FaStar, FaUsers } from "react-icons/fa"
 
-import ChevronDown from "@modules/common/icons/chevron-down"
-import User from "@modules/common/icons/user"
-import MapPin from "@modules/common/icons/map-pin"
-import Package from "@modules/common/icons/package"
-import Heart from "@modules/common/icons/heart"
 import Spinner from "@modules/common/icons/spinner"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
@@ -78,7 +73,7 @@ const AccountNav = ({
             data-testid="account-main-link"
           >
             <>
-              <ChevronDown className="transform rotate-90" />
+              <FaChevronDown className="transform rotate-90 w-5 h-5" />
               <span>Account</span>
             </>
           </LocalizedClientLink>
@@ -92,57 +87,61 @@ const AccountNav = ({
                 <li>
                   <LocalizedClientLink
                     href="/account/profile"
-                    className="flex items-center justify-between py-4 border-b border-border px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                    className="flex items-center justify-between py-4 border-b border-border/50 px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px]"
                     data-testid="profile-link"
+                    aria-label="Go to profile page"
                   >
                     <>
                       <div className="flex items-center gap-x-2">
-                        <User size={20} />
+                        <FaUser className="w-5 h-5" />
                         <span>Profile</span>
                       </div>
-                      <ChevronDown className="transform -rotate-90" />
+                      <FaChevronDown className="transform -rotate-90 w-5 h-5" />
                     </>
                   </LocalizedClientLink>
                 </li>
                 <li>
                   <LocalizedClientLink
                     href="/account/addresses"
-                    className="flex items-center justify-between py-4 border-b border-border px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                    className="flex items-center justify-between py-4 border-b border-border/50 px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px]"
                     data-testid="addresses-link"
+                    aria-label="Go to addresses page"
                   >
                     <>
                       <div className="flex items-center gap-x-2">
-                        <MapPin size={20} />
+                        <FaMapMarkerAlt className="w-5 h-5" />
                         <span>Addresses</span>
                       </div>
-                      <ChevronDown className="transform -rotate-90" />
+                      <FaChevronDown className="transform -rotate-90 w-5 h-5" />
                     </>
                   </LocalizedClientLink>
                 </li>
                 <li>
                   <LocalizedClientLink
                     href="/account/orders"
-                    className="flex items-center justify-between py-4 border-b border-border px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                    className="flex items-center justify-between py-4 border-b border-border/50 px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px]"
                     data-testid="orders-link"
+                    aria-label="Go to orders page"
                   >
                     <div className="flex items-center gap-x-2">
-                      <Package size={20} />
+                      <FaBox className="w-5 h-5" />
                       <span>Orders</span>
                     </div>
-                    <ChevronDown className="transform -rotate-90" />
+                    <FaChevronDown className="transform -rotate-90 w-5 h-5" />
                   </LocalizedClientLink>
                 </li>
                 <li>
                   <LocalizedClientLink
                     href="/account/wishlist"
-                    className="flex items-center justify-between py-4 border-b border-border px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                    className="flex items-center justify-between py-4 border-b border-border/50 px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px]"
                     data-testid="wishlist-link"
+                    aria-label="Go to wishlist page"
                   >
                     <div className="flex items-center gap-x-2">
-                      <Heart size="20" />
+                      <FaHeart className="w-5 h-5" />
                       <span>Wishlist</span>
                     </div>
-                    <ChevronDown className="transform -rotate-90" />
+                    <FaChevronDown className="transform -rotate-90 w-5 h-5" />
                   </LocalizedClientLink>
                 </li>
                 {/* 积分入口 - 仅在积分系统启用时显示 */}
@@ -150,25 +149,15 @@ const AccountNav = ({
                   <li>
                     <LocalizedClientLink
                       href="/account/loyalty"
-                      className="flex items-center justify-between py-4 border-b border-border px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                      className="flex items-center justify-between py-4 border-b border-border/50 px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px]"
                       data-testid="loyalty-link"
+                      aria-label="Go to loyalty points page"
                     >
                       <div className="flex items-center gap-x-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
+                        <FaStar className="w-5 h-5" />
                         <span>Points</span>
                       </div>
-                      <ChevronDown className="transform -rotate-90" />
+                      <FaChevronDown className="transform -rotate-90 w-5 h-5" />
                     </LocalizedClientLink>
                   </li>
                 )}
@@ -177,21 +166,15 @@ const AccountNav = ({
                   <li>
                     <LocalizedClientLink
                       href="/account/affiliate"
-                      className="flex items-center justify-between py-4 border-b border-border px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                      className="flex items-center justify-between py-4 border-b border-border/50 px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px]"
                       data-testid="affiliate-link"
+                      aria-label="Go to affiliate program page"
                     >
                       <div className="flex items-center gap-x-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                        </svg>
+                        <FaUsers className="w-5 h-5" />
                         <span>Affiliate Program</span>
                       </div>
-                      <ChevronDown className="transform -rotate-90" />
+                      <FaChevronDown className="transform -rotate-90 w-5 h-5" />
                     </LocalizedClientLink>
                   </li>
                 )}
@@ -200,21 +183,22 @@ const AccountNav = ({
                     type="button"
                     disabled={isLoggingOut}
                     className={clx(
-                      "flex items-center justify-between py-4 border-b border-border px-8 w-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all",
-                      isLoggingOut && "opacity-50 cursor-not-allowed"
+                      "flex items-center justify-between py-4 border-b border-border/50 px-8 w-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px]",
+                      isLoggingOut ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
                     )}
                     onClick={handleLogout}
                     data-testid="logout-button"
+                    aria-label={isLoggingOut ? "Logging out" : "Log out"}
                   >
                     <div className="flex items-center gap-x-2">
                       {isLoggingOut ? (
                         <Spinner className="w-5 h-5 animate-spin" />
                       ) : (
-                        <ArrowRightOnRectangle />
+                        <FaSignOutAlt className="w-5 h-5" />
                       )}
                       <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
                     </div>
-                    {!isLoggingOut && <ChevronDown className="transform -rotate-90" />}
+                    {!isLoggingOut && <FaChevronDown className="transform -rotate-90 w-5 h-5" />}
                   </button>
                 </li>
               </ul>
@@ -229,58 +213,64 @@ const AccountNav = ({
           </div>
           <div className="text-base-regular">
             <ul className="flex mb-0 justify-start items-start flex-col gap-y-4">
-              <li>
+              <li className="w-full">
                 <AccountNavLink
                   href="/account"
                   route={route!}
                   data-testid="overview-link"
+                  icon={<FaUser className="w-4 h-4" />}
                 >
                   Overview
                 </AccountNavLink>
               </li>
-              <li>
+              <li className="w-full">
                 <AccountNavLink
                   href="/account/profile"
                   route={route!}
                   data-testid="profile-link"
+                  icon={<FaUser className="w-4 h-4" />}
                 >
                   Profile
                 </AccountNavLink>
               </li>
-              <li>
+              <li className="w-full">
                 <AccountNavLink
                   href="/account/addresses"
                   route={route!}
                   data-testid="addresses-link"
+                  icon={<FaMapMarkerAlt className="w-4 h-4" />}
                 >
                   Addresses
                 </AccountNavLink>
               </li>
-              <li>
+              <li className="w-full">
                 <AccountNavLink
                   href="/account/orders"
                   route={route!}
                   data-testid="orders-link"
+                  icon={<FaBox className="w-4 h-4" />}
                 >
                   Orders
                 </AccountNavLink>
               </li>
-              <li>
+              <li className="w-full">
                 <AccountNavLink
                   href="/account/wishlist"
                   route={route!}
                   data-testid="wishlist-link"
+                  icon={<FaHeart className="w-4 h-4" />}
                 >
                   Wishlist
                 </AccountNavLink>
               </li>
               {/* 积分入口 - 仅在积分系统启用时显示 */}
               {isPointsEnabled && (
-                <li>
+                <li className="w-full">
                   <AccountNavLink
                     href="/account/loyalty"
                     route={route!}
                     data-testid="loyalty-link"
+                    icon={<FaStar className="w-4 h-4" />}
                   >
                     Points
                   </AccountNavLink>
@@ -288,28 +278,36 @@ const AccountNav = ({
               )}
               {/* Affiliate Program 入口 - 仅对 Affiliate 显示 */}
               {isAffiliate && (
-                <li>
+                <li className="w-full">
                   <AccountNavLink
                     href="/account/affiliate"
                     route={route!}
                     data-testid="affiliate-link"
+                    icon={<FaUsers className="w-4 h-4" />}
                   >
                     Affiliate Program
                   </AccountNavLink>
                 </li>
               )}
-              <li className="text-muted-foreground hover:text-foreground transition-colors">
+              <li className="w-full">
                 <button
                   type="button"
                   disabled={isLoggingOut}
                   className={clx(
-                    "flex items-center gap-x-2",
-                    isLoggingOut && "opacity-50 cursor-not-allowed"
+                    "flex items-center gap-x-2 text-muted-foreground hover:text-foreground transition-colors duration-200 cursor-pointer relative py-1.5 px-3 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px] w-full",
+                    isLoggingOut ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
                   )}
                   onClick={handleLogout}
                   data-testid="logout-button"
+                  aria-label={isLoggingOut ? "Logging out" : "Log out"}
                 >
-                  {isLoggingOut && <Spinner className="w-4 h-4 animate-spin" />}
+                  <span className="flex-shrink-0">
+                    {isLoggingOut ? (
+                      <Spinner className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <FaSignOutAlt className="w-4 h-4" />
+                    )}
+                  </span>
                   <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
                 </button>
               </li>
@@ -325,6 +323,7 @@ type AccountNavLinkProps = {
   href: string
   route: string
   children: React.ReactNode
+  icon?: React.ReactNode
   "data-testid"?: string
 }
 
@@ -332,18 +331,26 @@ const AccountNavLink = ({
   href,
   route,
   children,
+  icon,
   "data-testid": dataTestId,
 }: AccountNavLinkProps) => {
   const active = route === href
   return (
     <LocalizedClientLink
       href={href}
-      className={clx("text-muted-foreground hover:text-foreground transition-all", {
-        "text-primary font-semibold": active,
-      })}
+      className={clx(
+        "flex items-center gap-x-2 text-muted-foreground hover:text-foreground transition-colors duration-200 cursor-pointer relative py-1.5 px-3 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px] w-full",
+        {
+          "text-primary font-semibold bg-primary/10": active,
+        }
+      )}
       data-testid={dataTestId}
     >
-      {children}
+      {active && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-r-full" />
+      )}
+      {icon && <span className="flex-shrink-0">{icon}</span>}
+      <span>{children}</span>
     </LocalizedClientLink>
   )
 }

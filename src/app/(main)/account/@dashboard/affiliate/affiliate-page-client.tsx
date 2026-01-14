@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { HttpTypes } from "@medusajs/types"
-import { Copy, Check, Search, Link2, ExternalLink } from "lucide-react"
+import { FaCopy, FaCheck, FaSearch, FaLink, FaExternalLinkAlt, FaChevronDown } from "react-icons/fa"
 import { toast } from "sonner"
-import ChevronDown from "@modules/common/icons/chevron-down"
 
 type Product = {
   id: string
@@ -251,9 +250,9 @@ export default function AffiliatePageClient({
   if (!affiliateData?.affiliate) {
     return (
       <div className="w-full">
-        <div className="mb-8">
-          <h1 className="text-2xl-semi">Affiliate Program</h1>
-          <p className="text-base-regular text-ui-fg-subtle mt-2">
+        <div className="mb-4 small:mb-8">
+          <h1 className="text-2xl-semi text-foreground">Affiliate Program</h1>
+          <p className="text-base-regular text-muted-foreground mt-2">
             You are not an Affiliate yet. Please contact the administrator to apply.
           </p>
         </div>
@@ -271,68 +270,70 @@ export default function AffiliatePageClient({
   return (
     <div className="w-full space-y-8">
       <div className="mb-8">
-        <h1 className="text-2xl-semi">Affiliate Program</h1>
-        <p className="text-base-regular text-ui-fg-subtle mt-2">
+        <h1 className="text-2xl-semi text-foreground">Affiliate Program</h1>
+        <p className="text-base-regular text-muted-foreground mt-2">
           Promote products and earn commissions
         </p>
       </div>
 
       {/* 专属链接和折扣码 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="border border-ui-border-base rounded-lg p-6">
-          <h2 className="text-lg-semi mb-4">Your Affiliate Link</h2>
-          <div className="flex items-center gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 small:gap-6">
+        <div className="border border-border/50 rounded-xl p-6 bg-card shadow-sm">
+          <h2 className="text-lg-semi mb-4 text-foreground">Your Affiliate Link</h2>
+          <div className="flex items-center gap-3">
             <input
               type="text"
               readOnly
               value={affiliate.affiliate_link}
-              className="flex-1 px-3 py-2 border border-ui-border-base rounded-md bg-ui-bg-subtle text-sm"
+              className="flex-1 px-4 py-2 border border-border/50 rounded-lg bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all duration-200"
             />
             <button
               onClick={() => copyToClipboard(affiliate.affiliate_link, "link")}
-              className="px-4 py-2 bg-ui-bg-base border border-ui-border-base rounded-md hover:bg-ui-bg-base-hover transition-colors"
+              className="px-5 py-2 bg-card border border-border/50 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px] min-w-[44px]"
+              aria-label={copiedLink ? "Affiliate link copied to clipboard" : "Copy affiliate link"}
             >
-              {copiedLink ? <Check size={16} /> : <Copy size={16} />}
+              {copiedLink ? <FaCheck size={16} className="text-primary" /> : <FaCopy size={16} className="text-foreground" />}
             </button>
           </div>
         </div>
 
-        <div className="border border-ui-border-base rounded-lg p-6">
-          <h2 className="text-lg-semi mb-4">Your Discount Code</h2>
-          <div className="flex items-center gap-2">
+        <div className="border border-border/50 rounded-xl p-6 bg-card shadow-sm">
+          <h2 className="text-lg-semi mb-4 text-foreground">Your Discount Code</h2>
+          <div className="flex items-center gap-3">
             <input
               type="text"
               readOnly
               value={affiliate.discount_code}
-              className="flex-1 px-3 py-2 border border-ui-border-base rounded-md bg-ui-bg-subtle text-sm font-mono"
+              className="flex-1 px-4 py-2 border border-border/50 rounded-lg bg-background text-sm font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all duration-200"
             />
             <button
               onClick={() => copyToClipboard(affiliate.discount_code, "code")}
-              className="px-4 py-2 bg-ui-bg-base border border-ui-border-base rounded-md hover:bg-ui-bg-base-hover transition-colors"
+              className="px-5 py-2 bg-card border border-border/50 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px] min-w-[44px]"
+              aria-label={copiedCode ? "Discount code copied to clipboard" : "Copy discount code"}
             >
-              {copiedCode ? <Check size={16} /> : <Copy size={16} />}
+              {copiedCode ? <FaCheck size={16} className="text-primary" /> : <FaCopy size={16} className="text-foreground" />}
             </button>
           </div>
         </div>
       </div>
 
       {/* 数据概览 */}
-      <div className="border border-ui-border-base rounded-lg p-6">
-        <h2 className="text-lg-semi mb-6">Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="border border-border/50 rounded-xl p-6 bg-card shadow-sm">
+        <h2 className="text-lg-semi mb-6 text-foreground">Overview</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 small:gap-6">
           <div>
-            <p className="text-sm text-ui-fg-subtle mb-1">Total Orders</p>
-            <p className="text-2xl font-semibold">{stats.total_orders}</p>
+            <p className="text-sm text-muted-foreground mb-2 font-medium">Total Orders</p>
+            <p className="text-2xl font-semibold text-foreground">{stats.total_orders}</p>
           </div>
           <div>
-            <p className="text-sm text-ui-fg-subtle mb-1">Pending Amount</p>
-            <p className="text-2xl font-semibold">
+            <p className="text-sm text-muted-foreground mb-2 font-medium">Pending Amount</p>
+            <p className="text-2xl font-semibold text-foreground">
               {formatCurrency(stats.pending_amount + stats.approved_amount)}
             </p>
           </div>
           <div>
-            <p className="text-sm text-ui-fg-subtle mb-1">Paid Amount</p>
-            <p className="text-2xl font-semibold text-green-600">
+            <p className="text-sm text-muted-foreground mb-2 font-medium">Paid Amount</p>
+            <p className="text-2xl font-semibold text-green-600 dark:text-green-500">
               {formatCurrency(stats.paid_amount)}
             </p>
           </div>
@@ -340,25 +341,25 @@ export default function AffiliatePageClient({
       </div>
 
       {/* 提成比例 */}
-      <div className="border border-ui-border-base rounded-lg p-6">
-        <h2 className="text-lg-semi mb-4">Commission Settings</h2>
-        <p className="text-base-regular">
-          Your commission rate: <span className="font-semibold">{affiliate.commission_rate}%</span>
+      <div className="border border-border/50 rounded-xl p-6 bg-card shadow-sm">
+        <h2 className="text-lg-semi mb-4 text-foreground">Commission Settings</h2>
+        <p className="text-base-regular text-foreground">
+          Your commission rate: <span className="font-semibold text-primary">{affiliate.commission_rate}%</span>
         </p>
       </div>
 
       {/* 产品推广链接生成器 */}
-      <div className="border border-ui-border-base rounded-lg p-6">
-        <h2 className="text-lg-semi mb-4 flex items-center gap-2">
-          <Link2 size={20} />
+      <div className="border border-border/50 rounded-xl p-6 bg-card shadow-sm">
+        <h2 className="text-lg-semi mb-4 flex items-center gap-2 text-foreground">
+          <FaLink size={20} className="text-primary" />
           Product Link Generator
         </h2>
         <div className="mb-4 space-y-2">
-          <p className="text-sm text-ui-fg-subtle">
+          <p className="text-sm text-muted-foreground">
             Search and select products to generate links with your affiliate parameters
           </p>
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-            <p className="text-sm text-blue-800">
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
               💡 <strong>Tip:</strong> Enter a product title in the search box to find products, then select a product to generate your affiliate link.
             </p>
           </div>
@@ -366,37 +367,38 @@ export default function AffiliatePageClient({
         
         {/* 搜索框 */}
         <div className="relative mb-4">
-          <div className="flex items-center gap-2 border border-ui-border-base rounded-md px-3 py-2">
-            <Search size={16} className="text-ui-fg-subtle" />
+          <div className="flex items-center gap-2 border border-border/50 rounded-lg px-4 py-2 bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all duration-200">
+            <FaSearch size={16} className="text-muted-foreground" />
             <input
               type="text"
               placeholder="Search product name..."
               value={productSearch}
               onChange={(e) => setProductSearch(e.target.value)}
-              className="flex-1 outline-none bg-transparent text-sm"
+              className="flex-1 outline-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground"
             />
             {isSearching && (
-              <div className="animate-spin h-4 w-4 border-2 border-ui-fg-subtle border-t-transparent rounded-full" />
+              <div className="animate-spin h-4 w-4 border-2 border-muted-foreground border-t-transparent rounded-full" />
             )}
           </div>
           
           {/* 搜索结果下拉 */}
           {products.length > 0 && (
-            <div className="absolute z-10 w-full mt-1 bg-ui-bg-base border border-ui-border-base rounded-md shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-10 w-full mt-1 bg-card border border-border/50 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {products.map((product) => (
                 <button
                   key={product.id}
                   onClick={() => handleSelectProduct(product)}
-                  className="w-full flex items-center gap-3 p-3 hover:bg-ui-bg-subtle transition-colors text-left"
+                  className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors duration-200 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px]"
+                  aria-label={`Select product: ${product.title}`}
                 >
                   {product.thumbnail && (
                     <img
                       src={product.thumbnail}
                       alt={product.title}
-                      className="w-10 h-10 object-cover rounded"
+                      className="w-10 h-10 object-cover rounded-lg"
                     />
                   )}
-                  <span className="text-sm">{product.title}</span>
+                  <span className="text-sm text-foreground">{product.title}</span>
                 </button>
               ))}
             </div>
@@ -405,42 +407,43 @@ export default function AffiliatePageClient({
         
         {/* 选中的产品和生成的链接 */}
         {selectedProduct && (
-          <div className="bg-ui-bg-subtle rounded-md p-4 space-y-3">
+          <div className="bg-muted/50 rounded-lg p-4 space-y-3 border border-border/50">
             <div className="flex items-center gap-3">
               {selectedProduct.thumbnail && (
                 <img
                   src={selectedProduct.thumbnail}
                   alt={selectedProduct.title}
-                  className="w-12 h-12 object-cover rounded"
+                  className="w-12 h-12 object-cover rounded-lg"
                 />
               )}
               <div className="flex-1">
-                <p className="font-medium text-sm">{selectedProduct.title}</p>
+                <p className="font-medium text-sm text-foreground">{selectedProduct.title}</p>
                 <a
                   href={`/products/${selectedProduct.handle}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-ui-fg-subtle hover:underline flex items-center gap-1"
+                  className="text-xs text-muted-foreground hover:text-foreground hover:underline flex items-center gap-1 transition-colors duration-200"
                 >
-                  View Product <ExternalLink size={12} />
+                  View Product <FaExternalLinkAlt size={12} />
                 </a>
               </div>
             </div>
             
             <div>
-              <label className="text-xs text-ui-fg-subtle block mb-1">Your Affiliate Link:</label>
-              <div className="flex items-center gap-2">
+              <label className="text-xs text-muted-foreground block mb-1 font-medium">Your Affiliate Link:</label>
+              <div className="flex items-center gap-3">
                 <input
                   type="text"
                   readOnly
                   value={generatedProductLink}
-                  className="flex-1 px-3 py-2 border border-ui-border-base rounded-md bg-ui-bg-base text-xs font-mono"
+                  className="flex-1 px-4 py-2 border border-border/50 rounded-lg bg-background text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all duration-200"
                 />
                 <button
                   onClick={() => copyToClipboard(generatedProductLink, "product")}
-                  className="px-4 py-2 bg-ui-bg-base border border-ui-border-base rounded-md hover:bg-ui-bg-base-hover transition-colors"
+                  className="px-5 py-2 bg-card border border-border/50 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px] min-w-[44px]"
+                  aria-label={copiedProductLink === generatedProductLink ? "Product link copied to clipboard" : "Copy product affiliate link"}
                 >
-                  {copiedProductLink === generatedProductLink ? <Check size={16} /> : <Copy size={16} />}
+                  {copiedProductLink === generatedProductLink ? <FaCheck size={16} className="text-primary" /> : <FaCopy size={16} className="text-foreground" />}
                 </button>
               </div>
             </div>
@@ -449,17 +452,17 @@ export default function AffiliatePageClient({
       </div>
 
       {/* 最近佣金记录和提现记录 - 并排显示 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 small:gap-6">
         {/* 最近佣金记录 */}
         {statsData?.recent_commissions && statsData.recent_commissions.length > 0 && (
-          <div className="border border-ui-border-base rounded-lg p-6">
+          <div className="border border-border/50 rounded-xl p-6 bg-card shadow-sm">
             <button
               onClick={() => setIsCommissionsExpanded(!isCommissionsExpanded)}
-              className="w-full flex items-center justify-between mb-4 hover:opacity-70 transition-opacity"
+              className="w-full flex items-center justify-between mb-4 hover:opacity-70 transition-opacity cursor-pointer"
             >
-              <h2 className="text-lg-semi">Recent Commissions</h2>
-              <ChevronDown 
-                className={`transition-transform ${isCommissionsExpanded ? 'rotate-180' : ''}`}
+              <h2 className="text-lg-semi text-foreground">Recent Commissions</h2>
+              <FaChevronDown 
+                className={`transition-transform duration-200 ${isCommissionsExpanded ? 'rotate-180' : ''}`}
                 size={20}
               />
             </button>
@@ -467,14 +470,14 @@ export default function AffiliatePageClient({
               <>
                 {/* 指导文案 - 自动审核提示 */}
                 {autoApproveDays > 0 ? (
-                  <div className="mb-4 bg-blue-50 border border-blue-200 rounded-md p-3">
-                    <p className="text-sm text-blue-800">
+                  <div className="mb-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
                       💡 <strong>Auto-approval:</strong> Commissions will be automatically approved after <strong>{autoApproveDays}</strong> days
                     </p>
                   </div>
                 ) : (
-                  <div className="mb-4 bg-gray-50 border border-gray-200 rounded-md p-3">
-                    <p className="text-sm text-gray-600">
+                  <div className="mb-4 bg-muted/50 border border-border/50 rounded-lg p-3">
+                    <p className="text-sm text-muted-foreground">
                       💡 <strong>Review Note:</strong> Commissions require manual approval by an administrator
                     </p>
                   </div>
@@ -494,34 +497,34 @@ export default function AffiliatePageClient({
               return (
                 <div
                   key={commission.id}
-                  className={`flex items-start justify-between py-3 border-b border-ui-border-base last:border-0 ${
+                  className={`flex items-start justify-between py-3 border-b border-border/50 last:border-0 ${
                     isVoid ? "opacity-60" : ""
                   }`}
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="text-sm font-medium">Order {orderNumber}</p>
+                      <p className="text-sm font-medium text-foreground">Order {orderNumber}</p>
                       {(isVoid || hasRefundInfo) && (
-                        <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded">
+                        <span className="px-2 py-0.5 bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 text-xs font-medium rounded">
                           {isVoid ? "Returned" : "Refunded"}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-ui-fg-subtle mb-1">
+                    <p className="text-xs text-muted-foreground mb-1">
                       {new Date(commission.created_at).toLocaleString("en-US")}
                     </p>
                     {isVoid && commission.void_reason && (
-                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                      <div className="mt-2 p-2 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg text-xs text-red-700 dark:text-red-400">
                         <p className="font-medium mb-1">Void Reason:</p>
                         <p>{commission.void_reason}</p>
                       </div>
                     )}
                   </div>
                   <div className="text-right ml-4">
-                    <p className={`text-sm font-semibold ${isVoid ? "line-through text-ui-fg-subtle" : ""}`}>
+                    <p className={`text-sm font-semibold ${isVoid ? "line-through text-muted-foreground" : "text-foreground"}`}>
                       {formatCurrency(commission.amount)}
                     </p>
-                    <p className="text-xs text-ui-fg-subtle">
+                    <p className="text-xs text-muted-foreground">
                       {commission.status === "PENDING" && "Pending"}
                       {commission.status === "APPROVED" && "Approved"}
                       {commission.status === "PAID" && "Paid"}
@@ -535,21 +538,23 @@ export default function AffiliatePageClient({
                 
                 {/* 分页控件 */}
                 {totalCommissionsPages > 1 && (
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-ui-border-base">
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
                     <button
                       onClick={() => setCommissionsPage(Math.max(1, commissionsPage - 1))}
                       disabled={commissionsPage === 1}
-                      className="px-3 py-1 text-sm border border-ui-border-base rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ui-bg-subtle"
+                      className="px-4 py-2 text-sm border border-border/50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/50 transition-all duration-200 cursor-pointer text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px]"
+                      aria-label="Go to previous page"
                     >
                       Previous
                     </button>
-                    <span className="text-sm text-ui-fg-subtle">
+                    <span className="text-sm text-muted-foreground">
                       Page {commissionsPage} / {totalCommissionsPages}
                     </span>
                     <button
                       onClick={() => setCommissionsPage(Math.min(totalCommissionsPages, commissionsPage + 1))}
                       disabled={commissionsPage === totalCommissionsPages}
-                      className="px-3 py-1 text-sm border border-ui-border-base rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ui-bg-subtle"
+                      className="px-4 py-2 text-sm border border-border/50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/50 transition-all duration-200 cursor-pointer text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px]"
+                      aria-label="Go to next page"
                     >
                       Next
                     </button>
@@ -561,42 +566,44 @@ export default function AffiliatePageClient({
         )}
 
         {/* 提现记录 */}
-        <div className="border border-ui-border-base rounded-lg p-6">
+        <div className="border border-border/50 rounded-xl p-6 bg-card shadow-sm">
           <button
             onClick={() => setIsPaymentsExpanded(!isPaymentsExpanded)}
-            className="w-full flex items-center justify-between mb-4 hover:opacity-70 transition-opacity"
+            className="w-full flex items-center justify-between mb-4 hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md px-2 py-1 min-h-[44px]"
+            aria-label={isPaymentsExpanded ? "Collapse payment history" : "Expand payment history"}
+            aria-expanded={isPaymentsExpanded}
           >
-            <h2 className="text-lg-semi">Payment History</h2>
-            <ChevronDown 
-              className={`transition-transform ${isPaymentsExpanded ? 'rotate-180' : ''}`}
+            <h2 className="text-lg-semi text-foreground">Payment History</h2>
+            <FaChevronDown 
+              className={`transition-transform duration-200 ${isPaymentsExpanded ? 'rotate-180' : ''}`}
               size={20}
             />
           </button>
           {isLoadingPaymentHistory ? (
             <div className="text-center py-8">
-              <p className="text-sm text-ui-fg-subtle">Loading...</p>
+              <p className="text-sm text-muted-foreground">Loading...</p>
             </div>
           ) : paymentHistory && paymentHistory.payment_records.length > 0 ? (
             isPaymentsExpanded && (
               <div className="space-y-4">
                 {/* 指导文案 */}
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
-                  <p className="text-sm text-blue-800">
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
                     💡 <strong>Payment Note:</strong> Please contact the administrator to request a withdrawal. The withdrawal amount is your pending balance (approved commissions).
                   </p>
                 </div>
                 
                 {/* 统计摘要 */}
-                <div className="bg-ui-bg-subtle rounded-lg p-4 space-y-2">
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2 border border-border/50">
                   <div className="flex justify-between items-center">
-                    <p className="text-sm text-ui-fg-subtle">Total Paid:</p>
-                    <p className="text-lg font-semibold text-green-600">
+                    <p className="text-sm text-muted-foreground font-medium">Total Paid:</p>
+                    <p className="text-lg font-semibold text-green-600 dark:text-green-500">
                       {formatCurrency(paymentHistory.total_paid)}
                     </p>
                   </div>
                   <div className="flex justify-between items-center">
-                    <p className="text-sm text-ui-fg-subtle">Payment Count:</p>
-                    <p className="text-sm font-medium">
+                    <p className="text-sm text-muted-foreground font-medium">Payment Count:</p>
+                    <p className="text-sm font-medium text-foreground">
                       {paymentHistory.payment_records.length} times
                     </p>
                   </div>
@@ -607,10 +614,10 @@ export default function AffiliatePageClient({
                   {paginatedPayments.map((record, index) => (
                 <div
                   key={record.paid_at || index}
-                  className="border border-ui-border-base rounded-lg p-4 space-y-2 hover:bg-ui-bg-subtle transition-colors"
+                  className="border border-border/50 rounded-lg p-4 space-y-2 hover:bg-muted/50 transition-all duration-200 bg-card"
                 >
                   <div className="flex justify-between items-center">
-                    <p className="text-sm text-ui-fg-subtle">
+                    <p className="text-sm text-muted-foreground">
                       {new Date(record.paid_at).toLocaleString("en-US", {
                         year: "numeric",
                         month: "2-digit",
@@ -619,25 +626,25 @@ export default function AffiliatePageClient({
                         minute: "2-digit",
                       })}
                     </p>
-                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">
+                    <span className="px-2 py-1 bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 text-xs font-medium rounded">
                       Paid
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <p className="text-sm text-ui-fg-subtle">
+                    <p className="text-sm text-muted-foreground">
                       {record.commission_count} commission{record.commission_count !== 1 ? 's' : ''}
                     </p>
-                    <p className="text-lg font-semibold text-green-600">
+                    <p className="text-lg font-semibold text-green-600 dark:text-green-500">
                       {formatCurrency(record.amount)}
                     </p>
                   </div>
                   {record.order_display_ids && record.order_display_ids.length > 0 ? (
-                    <div className="text-xs text-ui-fg-subtle mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       Orders: {record.order_display_ids.slice(0, 3).map(id => `#${id}`).join(", ")}
                       {record.order_display_ids.length > 3 && ` and ${record.order_display_ids.length} more`}
                     </div>
                   ) : record.order_ids && record.order_ids.length > 0 ? (
-                    <div className="text-xs text-ui-fg-subtle mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       Orders: {record.order_ids.slice(0, 3).map(id => `#${id.slice(0, 8)}`).join(", ")}
                       {record.order_ids.length > 3 && ` and ${record.order_ids.length} more`}
                     </div>
@@ -648,21 +655,21 @@ export default function AffiliatePageClient({
                 
                 {/* 分页控件 */}
                 {totalPaymentsPages > 1 && (
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-ui-border-base">
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
                     <button
                       onClick={() => setPaymentsPage(Math.max(1, paymentsPage - 1))}
                       disabled={paymentsPage === 1}
-                      className="px-3 py-1 text-sm border border-ui-border-base rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ui-bg-subtle"
+                      className="px-4 py-2 text-sm border border-border/50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/50 transition-all duration-200 cursor-pointer text-foreground"
                     >
                       Previous
                     </button>
-                    <span className="text-sm text-ui-fg-subtle">
+                    <span className="text-sm text-muted-foreground">
                       Page {paymentsPage} / {totalPaymentsPages}
                     </span>
                     <button
                       onClick={() => setPaymentsPage(Math.min(totalPaymentsPages, paymentsPage + 1))}
                       disabled={paymentsPage === totalPaymentsPages}
-                      className="px-3 py-1 text-sm border border-ui-border-base rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-ui-bg-subtle"
+                      className="px-4 py-2 text-sm border border-border/50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/50 transition-all duration-200 cursor-pointer text-foreground"
                     >
                       Next
                     </button>
@@ -673,14 +680,14 @@ export default function AffiliatePageClient({
           ) : isPaymentsExpanded ? (
             <div className="space-y-4">
               {/* 指导文案 */}
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-                <p className="text-sm text-blue-800">
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
                   💡 <strong>Payment Note:</strong> Please contact the administrator to request a withdrawal. The withdrawal amount is your pending balance (approved commissions).
                 </p>
               </div>
               
               <div className="text-center py-8">
-                <p className="text-sm text-ui-fg-subtle">No payment records yet</p>
+                <p className="text-sm text-muted-foreground">No payment records yet</p>
               </div>
             </div>
           ) : null}

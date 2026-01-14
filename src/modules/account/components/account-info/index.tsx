@@ -44,11 +44,11 @@ const AccountInfo = ({
   return (
     <div className="text-small-regular text-foreground" data-testid={dataTestid}>
       <div className="flex items-end justify-between">
-        <div className="flex flex-col">
-          <span className="uppercase text-muted-foreground">{label}</span>
+        <div className="flex flex-col gap-y-1">
+          <span className="uppercase text-xs text-muted-foreground font-medium">{label}</span>
           <div className="flex items-center flex-1 basis-0 justify-end gap-x-4">
             {typeof currentInfo === "string" ? (
-              <span className="font-semibold text-foreground" data-testid="current-info">{currentInfo}</span>
+              <span className="font-semibold text-foreground text-base" data-testid="current-info">{currentInfo}</span>
             ) : (
               currentInfo
             )}
@@ -57,11 +57,12 @@ const AccountInfo = ({
         <div>
           <Button
             variant="secondary"
-            className="w-[100px] min-h-[25px] py-1 bg-muted hover:bg-muted/80 text-foreground border-border"
+            className="w-[100px] min-h-[44px] py-1.5 bg-muted hover:bg-muted/80 text-foreground border-border hover:border-primary/50 transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             onClick={handleToggle}
             type={state ? "reset" : "button"}
             data-testid="edit-button"
             data-active={state}
+            aria-label={state ? `Cancel editing ${label.toLowerCase()}` : `Edit ${label.toLowerCase()}`}
           >
             {state ? "Cancel" : "Edit"}
           </Button>
@@ -81,7 +82,7 @@ const AccountInfo = ({
           )}
           data-testid="success-message"
         >
-          <Badge className="p-2 my-4" color="green">
+          <Badge className="p-2 my-4" color="green" role="status" aria-live="polite">
             <span>{label} updated succesfully</span>
           </Badge>
         </Disclosure.Panel>
@@ -100,7 +101,7 @@ const AccountInfo = ({
           )}
           data-testid="error-message"
         >
-          <Badge className="p-2 my-4" color="red">
+          <Badge className="p-2 my-4" color="red" role="alert" aria-live="assertive">
             <span>{errorMessage}</span>
           </Badge>
         </Disclosure.Panel>
@@ -110,21 +111,31 @@ const AccountInfo = ({
         <Disclosure.Panel
           static
           className={clx(
-            "transition-[max-height,opacity] duration-300 ease-in-out overflow-visible",
+            "transition-all duration-300 ease-in-out overflow-hidden",
             {
-              "max-h-[1000px] opacity-100": state,
-              "max-h-0 opacity-0": !state,
+              "max-h-[1000px] opacity-100 mt-4": state,
+              "max-h-0 opacity-0 mt-0": !state,
             }
           )}
         >
-          <div className="flex flex-col gap-y-2 py-4">
+          <div className="flex flex-col gap-y-4 py-4 border-t border-border/50 pt-4">
             <div>{children}</div>
-            <div className="flex items-center justify-end mt-2">
+            <div className="flex items-center justify-end gap-x-3">
+              <Button
+                variant="secondary"
+                onClick={handleToggle}
+                className="bg-muted hover:bg-muted/80 text-foreground border-border hover:border-primary/50 transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px]"
+                type="button"
+                aria-label={`Cancel editing ${label.toLowerCase()}`}
+              >
+                Cancel
+              </Button>
               <Button
                 isLoading={pending}
-                className="w-full small:max-w-[140px]"
+                className="min-w-[140px] min-h-[44px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                 type="submit"
                 data-testid="save-button"
+                aria-label={`Save ${label.toLowerCase()} changes`}
               >
                 Save changes
               </Button>

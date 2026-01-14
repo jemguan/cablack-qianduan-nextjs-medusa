@@ -21,7 +21,7 @@ export default async function WishlistPage() {
 
   return (
     <div className="w-full" data-testid="wishlist-page-wrapper">
-      <div className="mb-8 flex flex-col gap-y-4">
+      <div className="mb-4 small:mb-8 flex flex-col gap-y-3 small:gap-y-4">
         <h1 className="text-2xl-semi">My Wishlist</h1>
         <p className="text-base-regular text-muted-foreground">
           View your saved items. Click the heart icon to remove items from your wishlist.
