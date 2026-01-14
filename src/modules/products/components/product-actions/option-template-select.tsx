@@ -1,13 +1,12 @@
 "use client"
 
 import { clx } from "@medusajs/ui"
-import React, { useMemo, useState, useEffect } from "react"
-import Image from "next/image"
-import { getImageUrl } from "@lib/util/image"
+import React, { useMemo, useState, useEffect, useCallback } from "react"
 import { Tooltip, TooltipProvider } from "@medusajs/ui"
 import useEmblaCarousel from "embla-carousel-react"
 import ChevronLeft from "@modules/common/icons/chevron-left"
 import ChevronRight from "@modules/common/icons/chevron-right"
+import { ChoiceImage } from "@modules/products/components/choice-image"
 import type { Choice, Option, OptionTemplate } from "@lib/data/option-templates"
 
 type OptionTemplateSelectProps = {
@@ -81,7 +80,7 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
 
   // 获取选项是否属于某个对比组
   const getComparisonGroupKey = (optionId: string): string | null => {
-    for (const [groupKey, options] of comparisonGroups.entries()) {
+    for (const [groupKey, options] of Array.from(comparisonGroups.entries())) {
       if (options.find((o) => o.id === optionId)) {
         return groupKey
       }
@@ -119,7 +118,7 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
 
       // 另外：如果当前选项是被其他对比选项引用的选项，也需要清除引用它的选项的选择
       // 这样当用户直接在"不可动眼"中选择时，也能清除"可动眼"的选择
-      template.options.forEach((otherOption) => {
+      template.options?.forEach((otherOption) => {
         if (otherOption.id !== option.id && otherOption.is_comparison && otherOption.comparison_option_id === option.id) {
           const groupKey = [otherOption.id, option.id].sort().join("-")
           const groupOptions = comparisonGroups.get(groupKey) || []
@@ -198,7 +197,7 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
   }
 
   // 渲染单个选择项
-  const renderChoice = (choice: Choice, option: Option) => {
+  const renderChoice = (choice: Choice, option: Option, index: number) => {
     const isSelected = selectedChoiceIds.includes(choice.id)
     const priceText = formatPriceAdjustment(choice.price_adjustment)
 
@@ -211,6 +210,9 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
         )}
       </div>
     )
+
+    // 判断是否是首个可见项（用于优先加载）
+    const isFirstVisible = index === 0
 
     return (
       <Tooltip key={choice.id} content={tooltipContent} sideOffset={8}>
@@ -227,31 +229,14 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
           )}
           data-testid={`choice-${choice.id}`}
         >
-          {/* 选择图片 */}
-          {choice.image_url && (() => {
-            const imageUrl = getImageUrl(choice.image_url)
-            if (!imageUrl) return null
-            return (
-              <div
-                className={clx(
-                  "relative w-full aspect-square mx-auto overflow-hidden bg-ui-bg-base",
-                  {
-                    "rounded-full border-2": true,
-                    "border-ui-border-interactive": isSelected,
-                    "border border-transparent": !isSelected,
-                  }
-                )}
-              >
-                <Image
-                  src={imageUrl}
-                  alt={choice.title}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 639px) 33vw, 16vw"
-                />
-              </div>
-            )
-          })()}
+          {/* 选择图片 - 使用优化后的组件 */}
+          <ChoiceImage
+            imageUrl={choice.image_url}
+            alt={choice.title}
+            isSelected={isSelected}
+            isFirstVisible={isFirstVisible}
+            sizeClassName="w-full aspect-square mx-auto"
+          />
 
           {/* 价格 */}
           {priceText && (
@@ -327,7 +312,7 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
           {/* 轮播容器 */}
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex gap-x-2">
-              {sortedChoices.map((choice) => renderChoice(choice, option))}
+              {sortedChoices.map((choice, index) => renderChoice(choice, option, index))}
             </div>
           </div>
 

@@ -3,9 +3,8 @@
 import { Text, Button } from "@medusajs/ui"
 import { useEffect, useState, useMemo } from "react"
 import { getOptionValuesByIds } from "@lib/data/option-values"
-import { getImageUrl } from "@lib/util/image"
-import Image from "next/image"
 import { ChevronDownMini, ChevronUpMini } from "@medusajs/icons"
+import { ChoiceImage } from "@modules/products/components/choice-image"
 
 // Choice 类型 - 对应后端的 template_choice
 type Choice = {
@@ -241,22 +240,16 @@ const LineItemCustomOptions = ({
                         key={choice.id}
                         className="flex items-center gap-2 text-xs p-1.5 rounded bg-muted/50 border border-border/30"
                       >
-                        {/* 选择图片 */}
-                        {choice.image_url && (() => {
-                          const imageUrl = getImageUrl(choice.image_url)
-                          if (!imageUrl) return null
-                          return (
-                            <div className="relative w-8 h-8 flex-shrink-0 rounded-full overflow-hidden bg-ui-bg-base border border-border">
-                              <Image
-                                src={imageUrl}
-                                alt={choice.title}
-                                fill
-                                className="object-cover"
-                                sizes="32px"
-                              />
-                            </div>
-                          )
-                        })()}
+                        {/* 选择图片 - 使用优化后的组件 */}
+                        {choice.image_url && (
+                          <ChoiceImage
+                            imageUrl={choice.image_url}
+                            alt={choice.title}
+                            sizeClassName="w-8 h-8"
+                            rounded={true}
+                            showBorder={false}
+                          />
+                        )}
 
                         {/* 选择标题和价格 */}
                         <div className="flex flex-col gap-0.5 min-w-0 flex-1">
