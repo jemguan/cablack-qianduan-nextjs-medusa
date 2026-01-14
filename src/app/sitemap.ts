@@ -13,24 +13,13 @@ const DEFAULT_REGION = "ca"
 /**
  * 获取 Sitemap 的基础 URL
  * 开发环境: http://localhost:8000
- * 生产环境: NEXT_PUBLIC_SITE_URL 或 NEXT_PUBLIC_BASE_URL
+ * 生产环境: NEXT_PUBLIC_BASE_URL
  */
 function getBaseUrl(): string {
-  // 生产环境优先使用配置的站点 URL
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "") // 移除末尾斜杠
-  }
-
   if (process.env.NEXT_PUBLIC_BASE_URL) {
     return process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, "")
   }
 
-  // Vercel 部署
-  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
-    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-  }
-
-  // 开发环境默认
   return "http://localhost:8000"
 }
 
