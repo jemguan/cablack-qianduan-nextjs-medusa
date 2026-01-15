@@ -16,6 +16,8 @@ export type PageTitleConfig = {
   organization_social_links?: string[] | null
   website_name?: string | null
   website_search_url?: string | null
+  has_merchant_return_policy?: Record<string, any> | null
+  shipping_details?: Record<string, any> | null
 }
 
 const DEFAULT_CONFIG: PageTitleConfig = {
@@ -30,6 +32,8 @@ const DEFAULT_CONFIG: PageTitleConfig = {
   organization_social_links: null,
   website_name: null,
   website_search_url: null,
+  has_merchant_return_policy: null,
+  shipping_details: null,
 }
 
 /**

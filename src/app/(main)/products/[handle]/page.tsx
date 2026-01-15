@@ -16,6 +16,8 @@ import { getProductOptionTemplates } from "@lib/data/option-templates"
 import { retrieveCustomer } from "@lib/data/customer"
 import { getLoyaltyAccount, getLoyaltyConfig } from "@lib/data/loyalty"
 import { getMedusaConfig } from "@lib/admin-api/config"
+import { getPageTitleConfig } from "@lib/data/page-title-config"
+import { getReviews, getReviewStats } from "@lib/data/reviews"
 
 type Props = {
   params: Promise<{ handle: string }>
@@ -208,6 +210,22 @@ export default async function ProductPage(props: Props) {
   // 获取 Medusa config
   const medusaConfig = await getMedusaConfig()
 
+  // 获取网站配置与评论信息（结构化数据使用）
+  const [siteConfig, reviewStats, reviewsResponse] = await Promise.all([
+    getPageTitleConfig(),
+    getReviewStats(pricedProduct.id),
+    getReviews({
+      product_id: pricedProduct.id,
+      status: "approved",
+      limit: 5,
+      offset: 0,
+      order_by: "created_at",
+      order: "DESC",
+    }),
+  ])
+
+  const reviews = reviewsResponse?.reviews || []
+
   return (
     <ReviewStatsProvider>
       {/* Structural Data for SEO */}
@@ -215,7 +233,11 @@ export default async function ProductPage(props: Props) {
         type="Product"
         data={{
           ...pricedProduct,
-          brand: brand ? { name: brand.name } : undefined
+          brand: brand ? { name: brand.name } : undefined,
+          aggregateRating: reviewStats?.average_rating ?? null,
+          reviewCount: reviewStats?.total ?? 0,
+          reviews,
+          siteConfig,
         }}
       />
       <Schema type="BreadcrumbList" data={schemaBreadcrumbs} />
