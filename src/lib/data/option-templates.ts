@@ -13,6 +13,7 @@ type Choice = {
   image_url?: string | null
   sort_order: number
   is_default?: boolean
+  created_at?: string | null
 }
 
 // 选项（Option）- 中间层，包含多个选择

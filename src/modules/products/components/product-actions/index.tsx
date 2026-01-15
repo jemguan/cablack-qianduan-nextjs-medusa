@@ -184,7 +184,7 @@ export default function ProductActions({
         // 检查该选项是否属于对比选项组
         let groupKeyForOption: string | null = null
         if (templateGroups) {
-          for (const [key, group] of templateGroups.entries()) {
+          for (const [key, group] of Array.from(templateGroups.entries())) {
             if (group.includes(option.id)) {
               groupKeyForOption = key
               break
@@ -458,15 +458,22 @@ export default function ProductActions({
           template.options?.some((option) => option.choices && option.choices.length > 0)
         ) && (
           <div className="flex flex-col gap-y-6">
-            {optionTemplates.map((template) => (
-              <OptionTemplateSelect
-                key={template.id}
-                template={template}
-                selectedChoiceIds={selectedChoicesByTemplate[template.id] || []}
-                onSelectionChange={handleTemplateSelectionChange}
-                disabled={!!disabled || isAdding}
-              />
-            ))}
+            {[...optionTemplates]
+              .sort((a, b) => {
+                // 按 sort_order 排序模板
+                const orderA = typeof a.sort_order === 'number' ? a.sort_order : (a.sort_order ? Number(a.sort_order) : 0)
+                const orderB = typeof b.sort_order === 'number' ? b.sort_order : (b.sort_order ? Number(b.sort_order) : 0)
+                return orderA - orderB
+              })
+              .map((template) => (
+                <OptionTemplateSelect
+                  key={template.id}
+                  template={template}
+                  selectedChoiceIds={selectedChoicesByTemplate[template.id] || []}
+                  onSelectionChange={handleTemplateSelectionChange}
+                  disabled={!!disabled || isAdding}
+                />
+              ))}
             {!mobileLayout && <Divider />}
           </div>
         )}

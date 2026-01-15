@@ -38,13 +38,50 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // 获取排序后的选项
+  // 获取排序后的选项（确保每个选项的choices也排序）
   const sortedOptions = useMemo(() => {
     if (!template.options || template.options.length === 0) {
       return []
     }
-    return [...template.options].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    return [...template.options]
+      .map((option) => {
+        // 确保每个选项的choices都按sort_order排序
+        const sortedChoices = [...(option.choices || [])].sort((a, b) => {
+          const orderA = typeof a.sort_order === 'number' ? a.sort_order : (a.sort_order ? Number(a.sort_order) : 0)
+          const orderB = typeof b.sort_order === 'number' ? b.sort_order : (b.sort_order ? Number(b.sort_order) : 0)
+          
+          // 如果 sort_order 相同，使用 created_at 作为次要排序键
+          if (orderA !== orderB) {
+            return orderA - orderB
+          }
+          
+          // 次要排序：按 created_at（如果存在）
+          const aCreatedAt = (a as any).created_at
+          const bCreatedAt = (b as any).created_at
+          if (aCreatedAt && bCreatedAt) {
+            const dateA = new Date(aCreatedAt).getTime()
+            const dateB = new Date(bCreatedAt).getTime()
+            if (dateA !== dateB) {
+              return dateA - dateB
+            }
+          }
+          
+          // 最后使用 id 作为稳定排序键
+          return (a.id || '').localeCompare(b.id || '')
+        })
+        return {
+          ...option,
+          choices: sortedChoices,
+        }
+      })
+      .sort((a, b) => {
+        const orderA = typeof a.sort_order === 'number' ? a.sort_order : (a.sort_order ? Number(a.sort_order) : 0)
+        const orderB = typeof b.sort_order === 'number' ? b.sort_order : (b.sort_order ? Number(b.sort_order) : 0)
+        return orderA - orderB
+      })
   }, [template.options])
+
+
 
   // 找出对比选项组（互斥的选项对）
   const comparisonGroups = useMemo(() => {
@@ -69,9 +106,44 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
       }
     })
     
-    // 确保所有组内的选项按 sort_order 排序
+    // 确保所有组内的选项按 sort_order 排序，并且每个选项的choices也排序
     groups.forEach((options, groupKey) => {
-      const sortedGroupOptions = [...options].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+      const sortedGroupOptions = [...options]
+        .map((option) => {
+          // 确保choices已排序（sortedOptions中已经排序了，但为了安全再次排序）
+          const sortedChoices = [...(option.choices || [])].sort((a, b) => {
+            const orderA = typeof a.sort_order === 'number' ? a.sort_order : (a.sort_order ? Number(a.sort_order) : 0)
+            const orderB = typeof b.sort_order === 'number' ? b.sort_order : (b.sort_order ? Number(b.sort_order) : 0)
+            
+            // 如果 sort_order 相同，使用 created_at 作为次要排序键
+            if (orderA !== orderB) {
+              return orderA - orderB
+            }
+            
+            // 次要排序：按 created_at（如果存在）
+            const aCreatedAt = (a as any).created_at
+            const bCreatedAt = (b as any).created_at
+            if (aCreatedAt && bCreatedAt) {
+              const dateA = new Date(aCreatedAt).getTime()
+              const dateB = new Date(bCreatedAt).getTime()
+              if (dateA !== dateB) {
+                return dateA - dateB
+              }
+            }
+            
+            // 最后使用 id 作为稳定排序键
+            return (a.id || '').localeCompare(b.id || '')
+          })
+          return {
+            ...option,
+            choices: sortedChoices,
+          }
+        })
+        .sort((a, b) => {
+          const orderA = typeof a.sort_order === 'number' ? a.sort_order : (a.sort_order ? Number(a.sort_order) : 0)
+          const orderB = typeof b.sort_order === 'number' ? b.sort_order : (b.sort_order ? Number(b.sort_order) : 0)
+          return orderA - orderB
+        })
       groups.set(groupKey, sortedGroupOptions)
     })
     
@@ -257,9 +329,30 @@ const OptionTemplateSelect: React.FC<OptionTemplateSelectProps> = ({
 
   // 渲染单个选项
   const renderOption = (option: Option) => {
-    const sortedChoices = [...(option.choices || [])].sort(
-      (a, b) => (a.sort_order || 0) - (b.sort_order || 0)
-    )
+    // 确保 choices 按 sort_order 排序（防御性排序，确保始终正确）
+    const sortedChoices = [...(option.choices || [])].sort((a, b) => {
+      const orderA = typeof a.sort_order === 'number' ? a.sort_order : (a.sort_order ? Number(a.sort_order) : 0)
+      const orderB = typeof b.sort_order === 'number' ? b.sort_order : (b.sort_order ? Number(b.sort_order) : 0)
+      
+      // 如果 sort_order 相同，使用 created_at 作为次要排序键
+      if (orderA !== orderB) {
+        return orderA - orderB
+      }
+      
+      // 次要排序：按 created_at（如果存在）
+      const aCreatedAt = (a as any).created_at
+      const bCreatedAt = (b as any).created_at
+      if (aCreatedAt && bCreatedAt) {
+        const dateA = new Date(aCreatedAt).getTime()
+        const dateB = new Date(bCreatedAt).getTime()
+        if (dateA !== dateB) {
+          return dateA - dateB
+        }
+      }
+      
+      // 最后使用 id 作为稳定排序键
+      return (a.id || '').localeCompare(b.id || '')
+    })
 
     if (sortedChoices.length === 0) {
       return null
