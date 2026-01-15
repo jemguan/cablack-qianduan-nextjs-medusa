@@ -1,4 +1,5 @@
 import { retrieveCart } from "@lib/data/cart"
+import { setCartId } from "@lib/data/cookies"
 import { retrieveCustomer } from "@lib/data/customer"
 import { listCartShippingMethods } from "@lib/data/fulfillment"
 import { listCartPaymentMethods } from "@lib/data/payment"
@@ -21,8 +22,19 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default async function Checkout() {
-  const cart = await retrieveCart()
+export default async function Checkout({
+  searchParams,
+}: {
+  searchParams: Promise<{ cart_id?: string }>
+}) {
+  const params = await searchParams
+  
+  // 如果 URL 中包含 cart_id 参数，设置到 cookie 中
+  if (params.cart_id) {
+    await setCartId(params.cart_id)
+  }
+  
+  const cart = await retrieveCart(params.cart_id)
 
   if (!cart) {
     return notFound()

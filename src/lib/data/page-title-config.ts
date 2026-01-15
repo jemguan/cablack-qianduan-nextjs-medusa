@@ -62,12 +62,13 @@ async function fetchPageTitleConfigInternal(): Promise<PageTitleConfig> {
 /**
  * 模块级别的 unstable_cache 实例
  * 确保在构建时缓存能够在页面之间共享
+ * 缓存时间：1小时（比之前缩短，确保配置更新更快生效）
  */
 const cachedPageTitleConfig = unstable_cache(
   fetchPageTitleConfigInternal,
   ["page-title-config"],
   {
-    revalidate: 7200, // 2小时
+    revalidate: 3600, // 1小时（缩短缓存时间，确保配置更新更快生效）
     tags: ["page-title-config"],
   }
 )
