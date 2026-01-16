@@ -97,6 +97,15 @@ const Payment = ({
     }
   }, [pendingSession?.provider_id, pendingSession?.status])
 
+  // 当购物车不为0时，如果当前选中的是 Manual Payment，自动取消选择
+  useEffect(() => {
+    const hasCartItems = cart?.items?.length > 0
+    if (hasCartItems && isManual(selectedPaymentMethod)) {
+      setSelectedPaymentMethod("")
+      setError(null)
+    }
+  }, [cart?.items?.length, selectedPaymentMethod])
+
   const setPaymentMethod = async (method: string) => {
     setError(null)
     setSelectedPaymentMethod(method)
@@ -216,7 +225,16 @@ const Payment = ({
               value={selectedPaymentMethod}
               onChange={(value: string) => setPaymentMethod(value)}
             >
-              {availablePaymentMethods.map((paymentMethod) => {
+              {availablePaymentMethods
+                .filter((paymentMethod) => {
+                  // 当购物车不为0时，隐藏 Manual Payment 选项
+                  const hasCartItems = cart?.items?.length > 0
+                  if (hasCartItems && isManual(paymentMethod.id)) {
+                    return false
+                  }
+                  return true
+                })
+                .map((paymentMethod) => {
                 // Find payment session for this specific payment method
                 const paymentSession = cart.payment_collection?.payment_sessions?.find(
                   (ps: any) => ps.provider_id === paymentMethod.id && ps.status === "pending"
