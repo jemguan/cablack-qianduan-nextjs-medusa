@@ -898,42 +898,49 @@ export async function placeOrder(cartId?: string) {
       throw new Error("Shipping method is required. Please select a shipping method.")
     }
 
-    if (!currentCart.payment_collection?.payment_sessions || currentCart.payment_collection.payment_sessions.length === 0) {
-      throw new Error("Payment session is required")
-    }
-
-    // 检查支付会话状态 - 放宽检查条件
-    // Stripe 支付成功后，状态可能是 "authorized", "requires_more", "pending" (如果 webhook 还未处理)
-    // 只要不是 "error" 或 "canceled"，都允许继续
-    const paymentSessions = currentCart.payment_collection.payment_sessions
-    const validPaymentSession = paymentSessions.find(
-      (session) => {
-        const status = session.status?.toLowerCase()
-        // 允许的状态：authorized, requires_more, pending (Stripe 支付成功后可能还是 pending，等待 webhook)
-        // 不允许的状态：error, canceled, null/undefined
-        return status && 
-          status !== "error" && 
-          status !== "canceled" &&
-          (status === "authorized" || 
-           status === "requires_more" || 
-           status === "pending" ||
-           status === "requires_action")
+    // 检查购物车总金额
+    // 对于零金额订单（使用积分、礼品卡或100%折扣），使用 Manual System Payment Provider，可能没有支付会话
+    const cartTotal = currentCart.total || 0
+    
+    // 仅对非零金额订单检查支付会话
+    if (cartTotal > 0) {
+      if (!currentCart.payment_collection?.payment_sessions || currentCart.payment_collection.payment_sessions.length === 0) {
+        throw new Error("Payment session is required")
       }
-    )
 
-    if (!validPaymentSession) {
-      // 检查是否有 Stripe 支付会话
-      const stripeSession = paymentSessions.find(s => s.provider_id === "stripe")
-      if (stripeSession) {
-        // 对于 Stripe，如果状态是 pending，可能是 webhook 还未处理，允许继续尝试
-        // Medusa 会在 complete 时验证支付状态
-        if (stripeSession.status === "pending") {
-          // 允许继续，Medusa 会在 complete 时验证
-        } else {
-          throw new Error(`Payment session status is ${stripeSession.status}. Please complete the payment first.`)
+      // 检查支付会话状态 - 放宽检查条件
+      // Stripe 支付成功后，状态可能是 "authorized", "requires_more", "pending" (如果 webhook 还未处理)
+      // 只要不是 "error" 或 "canceled"，都允许继续
+      const paymentSessions = currentCart.payment_collection.payment_sessions
+      const validPaymentSession = paymentSessions.find(
+        (session) => {
+          const status = session.status?.toLowerCase()
+          // 允许的状态：authorized, requires_more, pending (Stripe 支付成功后可能还是 pending，等待 webhook)
+          // 不允许的状态：error, canceled, null/undefined
+          return status && 
+            status !== "error" && 
+            status !== "canceled" &&
+            (status === "authorized" || 
+             status === "requires_more" || 
+             status === "pending" ||
+             status === "requires_action")
         }
-      } else {
-        throw new Error("No valid payment session found. Please complete the payment first.")
+      )
+
+      if (!validPaymentSession) {
+        // 检查是否有 Stripe 支付会话
+        const stripeSession = paymentSessions.find(s => s.provider_id === "stripe")
+        if (stripeSession) {
+          // 对于 Stripe，如果状态是 pending，可能是 webhook 还未处理，允许继续尝试
+          // Medusa 会在 complete 时验证支付状态
+          if (stripeSession.status === "pending") {
+            // 允许继续，Medusa 会在 complete 时验证
+          } else {
+            throw new Error(`Payment session status is ${stripeSession.status}. Please complete the payment first.`)
+          }
+        } else {
+          throw new Error("No valid payment session found. Please complete the payment first.")
+        }
       }
     }
   } catch (error: any) {
