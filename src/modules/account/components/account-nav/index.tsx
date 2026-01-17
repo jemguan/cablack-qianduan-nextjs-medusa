@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react"
 import { clx } from "@medusajs/ui"
 import { usePathname } from "next/navigation"
-import { FaSignOutAlt, FaChevronDown, FaUser, FaMapMarkerAlt, FaBox, FaHeart, FaStar, FaUsers } from "react-icons/fa"
+import { FaSignOutAlt, FaChevronDown, FaUser, FaMapMarkerAlt, FaBox, FaHeart, FaStar, FaUsers, FaBell } from "react-icons/fa"
 
 import Spinner from "@modules/common/icons/spinner"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -261,6 +261,16 @@ const AccountNav = ({
                   icon={<FaHeart className="w-4 h-4" />}
                 >
                   Wishlist
+                </AccountNavLink>
+              </li>
+              <li className="w-full">
+                <AccountNavLink
+                  href="/account/notify-me"
+                  route={route!}
+                  data-testid="notify-me-link"
+                  icon={<FaBell className="w-4 h-4" />}
+                >
+                  Notifications
                 </AccountNavLink>
               </li>
               {/* 积分入口 - 仅在积分系统启用时显示 */}

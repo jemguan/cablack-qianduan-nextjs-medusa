@@ -10,6 +10,7 @@ import Nav from "@modules/layout/templates/nav"
 import FreeShippingPriceNudge from "@modules/shipping/components/free-shipping-price-nudge"
 import { ScrollToTop } from "@components/ScrollToTop"
 import { WishlistProvider } from "@lib/context/wishlist-context"
+import { RestockNotifyProvider } from "@lib/context/restock-notify-context"
 
 // 页面级别缓存设置（5分钟）
 // 注意：购物车页面和结账页面有各自的 force-dynamic 设置，不受此影响
@@ -33,21 +34,23 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
 
   return (
     <WishlistProvider customer={customer}>
-      <ScrollToTop />
-      <Nav />
-      {customer && cart && (
-        <CartMismatchBanner customer={customer} cart={cart} />
-      )}
+      <RestockNotifyProvider customer={customer}>
+        <ScrollToTop />
+        <Nav />
+        {customer && cart && (
+          <CartMismatchBanner customer={customer} cart={cart} />
+        )}
 
-      {cart && (
-        <FreeShippingPriceNudge
-          variant="popup"
-          cart={cart}
-          shippingOptions={shippingOptions}
-        />
-      )}
-      {props.children}
-      <Footer />
+        {cart && (
+          <FreeShippingPriceNudge
+            variant="popup"
+            cart={cart}
+            shippingOptions={shippingOptions}
+          />
+        )}
+        {props.children}
+        <Footer />
+      </RestockNotifyProvider>
     </WishlistProvider>
   )
 }

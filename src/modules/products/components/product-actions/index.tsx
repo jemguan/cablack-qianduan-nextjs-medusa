@@ -16,6 +16,7 @@ import { useVariantSelection } from "@modules/products/contexts/variant-selectio
 import { useOptionTemplateSelection } from "@modules/products/contexts/option-template-selection-context"
 import { ProductQuantitySelector } from "../quantity-selector"
 import WishlistButton from "@modules/wishlist/components/wishlist-button"
+import NotifyMeButton from "@modules/products/components/notify-me-button"
 import ProductPointsInfo from "../product-points-info"
 import ProductPointsLoginPrompt from "../product-points-login-prompt"
 import { LoyaltyAccount } from "@/types/loyalty"
@@ -620,6 +621,20 @@ export default function ProductActions({
           )}
           <WishlistButton product={product} size="md" iconOnly />
         </div>
+
+        {/* 缺货时显示 Notify Me 按钮 */}
+        {!inStock && selectedVariant && (
+          <div className="flex gap-2">
+            <NotifyMeButton
+              product={product}
+              variant={selectedVariant}
+              customer={customer}
+              size="md"
+              showLabel={true}
+              className="flex-1"
+            />
+          </div>
+        )}
         {/* MobileActions 已禁用，因为 StickyAddToCart 提供了更好的移动端体验 */}
         {/* <MobileActions
           product={product}
