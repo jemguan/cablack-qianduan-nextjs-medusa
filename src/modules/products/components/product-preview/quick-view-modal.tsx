@@ -10,6 +10,8 @@ import QuickAddButton from "./quick-add-button"
 import ProductPrice from "../product-price"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { Text, Button } from "@medusajs/ui"
+import { Bell, BellOff } from "lucide-react"
+import { useRestockNotify } from "@lib/context/restock-notify-context"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductImageCarousel from "./product-image-carousel"
 import ProductBrandLink from "../product-brand-link"
@@ -52,9 +54,11 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
   const [quantity, setQuantity] = useState(1)
   const [isAdding, setIsAdding] = useState(false)
+  const [isTogglingNotify, setIsTogglingNotify] = useState(false)
   const params = useParams()
   const countryCode = params?.countryCode as string
   const router = useRouter()
+  const { isSubscribedToVariant, toggleRestockSubscription, isLoading: isNotifyLoading } = useRestockNotify()
 
   // 检查当前产品是否是会员产品
   const isMembershipProduct = useMemo(() => {
@@ -128,6 +132,37 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
       return isEqual(variantOptions, options)
     })
   }, [product.variants, options])
+
+  // 检查当前变体是否已订阅补货通知
+  const isSubscribed = useMemo(() => {
+    if (!selectedVariant) return false
+    return isSubscribedToVariant(selectedVariant.id)
+  }, [selectedVariant, isSubscribedToVariant])
+
+  // 处理补货通知订阅/取消订阅
+  const handleNotifyMe = async () => {
+    if (!selectedVariant) return
+
+    if (!customer) {
+      // 未登录，跳转到登录页
+      onClose()
+      router.push("/account")
+      return
+    }
+
+    setIsTogglingNotify(true)
+    try {
+      await toggleRestockSubscription(
+        product,
+        selectedVariant,
+        customer.email || ""
+      )
+    } catch (error) {
+      console.error("Failed to toggle notification:", error)
+    } finally {
+      setIsTogglingNotify(false)
+    }
+  }
 
   // 处理加入购物车
   const handleAddToCart = async () => {
@@ -362,7 +397,74 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                             You are already a VIP
                           </Button>
                         ) : (
-                          // 普通用户：正常添加到购物车
+                          // 普通用户：正常添加到购物车或 Notify Me 按钮
+                          (!inStock && selectedVariant && isValidVariant) ? (
+                            // 缺货时显示 Notify Me 按钮
+                            <Button
+                              onClick={handleNotifyMe}
+                              disabled={isTogglingNotify || isNotifyLoading}
+                              variant="primary"
+                              className="w-full h-10 text-black dark:text-white border-none !border-2 !shadow-none bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 !border-blue-200 dark:!border-blue-800"
+                              style={{ borderColor: 'rgb(191 219 254)', borderWidth: '2px', borderStyle: 'solid' }}
+                              isLoading={isTogglingNotify}
+                            >
+                              <span className="flex items-center gap-1 sm:gap-2">
+                                <span className="hidden sm:inline">Out of Stock</span>
+                                <span className="inline sm:hidden">No Stock</span>
+                                <span className="text-gray-400 dark:text-gray-500">|</span>
+                                {isSubscribed ? <BellOff size={16} /> : <Bell size={16} />}
+                                {isSubscribed ? "Notified" : "Notify Me"}
+                              </span>
+                            </Button>
+                          ) : (
+                            <Button
+                              onClick={handleAddToCart}
+                              disabled={
+                                !inStock ||
+                                !selectedVariant ||
+                                isAdding ||
+                                !isValidVariant
+                              }
+                              variant="primary"
+                              className={`w-full h-10 text-white border-none !border-2 !shadow-none ${
+                                !isValidVariant || !selectedVariant
+                                  ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
+                                  : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
+                              }`}
+                              style={
+                                !isValidVariant || !selectedVariant
+                                  ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
+                                  : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
+                              }
+                              isLoading={isAdding}
+                            >
+                              {!selectedVariant || !isValidVariant
+                                ? "Select variant"
+                                : "Add to Cart"}
+                            </Button>
+                          )
+                        )
+                      ) : (
+                        // 非会员产品：正常按钮或 Notify Me 按钮
+                        (!inStock && selectedVariant && isValidVariant) ? (
+                          // 缺货时显示 Notify Me 按钮
+                          <Button
+                            onClick={handleNotifyMe}
+                            disabled={isTogglingNotify || isNotifyLoading}
+                            variant="primary"
+                            className="w-full h-10 text-black dark:text-white border-none !border-2 !shadow-none bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 !border-blue-200 dark:!border-blue-800"
+                            style={{ borderColor: 'rgb(191 219 254)', borderWidth: '2px', borderStyle: 'solid' }}
+                            isLoading={isTogglingNotify}
+                          >
+                            <span className="flex items-center gap-1 sm:gap-2">
+                              <span className="hidden sm:inline">Out of Stock</span>
+                              <span className="inline sm:hidden">No Stock</span>
+                              <span className="text-gray-400 dark:text-gray-500">|</span>
+                              {isSubscribed ? <BellOff size={16} /> : <Bell size={16} />}
+                              {isSubscribed ? "Notified" : "Notify Me"}
+                            </span>
+                          </Button>
+                        ) : (
                           <Button
                             onClick={handleAddToCart}
                             disabled={
@@ -373,12 +475,12 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                             }
                             variant="primary"
                             className={`w-full h-10 text-white border-none !border-2 !shadow-none ${
-                              !inStock || !isValidVariant || !selectedVariant
+                              !isValidVariant || !selectedVariant
                                 ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
                                 : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
                             }`}
                             style={
-                              !inStock || !isValidVariant || !selectedVariant
+                              !isValidVariant || !selectedVariant
                                 ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
                                 : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
                             }
@@ -386,40 +488,9 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                           >
                             {!selectedVariant || !isValidVariant
                               ? "Select variant"
-                              : !inStock
-                              ? "Out of Stock"
                               : "Add to Cart"}
                           </Button>
                         )
-                      ) : (
-                        // 非会员产品：正常按钮
-                        <Button
-                          onClick={handleAddToCart}
-                          disabled={
-                            !inStock ||
-                            !selectedVariant ||
-                            isAdding ||
-                            !isValidVariant
-                          }
-                          variant="primary"
-                          className={`w-full h-10 text-white border-none !border-2 !shadow-none ${
-                            !inStock || !isValidVariant || !selectedVariant
-                              ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
-                              : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
-                          }`}
-                          style={
-                            !inStock || !isValidVariant || !selectedVariant
-                              ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
-                              : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
-                          }
-                          isLoading={isAdding}
-                        >
-                          {!selectedVariant || !isValidVariant
-                            ? "Select variant"
-                            : !inStock
-                            ? "Out of Stock"
-                            : "Add to Cart"}
-                        </Button>
                       )}
                     </div>
 

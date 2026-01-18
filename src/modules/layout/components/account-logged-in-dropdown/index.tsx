@@ -6,7 +6,7 @@ import {
   PopoverPanel,
   Transition,
 } from "@headlessui/react"
-import { FaSignOutAlt, FaUser, FaMapMarkerAlt, FaBox, FaHeart, FaStar, FaUsers } from "react-icons/fa"
+import { FaSignOutAlt, FaUser, FaMapMarkerAlt, FaBox, FaHeart, FaStar, FaUsers, FaBell } from "react-icons/fa"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
@@ -190,6 +190,16 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                 >
                   <FaHeart size={18} />
                   <span>Wishlist</span>
+                </LocalizedClientLink>
+
+                <LocalizedClientLink
+                  href="/account/notify-me"
+                  className="flex items-center gap-x-3 py-2 px-2 text-base-regular text-ui-fg-subtle hover:text-ui-fg-base hover:bg-ui-bg-base-hover rounded-md transition-colors"
+                  onClick={close}
+                  data-testid="account-notify-me-link"
+                >
+                  <FaBell size={18} />
+                  <span>Notify Me</span>
                 </LocalizedClientLink>
 
                 {/* 积分入口 - 仅在积分系统启用时显示 */}

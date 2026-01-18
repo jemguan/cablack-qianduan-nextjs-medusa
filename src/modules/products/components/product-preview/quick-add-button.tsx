@@ -4,6 +4,8 @@ import { addToCart } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button, clx } from "@medusajs/ui"
 import { FaShoppingBag, FaCheck } from "react-icons/fa"
+import { Bell, BellOff } from "lucide-react"
+import { useRestockNotify } from "@lib/context/restock-notify-context"
 import { useParams, useRouter } from "next/navigation"
 import { useState, useMemo } from "react"
 import { isEqual } from "lodash"
@@ -44,9 +46,11 @@ const QuickAddButton: React.FC<QuickAddButtonProps> = ({
 }) => {
   const [isAdding, setIsAdding] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [isTogglingNotify, setIsTogglingNotify] = useState(false)
   const params = useParams()
   const countryCode = params?.countryCode as string
   const router = useRouter()
+  const { isSubscribedToVariant, toggleRestockSubscription, isLoading: isNotifyLoading } = useRestockNotify()
 
   // 检查当前产品是否是会员产品
   const isMembershipProduct = useMemo(() => {
@@ -104,6 +108,42 @@ const QuickAddButton: React.FC<QuickAddButtonProps> = ({
     // Check inventory quantity (if null/undefined, consider out of stock per Medusa docs)
     return (selectedVariant.inventory_quantity || 0) > 0
   }, [selectedVariant, product.variants])
+
+  // 检查当前变体是否已订阅补货通知
+  const isSubscribed = useMemo(() => {
+    if (!selectedVariant) return false
+    return isSubscribedToVariant(selectedVariant.id)
+  }, [selectedVariant, isSubscribedToVariant])
+
+  // 处理补货通知订阅/取消订阅
+  const handleNotifyMe = async () => {
+    if (!selectedVariant) {
+      // 如果没有选中变体，打开 Quick View
+      if (onOpenQuickView) {
+        onOpenQuickView()
+      }
+      return
+    }
+
+    if (!customer) {
+      // 未登录，跳转到登录页
+      router.push("/account")
+      return
+    }
+
+    setIsTogglingNotify(true)
+    try {
+      await toggleRestockSubscription(
+        product,
+        selectedVariant,
+        customer.email || ""
+      )
+    } catch (error) {
+      console.error("Failed to toggle notification:", error)
+    } finally {
+      setIsTogglingNotify(false)
+    }
+  }
 
   // Handle add to cart
   const handleAddToCart = async () => {
@@ -192,8 +232,8 @@ const QuickAddButton: React.FC<QuickAddButtonProps> = ({
     )
   }
 
-  // If variant is not valid or not in stock
-  if (!isValidVariant || !inStock) {
+  // If variant is not valid
+  if (!isValidVariant) {
     return (
       <Button
         onClick={onOpenQuickView}
@@ -204,7 +244,30 @@ const QuickAddButton: React.FC<QuickAddButtonProps> = ({
         )}
         disabled={isAdding}
       >
-        {!inStock ? "Out of Stock" : "Select Options"}
+        Select Options
+      </Button>
+    )
+  }
+
+  // If variant is not in stock, show Notify Me button
+  if (!inStock) {
+    return (
+      <Button
+        onClick={handleNotifyMe}
+        variant="secondary"
+        className={clx(
+          "w-full transition-all duration-200 text-black dark:text-white bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 border-blue-200 dark:border-blue-800",
+          compact ? "h-8 text-xs" : "h-10"
+        )}
+        disabled={isTogglingNotify || isNotifyLoading}
+        isLoading={isTogglingNotify}
+      >
+        <span className="flex items-center gap-1 justify-center">
+          <span>No Stock</span>
+          <span className="text-gray-400 dark:text-gray-500">|</span>
+          {isSubscribed ? <BellOff size={compact ? 12 : 14} /> : <Bell size={compact ? 12 : 14} />}
+          {isSubscribed ? "Notified" : "Notify Me"}
+        </span>
       </Button>
     )
   }

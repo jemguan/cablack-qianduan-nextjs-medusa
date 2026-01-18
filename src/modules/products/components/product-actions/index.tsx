@@ -16,7 +16,8 @@ import { useVariantSelection } from "@modules/products/contexts/variant-selectio
 import { useOptionTemplateSelection } from "@modules/products/contexts/option-template-selection-context"
 import { ProductQuantitySelector } from "../quantity-selector"
 import WishlistButton from "@modules/wishlist/components/wishlist-button"
-import NotifyMeButton from "@modules/products/components/notify-me-button"
+import { useRestockNotify } from "@lib/context/restock-notify-context"
+import { Bell, BellOff } from "lucide-react"
 import ProductPointsInfo from "../product-points-info"
 import ProductPointsLoginPrompt from "../product-points-login-prompt"
 import { LoyaltyAccount, LoyaltyConfig } from "@/types/loyalty"
@@ -61,7 +62,9 @@ export default function ProductActions({
 }: ProductActionsProps) {
   const { options, selectedVariant, setOptionValue, setOptions } = useVariantSelection()
   const { selectedChoicesByTemplate, updateTemplateSelection } = useOptionTemplateSelection()
+  const { isSubscribedToVariant, toggleRestockSubscription, isLoading: isNotifyLoading } = useRestockNotify()
   const [isAdding, setIsAdding] = useState(false)
+  const [isTogglingNotify, setIsTogglingNotify] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const countryCode = useParams().countryCode as string
   const router = useRouter()
@@ -393,6 +396,36 @@ export default function ProductActions({
     }
   }, [optionTemplates, selectedChoicesByTemplate])
 
+  // 检查当前变体是否已订阅补货通知
+  const isSubscribed = useMemo(() => {
+    if (!selectedVariant) return false
+    return isSubscribedToVariant(selectedVariant.id)
+  }, [selectedVariant, isSubscribedToVariant])
+
+  // 处理补货通知订阅/取消订阅
+  const handleNotifyMe = async () => {
+    if (!selectedVariant) return
+
+    if (!customer) {
+      // 未登录，跳转到登录页
+      router.push("/account")
+      return
+    }
+
+    setIsTogglingNotify(true)
+    try {
+      await toggleRestockSubscription(
+        product,
+        selectedVariant,
+        customer.email || ""
+      )
+    } catch (error) {
+      console.error("Failed to toggle notification:", error)
+    } finally {
+      setIsTogglingNotify(false)
+    }
+  }
+
   // add the selected variant to the cart
   const handleAddToCart = async () => {
     if (!selectedVariant?.id) {
@@ -558,7 +591,81 @@ export default function ProductActions({
                 You are already a VIP
               </Button>
             ) : (
-              // 普通用户（已登录非VIP）：正常添加到购物车
+              // 普通用户（已登录非VIP）：正常添加到购物车或 Notify Me 按钮
+              (!inStock && selectedVariant && isValidVariant) ? (
+                // 缺货时显示 Notify Me 按钮
+                <Button
+                  onClick={handleNotifyMe}
+                  disabled={isTogglingNotify || isNotifyLoading}
+                  variant="primary"
+                  className="flex-1 h-10 text-black dark:text-white border-none !border-2 !shadow-none bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 !border-blue-200 dark:!border-blue-800"
+                  style={{ borderColor: 'rgb(191 219 254)', borderWidth: '2px', borderStyle: 'solid' }}
+                  isLoading={isTogglingNotify}
+                  data-testid="notify-me-button"
+                >
+                  <span className="flex items-center gap-1 sm:gap-2">
+                    <span className="hidden sm:inline">Out of Stock</span>
+                    <span className="inline sm:hidden">No Stock</span>
+                    <span className="text-gray-400 dark:text-gray-500">|</span>
+                    {isSubscribed ? <BellOff size={16} /> : <Bell size={16} />}
+                    {isSubscribed ? "Notified" : "Notify Me"}
+                  </span>
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleAddToCart}
+                  disabled={
+                    !inStock ||
+                    !selectedVariant ||
+                    !!disabled ||
+                    isAdding ||
+                    !isValidVariant ||
+                    !isValidOptionSelections
+                  }
+                  variant="primary"
+                  className={`flex-1 h-10 text-white border-none !border-2 !shadow-none ${
+                    !isValidVariant || !selectedVariant || !isValidOptionSelections
+                      ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
+                      : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
+                  }`}
+                  style={
+                    !isValidVariant || !selectedVariant || !isValidOptionSelections
+                      ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
+                      : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
+                  }
+                  isLoading={isAdding}
+                  data-testid="add-product-button"
+                >
+                  {!selectedVariant && !options
+                    ? "Select variant"
+                    : !isValidOptionSelections
+                    ? "Select Options"
+                    : "Add to Cart"}
+                </Button>
+              )
+            )
+          ) : (
+            // 非会员产品：正常添加到购物车按钮或 Notify Me 按钮
+            (!inStock && selectedVariant && isValidVariant) ? (
+              // 缺货时显示 Notify Me 按钮
+              <Button
+                onClick={handleNotifyMe}
+                disabled={isTogglingNotify || isNotifyLoading}
+                variant="primary"
+                className="flex-1 h-10 text-black dark:text-white border-none !border-2 !shadow-none bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 !border-blue-200 dark:!border-blue-800"
+                style={{ borderColor: 'rgb(191 219 254)', borderWidth: '2px', borderStyle: 'solid' }}
+                isLoading={isTogglingNotify}
+                data-testid="notify-me-button"
+              >
+                <span className="flex items-center gap-1 sm:gap-2">
+                  <span className="hidden sm:inline">Out of Stock</span>
+                  <span className="inline sm:hidden">No Stock</span>
+                  <span className="text-gray-400 dark:text-gray-500">|</span>
+                  {isSubscribed ? <BellOff size={16} /> : <Bell size={16} />}
+                  {isSubscribed ? "Notified" : "Notify Me"}
+                </span>
+              </Button>
+            ) : (
               <Button
                 onClick={handleAddToCart}
                 disabled={
@@ -571,12 +678,12 @@ export default function ProductActions({
                 }
                 variant="primary"
                 className={`flex-1 h-10 text-white border-none !border-2 !shadow-none ${
-                  !inStock || !isValidVariant || !selectedVariant || !isValidOptionSelections
+                  !isValidVariant || !selectedVariant || !isValidOptionSelections
                     ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
                     : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
                 }`}
                 style={
-                  !inStock || !isValidVariant || !selectedVariant || !isValidOptionSelections
+                  !isValidVariant || !selectedVariant || !isValidOptionSelections
                     ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
                     : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
                 }
@@ -585,64 +692,15 @@ export default function ProductActions({
               >
                 {!selectedVariant && !options
                   ? "Select variant"
-                  : !inStock || !isValidVariant
-                  ? "Out of Stock"
                   : !isValidOptionSelections
                   ? "Select Options"
                   : "Add to Cart"}
               </Button>
             )
-          ) : (
-            // 非会员产品：正常添加到购物车按钮
-            <Button
-              onClick={handleAddToCart}
-              disabled={
-                !inStock ||
-                !selectedVariant ||
-                !!disabled ||
-                isAdding ||
-                !isValidVariant ||
-                !isValidOptionSelections
-              }
-              variant="primary"
-              className={`flex-1 h-10 text-white border-none !border-2 !shadow-none ${
-                !inStock || !isValidVariant || !selectedVariant || !isValidOptionSelections
-                  ? "bg-ui-bg-disabled hover:bg-ui-bg-disabled dark:bg-ui-bg-disabled dark:hover:bg-ui-bg-disabled !border-ui-border-base cursor-not-allowed"
-                  : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 !border-orange-600 hover:!border-orange-700 dark:!border-orange-600 dark:hover:!border-orange-700"
-              }`}
-              style={
-                !inStock || !isValidVariant || !selectedVariant || !isValidOptionSelections
-                  ? { borderColor: 'rgb(229 231 235)', borderWidth: '2px', borderStyle: 'solid' }
-                  : { borderColor: 'rgb(234 88 12)', borderWidth: '2px', borderStyle: 'solid' }
-              }
-              isLoading={isAdding}
-              data-testid="add-product-button"
-            >
-              {!selectedVariant && !options
-                ? "Select variant"
-                : !inStock || !isValidVariant
-                ? "Out of Stock"
-                : !isValidOptionSelections
-                ? "Select Options"
-                : "Add to Cart"}
-            </Button>
           )}
           <WishlistButton product={product} size="md" iconOnly />
         </div>
 
-        {/* 缺货时显示 Notify Me 按钮 */}
-        {!inStock && selectedVariant && (
-          <div className="flex gap-2">
-            <NotifyMeButton
-              product={product}
-              variant={selectedVariant}
-              customer={customer}
-              size="md"
-              showLabel={true}
-              className="flex-1"
-            />
-          </div>
-        )}
         {/* MobileActions 已禁用，因为 StickyAddToCart 提供了更好的移动端体验 */}
         {/* <MobileActions
           product={product}
