@@ -58,7 +58,7 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
       data-testid="product-container-two-column"
     >
       {/* 左侧：图片区域 */}
-        <div className="w-full small:w-1/2 flex-shrink-0 small:self-start">
+        <div className="w-full small:w-1/2 flex-shrink-0 small:self-start small:sticky small:top-28">
           <ProductImageCarouselClient
             product={product}
           productTitle={product.title}
