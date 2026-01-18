@@ -43,7 +43,7 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
 
         {cart && (
           <FreeShippingPriceNudge
-            variant="popup"
+            variant="progress-bar"
             cart={cart}
             shippingOptions={shippingOptions}
           />

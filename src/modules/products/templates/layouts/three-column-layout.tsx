@@ -13,8 +13,9 @@ import { StickyAddToCart } from "@modules/products/components/sticky-add-to-cart
 import { MedusaConfig } from "@lib/admin-api/config"
 import ProductRating from "@modules/products/components/reviews/ProductRating"
 import ProductDescriptionAccordion from "@modules/products/components/product-description-accordion"
-import { LoyaltyAccount } from "@/types/loyalty"
+import { LoyaltyAccount, LoyaltyConfig } from "@/types/loyalty"
 import type { OptionTemplate } from "@lib/data/option-templates"
+import type { Brand } from "@lib/data/brands"
 
 type ThreeColumnLayoutProps = {
   product: HttpTypes.StoreProduct
@@ -27,10 +28,14 @@ type ThreeColumnLayoutProps = {
   customer?: HttpTypes.StoreCustomer | null
   /** 积分账户信息 */
   loyaltyAccount?: LoyaltyAccount | null
+  /** 积分系统配置 */
+  loyaltyConfig?: LoyaltyConfig | null
   /** 会员产品 ID 列表 */
   membershipProductIds?: Record<string, boolean> | null
   /** 选项模板列表 */
   optionTemplates?: OptionTemplate[]
+  /** 品牌信息 */
+  brand?: Brand | null
 }
 
 const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
@@ -42,8 +47,10 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
   htmlDescription,
   customer,
   loyaltyAccount,
+  loyaltyConfig,
   membershipProductIds,
   optionTemplates = [],
+  brand,
 }) => {
   const actionsRef = useRef<HTMLDivElement>(null)
   const mobileActionsRef = useRef<HTMLDivElement>(null)
@@ -68,6 +75,7 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
         <ProductBrandLink 
           productId={product.id}
           className="text-medium text-ui-fg-muted hover:text-ui-fg-subtle"
+          brand={brand}
         />
         <Heading
           level="h1"
@@ -98,6 +106,7 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
             mobileLayout={true}
             customer={customer}
             loyaltyAccount={loyaltyAccount}
+            loyaltyConfig={loyaltyConfig}
             membershipProductIds={membershipProductIds}
             optionTemplates={optionTemplates}
           />
@@ -136,6 +145,7 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
             region={region}
             customer={customer}
             loyaltyAccount={loyaltyAccount}
+            loyaltyConfig={loyaltyConfig}
             membershipProductIds={membershipProductIds}
             optionTemplates={optionTemplates}
           />
@@ -151,6 +161,7 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
         mobileTriggerRef={mobileActionsRef}
         customer={customer}
         loyaltyAccount={loyaltyAccount}
+        loyaltyConfig={loyaltyConfig}
         membershipProductIds={membershipProductIds}
       />
     </ProductPageClientWrapper>

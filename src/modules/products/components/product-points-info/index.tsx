@@ -1,50 +1,32 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { getLoyaltyAccount } from "@lib/data/loyalty"
+import type { LoyaltyAccount, LoyaltyConfig } from "@/types/loyalty"
 
 interface ProductPointsInfoProps {
   price: number // 商品价格（以货币单位为单位，如 129.99 CAD）
   currencyCode: string
+  // 从父组件传入，避免重复 API 请求
+  loyaltyAccount?: LoyaltyAccount | null
+  loyaltyConfig?: LoyaltyConfig | null
+  isLoggedIn?: boolean
 }
 
-export default function ProductPointsInfo({ price, currencyCode }: ProductPointsInfoProps) {
-  const [pointsEarnRate, setPointsEarnRate] = useState(10) // 默认 10 积分/$1
-  const [vipMultiplier, setVipMultiplier] = useState(1)
-  const [isMember, setIsMember] = useState(false)
-  const [isPointsEnabled, setIsPointsEnabled] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+export default function ProductPointsInfo({
+  price,
+  currencyCode,
+  loyaltyAccount,
+  loyaltyConfig,
+  isLoggedIn = false,
+}: ProductPointsInfoProps) {
+  // 从 props 获取配置，使用默认值
+  const isPointsEnabled = loyaltyConfig?.is_points_enabled ?? false
+  const pointsEarnRate = loyaltyConfig?.points_earn_rate ?? 10
+  const vipMultiplier = loyaltyConfig?.vip_multiplier ?? 1
+  const isMember = loyaltyAccount?.is_member ?? false
 
-  useEffect(() => {
-    const fetchLoyaltyInfo = async () => {
-      try {
-        const data = await getLoyaltyAccount()
-        if (data) {
-          setIsPointsEnabled(data.config.is_points_enabled || false)
-          setPointsEarnRate(data.config.points_earn_rate || 10)
-          setVipMultiplier(data.config.vip_multiplier || 1)
-          // 检查用户是否登录（有 account 信息表示已登录）
-          setIsLoggedIn(!!data.account)
-          // 只有在用户登录且有账户信息时才设置会员状态
-          setIsMember(data.account?.is_member || false)
-        } else {
-          // 如果返回 null，说明用户未登录
-          setIsLoggedIn(false)
-        }
-      } catch (error) {
-        // 忽略错误，使用默认值
-        setIsLoggedIn(false)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchLoyaltyInfo()
-  }, [])
-
-  // 如果正在加载、积分系统未启用或用户未登录，不显示此组件
+  // 如果积分系统未启用或用户未登录，不显示此组件
   // 未登录时应该显示 ProductPointsLoginPrompt 组件
-  if (isLoading || !isPointsEnabled || !isLoggedIn) {
+  if (!isPointsEnabled || !isLoggedIn) {
     return null
   }
 

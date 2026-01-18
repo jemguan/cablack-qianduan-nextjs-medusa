@@ -2,18 +2,22 @@ import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@medusajs/ui"
 import ProductBrandLink from "@modules/products/components/product-brand-link"
 import ProductRating from "@modules/products/components/reviews/ProductRating"
+import type { Brand } from "@lib/data/brands"
 
 type ProductInfoProps = {
   product: HttpTypes.StoreProduct
+  // 从父组件传入，避免重复 API 请求
+  brand?: Brand | null
 }
 
-const ProductInfo = ({ product }: ProductInfoProps) => {
+const ProductInfo = ({ product, brand }: ProductInfoProps) => {
   return (
     <div id="product-info">
       <div className="flex flex-col gap-y-4">
         <ProductBrandLink 
           productId={product.id}
           className="text-medium text-ui-fg-muted hover:text-ui-fg-subtle"
+          brand={brand}
         />
         <Heading
           level="h2"

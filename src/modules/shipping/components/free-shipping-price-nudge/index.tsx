@@ -10,7 +10,7 @@ import {
 } from "@medusajs/types"
 import { Button, clx } from "@medusajs/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { StoreFreeShippingPrice } from "types/global"
 
 const computeTarget = (
@@ -73,16 +73,16 @@ const computeTarget = (
 }
 
 export default function ShippingPriceNudge({
-  variant = "inline",
+  variant = "progress-bar",
   cart,
   shippingOptions,
 }: {
-  variant?: "popup" | "inline"
+  variant?: "popup" | "inline" | "progress-bar"
   cart: StoreCart
   shippingOptions: StoreCartShippingOption[]
 }) {
   if (!cart || !shippingOptions?.length) {
-    return
+    return null
   }
 
   // Check if any shipping options have a conditional price based on item_total
@@ -120,13 +120,15 @@ export default function ShippingPriceNudge({
     .find((price) => price?.amount === 0)
 
   if (!freeShippingPrice) {
-    return
+    return null
   }
 
   if (variant === "popup") {
     return <FreeShippingPopup cart={cart} price={freeShippingPrice} />
-  } else {
+  } else if (variant === "inline") {
     return <FreeShippingInline cart={cart} price={freeShippingPrice} />
+  } else {
+    return <FreeShippingProgressBar cart={cart} price={freeShippingPrice} />
   }
 }
 
@@ -182,6 +184,143 @@ function FreeShippingInline({
             style={{ width: `${price.remaining_percentage}%` }}
           ></div>
           <div className="bg-neutral-300 h-1 rounded-full w-fit flex-grow"></div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FreeShippingProgressBar({
+  cart,
+  price,
+}: {
+  cart: StoreCart
+  price: StorePrice & {
+    target_reached: boolean
+    target_remaining: number
+    remaining_percentage: number
+  }
+}) {
+  const [isClosed, setIsClosed] = useState(false)
+
+  useEffect(() => {
+    // 在开发环境中不检查持久化状态
+    if (process.env.NODE_ENV === 'production') {
+      const closedTimestamp = localStorage.getItem('freeShippingNudgeClosed')
+      if (closedTimestamp) {
+        const closedTime = parseInt(closedTimestamp)
+        const now = Date.now()
+        const oneHour = 60 * 60 * 1000 // 1小时 = 3600000毫秒
+
+        // 如果关闭时间超过1小时，清除存储并显示组件
+        if (now - closedTime > oneHour) {
+          localStorage.removeItem('freeShippingNudgeClosed')
+        } else {
+          setIsClosed(true)
+        }
+      }
+    }
+  }, [])
+
+  const handleClose = () => {
+    setIsClosed(true)
+    // 在开发环境中不持久化关闭状态
+    if (process.env.NODE_ENV === 'production') {
+      localStorage.setItem('freeShippingNudgeClosed', Date.now().toString())
+    }
+  }
+
+  if (isClosed) {
+    return null
+  }
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-lg">
+      <div className="max-w-7xl mx-auto px-4 py-3">
+        <div className="flex items-center justify-between gap-4">
+          {/* 进度条容器 */}
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                {price.target_reached ? (
+                  <>
+                    <CheckCircleSolid className="text-green-500 w-5 h-5" />
+                    <span className="text-sm font-medium text-green-600">
+                      Free Shipping Unlocked!
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm font-medium text-foreground">
+                      Free Shipping
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      <span className="sm:inline hidden">Only </span>
+                      <span className="font-semibold text-foreground">
+                        {convertToLocale({
+                          amount: price.target_remaining,
+                          currency_code: cart.currency_code,
+                        })}
+                      </span>
+                      <span className="sm:inline hidden"> away</span>
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* 进度条 */}
+            <div className="relative h-3 bg-muted rounded-full overflow-hidden">
+              <div
+                className={clx(
+                  "absolute left-0 top-0 h-full rounded-full transition-all duration-500 ease-out",
+                  {
+                    "bg-gradient-to-r from-green-400 to-green-500": price.target_reached,
+                    "bg-gradient-to-r from-red-400 via-yellow-400 via-green-400 via-blue-400 via-purple-400 to-pink-400": !price.target_reached,
+                  }
+                )}
+                style={{
+                  width: price.target_reached ? '100%' : `${Math.min(price.remaining_percentage, 100)}%`
+                }}
+              />
+              {/* 进度条上的文本 */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xs font-medium text-foreground drop-shadow-sm">
+                  {price.target_reached ? '100%' : `${Math.round(price.remaining_percentage)}%`}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 操作按钮和关闭按钮 */}
+          <div className="flex items-center gap-2">
+            {/* 操作按钮 */}
+            {!price.target_reached && (
+              <>
+                {/* 在桌面端显示两个按钮，在移动端只显示继续购物按钮 */}
+              <LocalizedClientLink
+                className="hidden sm:inline-block px-3 py-2 text-sm font-medium text-muted-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
+                href="/cart"
+              >
+                  View Cart
+                </LocalizedClientLink>
+              <LocalizedClientLink
+                className="px-3 sm:px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-md transition-colors"
+                href="/products"
+              >
+                  Continue Shopping
+                </LocalizedClientLink>
+              </>
+            )}
+
+            {/* 关闭按钮 */}
+            <Button
+              className="rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground p-2 h-8 w-8 flex items-center justify-center transition-colors"
+              onClick={handleClose}
+            >
+              <XMark className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

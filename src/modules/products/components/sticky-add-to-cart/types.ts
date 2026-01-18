@@ -1,5 +1,5 @@
 import type { HttpTypes } from '@medusajs/types';
-import type { LoyaltyAccount } from '@/types/loyalty';
+import type { LoyaltyAccount, LoyaltyConfig } from '@/types/loyalty';
 import type { OptionTemplate } from '@lib/data/option-templates';
 
 /**
@@ -18,6 +18,8 @@ export interface StickyAddToCartProps {
   customer?: HttpTypes.StoreCustomer | null;
   /** 积分账户信息 */
   loyaltyAccount?: LoyaltyAccount | null;
+  /** 积分系统配置 */
+  loyaltyConfig?: LoyaltyConfig | null;
   /** 会员产品 ID 列表 */
   membershipProductIds?: Record<string, boolean> | null;
   /** 选项模板列表 */

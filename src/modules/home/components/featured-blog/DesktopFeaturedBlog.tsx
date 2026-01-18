@@ -5,7 +5,6 @@ import { FEATURED_BLOG_CONFIG } from './config';
 import { filterArticlesByIds, limitArticles } from './utils';
 import { EmblaCarousel } from '@lib/ui/embla-carousel';
 import { BlogCard } from '@modules/blogs/components/blog-card';
-import { Text } from '@medusajs/ui';
 import LocalizedClientLink from '@modules/common/components/localized-client-link';
 import { Button } from '@/components/ui/button';
 
@@ -54,6 +53,10 @@ export function DesktopFeaturedBlog({
     return null;
   }
 
+  // 使用标题和副标题
+  const displayTitle = title || '';
+  const displaySubtitle = subtitle || '';
+
   const titleAlignClass = {
     left: 'text-left',
     center: 'text-center',
@@ -68,13 +71,13 @@ export function DesktopFeaturedBlog({
     const finalClassName = className ? `space-y-6 ${className}`.trim() : "space-y-6"
     return (
       <div className={finalClassName}>
-        {((showTitle && title) || (showSubtitle && subtitle)) && (
+        {((showTitle && displayTitle) || (showSubtitle && displaySubtitle)) && (
           <div className={`${titleAlignClass}`}>
-            {showTitle && title && (
-              <Text className="txt-xlarge mb-2">{title}</Text>
+            {showTitle && displayTitle && (
+              <p className="txt-xlarge mb-2 font-normal font-sans">{displayTitle}</p>
             )}
-            {showSubtitle && subtitle && (
-              <Text className="text-medium text-ui-fg-subtle">{subtitle}</Text>
+            {showSubtitle && displaySubtitle && (
+              <p className="text-medium text-ui-fg-subtle font-normal font-sans">{displaySubtitle}</p>
             )}
           </div>
         )}
@@ -115,13 +118,13 @@ export function DesktopFeaturedBlog({
   const finalClassName = className ? `space-y-6 ${className}`.trim() : "space-y-6"
   return (
     <div className={finalClassName}>
-      {((showTitle && title) || (showSubtitle && subtitle)) && (
+      {((showTitle && displayTitle) || (showSubtitle && displaySubtitle)) && (
         <div className={`${titleAlignClass}`}>
-          {showTitle && title && (
-            <Text className="txt-xlarge mb-2">{title}</Text>
+          {showTitle && displayTitle && (
+            <p className="txt-xlarge mb-2 font-normal font-sans">{displayTitle}</p>
           )}
-          {showSubtitle && subtitle && (
-            <Text className="text-medium text-ui-fg-subtle">{subtitle}</Text>
+          {showSubtitle && displaySubtitle && (
+            <p className="text-medium text-ui-fg-subtle font-normal font-sans">{displaySubtitle}</p>
           )}
         </div>
       )}

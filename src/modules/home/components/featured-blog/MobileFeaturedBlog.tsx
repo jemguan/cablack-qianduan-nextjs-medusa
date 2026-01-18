@@ -5,7 +5,6 @@ import { FEATURED_BLOG_CONFIG } from './config';
 import { filterArticlesByIds, limitArticles } from './utils';
 import { EmblaCarousel } from '@lib/ui/embla-carousel';
 import { BlogCard } from '@modules/blogs/components/blog-card';
-import { Text } from '@medusajs/ui';
 import LocalizedClientLink from '@modules/common/components/localized-client-link';
 import { Button } from '@/components/ui/button';
 
@@ -63,10 +62,10 @@ export function MobileFeaturedBlog({
         {((showTitle && title) || (showSubtitle && subtitle)) && (
           <div className={`${titleAlignClass}`}>
             {showTitle && title && (
-              <Text className="txt-xlarge mb-2">{title}</Text>
+              <p className="txt-xlarge mb-2 font-normal font-sans">{title}</p>
             )}
             {showSubtitle && subtitle && (
-              <Text className="text-medium text-ui-fg-subtle">{subtitle}</Text>
+              <p className="text-medium text-ui-fg-subtle font-normal font-sans">{subtitle}</p>
             )}
           </div>
         )}
@@ -99,10 +98,10 @@ export function MobileFeaturedBlog({
       {((showTitle && title) || (showSubtitle && subtitle)) && (
         <div className={`${titleAlignClass}`}>
           {showTitle && title && (
-            <Text className="txt-xlarge mb-2">{title}</Text>
+            <p className="txt-xlarge mb-2 font-normal font-sans">{title}</p>
           )}
           {showSubtitle && subtitle && (
-            <Text className="text-medium text-ui-fg-subtle">{subtitle}</Text>
+            <p className="text-medium text-ui-fg-subtle font-normal font-sans">{subtitle}</p>
           )}
         </div>
       )}

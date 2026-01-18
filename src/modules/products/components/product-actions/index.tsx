@@ -19,7 +19,7 @@ import WishlistButton from "@modules/wishlist/components/wishlist-button"
 import NotifyMeButton from "@modules/products/components/notify-me-button"
 import ProductPointsInfo from "../product-points-info"
 import ProductPointsLoginPrompt from "../product-points-login-prompt"
-import { LoyaltyAccount } from "@/types/loyalty"
+import { LoyaltyAccount, LoyaltyConfig } from "@/types/loyalty"
 import type { OptionTemplate } from "@lib/data/option-templates"
 
 type ProductActionsProps = {
@@ -32,6 +32,8 @@ type ProductActionsProps = {
   customer?: HttpTypes.StoreCustomer | null
   /** 积分账户信息 */
   loyaltyAccount?: LoyaltyAccount | null
+  /** 积分系统配置 */
+  loyaltyConfig?: LoyaltyConfig | null
   /** 会员产品 ID 列表 */
   membershipProductIds?: Record<string, boolean> | null
   /** 选项模板列表 */
@@ -53,6 +55,7 @@ export default function ProductActions({
   mobileLayout = false,
   customer,
   loyaltyAccount,
+  loyaltyConfig,
   membershipProductIds,
   optionTemplates = [],
 }: ProductActionsProps) {
@@ -489,10 +492,15 @@ export default function ProductActions({
                 <ProductPointsInfo
                   price={selectedVariant.calculated_price.calculated_amount}
                   currencyCode={selectedVariant.calculated_price.currency_code || "cad"}
+                  loyaltyAccount={loyaltyAccount}
+                  loyaltyConfig={loyaltyConfig}
+                  isLoggedIn={isLoggedIn}
                 />
                 <ProductPointsLoginPrompt
                   price={selectedVariant.calculated_price.calculated_amount}
                   currencyCode={selectedVariant.calculated_price.currency_code || "cad"}
+                  loyaltyConfig={loyaltyConfig}
+                  isLoggedIn={isLoggedIn}
                 />
               </>
             )}

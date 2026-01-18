@@ -1,40 +1,18 @@
-"use client"
-
-import { useState, useEffect } from "react"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { getProductBrand } from "@lib/data/brands"
 import { Brand } from "@lib/data/brands"
 
 type ProductBrandLinkProps = {
-  productId: string
+  productId?: string
   className?: string
+  // 从父组件传入，避免重复 API 请求
+  brand?: Brand | null
 }
 
-const ProductBrandLink = ({ productId, className = "text-sm text-muted-foreground hover:text-primary transition-colors" }: ProductBrandLinkProps) => {
-  const [brand, setBrand] = useState<Brand | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchBrand = async () => {
-      try {
-        const brandData = await getProductBrand(productId)
-        setBrand(brandData)
-      } catch (error) {
-        setBrand(null)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    if (productId) {
-      fetchBrand()
-    }
-  }, [productId])
-
-  if (isLoading) {
-    return null
-  }
-
+const ProductBrandLink = ({
+  productId,
+  className = "text-sm text-muted-foreground hover:text-primary transition-colors",
+  brand,
+}: ProductBrandLinkProps) => {
   if (!brand) {
     return null
   }

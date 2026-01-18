@@ -11,8 +11,9 @@ import ProductPageClientWrapper from "@modules/products/components/product-page-
 import { StickyAddToCart } from "@modules/products/components/sticky-add-to-cart"
 import { MedusaConfig } from "@lib/admin-api/config"
 import ProductDescriptionAccordion from "@modules/products/components/product-description-accordion"
-import { LoyaltyAccount } from "@/types/loyalty"
+import { LoyaltyAccount, LoyaltyConfig } from "@/types/loyalty"
 import type { OptionTemplate } from "@lib/data/option-templates"
+import type { Brand } from "@lib/data/brands"
 
 type TwoColumnLayoutProps = {
   product: HttpTypes.StoreProduct
@@ -25,10 +26,14 @@ type TwoColumnLayoutProps = {
   customer?: HttpTypes.StoreCustomer | null
   /** 积分账户信息 */
   loyaltyAccount?: LoyaltyAccount | null
+  /** 积分系统配置 */
+  loyaltyConfig?: LoyaltyConfig | null
   /** 会员产品 ID 列表 */
   membershipProductIds?: Record<string, boolean> | null
   /** 选项模板列表 */
   optionTemplates?: OptionTemplate[]
+  /** 品牌信息 */
+  brand?: Brand | null
 }
 
 const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
@@ -40,8 +45,10 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
   htmlDescription,
   customer,
   loyaltyAccount,
+  loyaltyConfig,
   membershipProductIds,
   optionTemplates = [],
+  brand,
 }) => {
   const actionsRef = useRef<HTMLDivElement>(null)
   const mobileActionsRef = useRef<HTMLDivElement>(null)
@@ -68,7 +75,7 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
       {/* 右侧：产品信息区域 */}
         <div className="w-full small:w-1/2 flex flex-col gap-y-6 small:self-start">
         {/* 产品基本信息 */}
-        <ProductInfo product={product} />
+        <ProductInfo product={product} brand={brand} />
         
         {/* 移动端：在副标题下显示操作区域（变体选择、数量选择、按钮） */}
         <div className="small:hidden mt-4" ref={mobileActionsRef}>
@@ -78,6 +85,7 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
             mobileLayout={true}
             customer={customer}
             loyaltyAccount={loyaltyAccount}
+            loyaltyConfig={loyaltyConfig}
             membershipProductIds={membershipProductIds}
             optionTemplates={optionTemplates}
           />
@@ -90,6 +98,7 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
             region={region}
             customer={customer}
             loyaltyAccount={loyaltyAccount}
+            loyaltyConfig={loyaltyConfig}
             membershipProductIds={membershipProductIds}
             optionTemplates={optionTemplates}
           />
@@ -120,6 +129,7 @@ const TwoColumnLayout: React.FC<TwoColumnLayoutProps> = ({
         mobileTriggerRef={mobileActionsRef}
         customer={customer}
         loyaltyAccount={loyaltyAccount}
+        loyaltyConfig={loyaltyConfig}
         membershipProductIds={membershipProductIds}
         optionTemplates={optionTemplates}
       />
