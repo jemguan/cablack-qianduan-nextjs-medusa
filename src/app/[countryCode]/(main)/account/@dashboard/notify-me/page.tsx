@@ -189,7 +189,7 @@ export default function NotifyMePage() {
           <Heading level="h1" className="text-xl small:text-2xl font-bold">
             <span className="hidden small:inline">📬 My Restock Notifications</span>
             <span className="small:hidden">📬 Notifications</span>
-          </Heading>
+        </Heading>
           <button
             onClick={handleRefreshStatus}
             disabled={isRefreshingStatus}

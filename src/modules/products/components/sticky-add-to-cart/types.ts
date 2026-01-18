@@ -11,9 +11,9 @@ export interface StickyAddToCartProps {
   /** 区域信息 */
   region: HttpTypes.StoreRegion;
   /** 触发显示的目标元素引用（桌面端） */
-  triggerRef?: React.RefObject<HTMLElement>;
+  triggerRef?: React.RefObject<HTMLElement | null>;
   /** 移动端触发显示的目标元素引用 */
-  mobileTriggerRef?: React.RefObject<HTMLElement>;
+  mobileTriggerRef?: React.RefObject<HTMLElement | null>;
   /** 当前登录的客户 */
   customer?: HttpTypes.StoreCustomer | null;
   /** 积分账户信息 */
