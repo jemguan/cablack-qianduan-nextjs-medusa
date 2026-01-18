@@ -144,6 +144,20 @@ const AccountNav = ({
                     <FaChevronDown className="transform -rotate-90 w-5 h-5" />
                   </LocalizedClientLink>
                 </li>
+                <li>
+                  <LocalizedClientLink
+                    href="/account/notify-me"
+                    className="flex items-center justify-between py-4 border-b border-border/50 px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[44px]"
+                    data-testid="notify-me-link"
+                    aria-label="Go to notify me page"
+                  >
+                    <div className="flex items-center gap-x-2">
+                      <FaBell className="w-5 h-5" />
+                      <span>Notify Me</span>
+                    </div>
+                    <FaChevronDown className="transform -rotate-90 w-5 h-5" />
+                  </LocalizedClientLink>
+                </li>
                 {/* 积分入口 - 仅在积分系统启用时显示 */}
                 {isPointsEnabled && (
                   <li>
@@ -270,7 +284,7 @@ const AccountNav = ({
                   data-testid="notify-me-link"
                   icon={<FaBell className="w-4 h-4" />}
                 >
-                  Notifications
+                  Notify Me
                 </AccountNavLink>
               </li>
               {/* 积分入口 - 仅在积分系统启用时显示 */}

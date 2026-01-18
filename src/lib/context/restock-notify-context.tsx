@@ -80,6 +80,17 @@ export const RestockNotifyProvider = ({
     }
   }, [isAuthenticated, loadSubscriptions])
 
+  // Auto-refresh subscription status (once per day)
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    const interval = setInterval(() => {
+      loadSubscriptions()
+    }, 86400000) // 24 hours = 86400000ms
+
+    return () => clearInterval(interval)
+  }, [isAuthenticated, loadSubscriptions])
+
   // 检查是否订阅了某变体
   const isSubscribedToVariant = useCallback(
     (variantId: string): boolean => {

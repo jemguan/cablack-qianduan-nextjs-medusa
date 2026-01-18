@@ -140,3 +140,34 @@ export async function checkRestockSubscribed(
 
   return result.subscribed
 }
+
+export interface TriggerRestockCheckResponse {
+  success: boolean
+  message: string
+  duration?: string
+}
+
+/**
+ * 手动触发补货检查
+ */
+export async function triggerRestockCheck(): Promise<TriggerRestockCheckResponse> {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  const result = await sdk.client
+    .fetch<TriggerRestockCheckResponse>(
+      `/store/restock-subscriptions/trigger-check`,
+      {
+        method: "POST",
+        headers,
+      }
+    )
+    .catch((err) => {
+      console.error("Failed to trigger restock check:", err)
+      throw err
+    })
+
+  revalidateTag(RESTOCK_CACHE_TAG)
+  return result
+}
