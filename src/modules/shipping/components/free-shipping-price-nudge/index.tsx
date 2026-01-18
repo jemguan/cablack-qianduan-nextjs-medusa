@@ -86,6 +86,23 @@ export default function ShippingPriceNudge({
   }
 
   // Check if any shipping options have a conditional price based on item_total
+  // Only show component if there are actual free shipping options available
+  const hasFreeShippingOptions = shippingOptions.some((shippingOption) => {
+    return shippingOption.prices.some(
+      (price) =>
+        price.currency_code === cart.currency_code &&
+        price.amount === 0 &&
+        (price.price_rules || []).some(
+          (priceRule) => priceRule.attribute === "item_total"
+        )
+    )
+  })
+
+  // If no free shipping options exist for this country, don't show the component
+  if (!hasFreeShippingOptions) {
+    return null
+  }
+
   const freeShippingPrice = shippingOptions
     .map((shippingOption) => {
       const calculatedPrice = shippingOption.calculated_price
