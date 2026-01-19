@@ -34,7 +34,8 @@ export default function CollectionsListTemplate({
       <ul className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8">
         {collections.map((collection) => {
           const collectionLink = `/collections/${collection.handle}`
-          const thumbnailUrl = getImageUrl(collection.thumbnail)
+          // thumbnail may be provided via metadata or extended fields
+          const thumbnailUrl = getImageUrl((collection as HttpTypes.StoreCollection & { thumbnail?: string }).thumbnail)
 
           return (
             <li key={collection.id}>

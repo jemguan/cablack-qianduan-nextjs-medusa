@@ -97,7 +97,7 @@ export function MobileCollageHero({
     }
 
     // 去重并预取
-    const uniqueLinks = [...new Set(linksToPreFetch)];
+    const uniqueLinks = Array.from(new Set(linksToPreFetch));
     uniqueLinks.forEach(link => {
       router.prefetch(link);
     });

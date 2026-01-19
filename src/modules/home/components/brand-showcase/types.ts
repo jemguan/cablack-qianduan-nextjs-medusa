@@ -16,6 +16,8 @@ export interface Brand {
  * 品牌展示区块数据接口
  */
 export interface BrandShowcaseData {
+  /** 是否启用此区块 */
+  enabled?: boolean;
   /** 要展示的品牌列表 */
   brands: Brand[];
 

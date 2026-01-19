@@ -38,7 +38,8 @@ type EmbeddedChoice = {
 type LineItemCustomOptionsProps = {
   item: {
     id: string
-    metadata?: Record<string, any>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    metadata?: Record<string, any> | null
   }
   currencyCode?: string
   className?: string

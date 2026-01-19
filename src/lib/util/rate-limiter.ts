@@ -27,7 +27,8 @@ function cleanupExpiredEntries(): void {
   const now = Date.now()
   
   // 删除过期条目
-  for (const [key, entry] of rateLimitStore.entries()) {
+  const entries = Array.from(rateLimitStore.entries())
+  for (const [key, entry] of entries) {
     if (entry.resetAt < now) {
       rateLimitStore.delete(key)
     }

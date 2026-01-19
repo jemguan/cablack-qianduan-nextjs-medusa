@@ -28,9 +28,10 @@ export async function subscribeToNewsletter(
       },
     })
     .then((data) => {
+      const response = data as { message?: string }
       return {
         success: true,
-        message: data.message || "Successfully subscribed",
+        message: response.message || "Successfully subscribed",
       }
     })
     .catch((err) => {

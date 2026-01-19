@@ -44,6 +44,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   try {
     const productCategory = await getCategoryByHandle(params.category)
 
+    if (!productCategory) {
+      notFound()
+    }
+
     // 使用 .trim() 来判断，这样空格 " " 可以作为占位符，触发 fallback
     const metadata = productCategory.metadata || {}
     const title = (metadata.seo_title as string)?.trim() || (await getPageTitle("category", { name: productCategory.name, title: productCategory.name }))

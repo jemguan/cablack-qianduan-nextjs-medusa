@@ -101,7 +101,7 @@ export function StickyAddToCart({
             selectedChoices.includes(choice.id)
           )
           if (!hasSelection) {
-            missing.push(`${template.name} - ${option.name}`)
+            missing.push(`${template.title} - ${option.name}`)
           }
         }
       })

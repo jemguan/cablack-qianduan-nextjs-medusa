@@ -1,11 +1,11 @@
-const ErrorMessage = ({ error, 'data-testid': dataTestid }: { error?: string | null, 'data-testid'?: string }) => {
+const ErrorMessage = ({ error, className, 'data-testid': dataTestid }: { error?: string | null, className?: string, 'data-testid'?: string }) => {
   if (!error) {
     return null
   }
 
   return (
-    <div 
-      className="pt-2 text-rose-500 text-small-regular flex items-start gap-2 animate-in fade-in slide-in-from-top-1 duration-200" 
+    <div
+      className={`pt-2 text-rose-500 text-small-regular flex items-start gap-2 animate-in fade-in slide-in-from-top-1 duration-200 ${className || ''}`}
       data-testid={dataTestid}
       role="alert"
       aria-live="polite"

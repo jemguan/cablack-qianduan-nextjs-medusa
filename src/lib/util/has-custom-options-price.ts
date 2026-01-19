@@ -3,10 +3,12 @@
  */
 export function hasCustomOptionsPrice(
   item: {
-    metadata?: Record<string, any>
+    id: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    metadata?: Record<string, any> | null
   }
 ): boolean {
-  const metadata = item.metadata as Record<string, any> | undefined
+  const metadata = item.metadata
   const customOptions = metadata?.custom_options
 
   if (!customOptions || !Array.isArray(customOptions)) {

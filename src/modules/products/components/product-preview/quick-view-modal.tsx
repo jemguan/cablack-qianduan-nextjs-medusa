@@ -312,8 +312,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                   {/* Left: Image Gallery */}
                   <div className="flex flex-col gap-4">
                     <ProductImageCarousel
-                      key={`carousel-${selectedVariant?.id || 'default'}-${displayImages[0]?.id || 0}`}
-                      images={displayImages}
+                      key={`carousel-${selectedVariant?.id || 'default'}-${(displayImages[0] as { id?: string })?.id || 0}`}
+                      images={displayImages as { id?: string; url: string }[]}
                       productTitle={product.title}
                       variantId={selectedVariant?.id}
                     />

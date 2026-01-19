@@ -28,7 +28,7 @@ export async function PUT(
     }
 
     // 获取当前购物车
-    const cartResponse = await sdk.client.fetch(
+    const cartResponse = await sdk.client.fetch<{ cart: { metadata?: Record<string, unknown> } }>(
       `/store/carts/${cartId}`,
       {
         method: "GET",
@@ -36,11 +36,7 @@ export async function PUT(
       }
     )
 
-    if (!cartResponse.ok) {
-      throw new Error("Failed to fetch cart")
-    }
-
-    const cart = await cartResponse.json()
+    const cart = cartResponse
 
     // 更新购物车 metadata
     const updateResponse = await sdk.store.cart.update(

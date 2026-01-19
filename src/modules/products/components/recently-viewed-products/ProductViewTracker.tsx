@@ -35,7 +35,7 @@ export function ProductViewTracker({ product }: ProductViewTrackerProps) {
       handle: product.handle,
       vendor: undefined, // Medusa 产品可能没有 vendor 字段
       imageUrl: product.images?.[0]?.url || product.thumbnail || undefined,
-      imageAlt: product.images?.[0]?.metadata?.alt || product.title,
+      imageAlt: (product.images?.[0]?.metadata?.alt as string) || product.title,
       price: displayPrice
         ? {
             amount: displayPrice.calculated_price_number.toString(),

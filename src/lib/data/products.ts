@@ -120,7 +120,7 @@ export const listProducts = async ({
   // 根据使用场景选择字段
   // 如果 queryParams.fields 以 "=" 开头，表示完全替换默认字段
   const shouldReplaceFields = queryParams?.fields?.startsWith("=")
-  const fieldsToUse = shouldReplaceFields 
+  const fieldsToUse = shouldReplaceFields && queryParams?.fields
     ? queryParams.fields.substring(1) // 移除 "=" 前缀
     : undefined
   

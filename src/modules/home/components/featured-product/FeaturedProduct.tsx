@@ -38,10 +38,10 @@ export default async function FeaturedProduct({
         },
       });
 
-      productData = response.products[0] || null;
+      productData = response.products[0] || undefined;
     } catch (error) {
       console.error('[FeaturedProduct] Error fetching product:', error);
-      productData = null;
+      productData = undefined;
     }
   }
 

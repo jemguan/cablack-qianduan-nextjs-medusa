@@ -29,7 +29,7 @@ const ItemsTemplate = ({ cart }: ItemsTemplateProps) => {
                 <Item
                   key={item.id}
                   item={item}
-                  currencyCode={cart?.currency_code}
+                  currencyCode={cart?.currency_code ?? "usd"}
                   isMobile={true}
                 />
               )
@@ -57,7 +57,7 @@ const ItemsTemplate = ({ cart }: ItemsTemplateProps) => {
                     <Item
                       key={item.id}
                       item={item}
-                      currencyCode={cart?.currency_code}
+                      currencyCode={cart?.currency_code ?? "usd"}
                       isMobile={false}
                     />
                   )

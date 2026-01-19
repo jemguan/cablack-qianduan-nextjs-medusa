@@ -45,7 +45,7 @@ export function DesktopEmblaCarousel({
   const autoplayTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    if (!isMounted || !autoplay || !emblaApi || !emblaRef.current) return
+    if (!isMounted || !autoplay || !emblaApi) return
 
     const startAutoplay = () => {
       if (autoplayTimerRef.current) {

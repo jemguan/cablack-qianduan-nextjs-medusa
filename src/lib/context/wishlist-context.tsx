@@ -125,8 +125,8 @@ export const WishlistProvider = ({
       // 准备批量添加的项目列表
       const itemsToAdd = local.items.map((item) => ({
         product_id: item.product_id,
-        variant_id: item.variant_id,
-        notes: item.notes,
+        variant_id: item.variant_id ?? undefined,
+        notes: item.notes ?? undefined,
       }))
 
       // 使用批量 API 一次性添加所有项目

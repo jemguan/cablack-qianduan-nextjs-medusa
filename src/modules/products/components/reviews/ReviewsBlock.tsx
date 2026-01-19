@@ -1,6 +1,6 @@
-import type { HttpTypes } from "@medusajs/types"
 import type { ReviewsBlockProps } from "./types"
 import { Reviews } from "./index"
+import { DEFAULT_REVIEWS_CONFIG } from "./config"
 
 /**
  * Reviews Block 包装组件
@@ -9,7 +9,7 @@ import { Reviews } from "./index"
 export function ReviewsBlock({ product, region, config }: ReviewsBlockProps) {
   return (
     <section className="w-full">
-      <Reviews product={product} region={region} config={config} />
+      <Reviews product={product} region={region} config={config ?? DEFAULT_REVIEWS_CONFIG} />
     </section>
   )
 }

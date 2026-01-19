@@ -163,8 +163,8 @@ export function MobileFeaturedProduct({
       {/* 产品图片 */}
       <div>
         <ProductImageCarousel
-          key={`carousel-${selectedVariant?.id || 'default'}-${imagesToShow[0]?.id || 0}`}
-          images={imagesToShow}
+          key={`carousel-${selectedVariant?.id || 'default'}-${(imagesToShow[0] as { id?: string })?.id || 0}`}
+          images={imagesToShow as { id?: string; url: string }[]}
           productTitle={product.title}
           variantId={selectedVariant?.id}
         />

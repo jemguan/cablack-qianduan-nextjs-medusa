@@ -211,14 +211,31 @@ export function clearViewingHistory(): void {
 export function adaptViewedProductToMedusaProduct(
   viewedProduct: ViewedProduct,
 ): HttpTypes.StoreProduct {
-  // 构建变体数据
-  const variant: HttpTypes.StoreProductVariant = {
+  // 构建图片数据
+  const imageData = viewedProduct.imageUrl
+    ? [
+        {
+          id: `${viewedProduct.id}_image`,
+          url: viewedProduct.imageUrl,
+          rank: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          deleted_at: null,
+          metadata: {},
+        },
+      ]
+    : [];
+
+  // 构建变体数据 - 使用类型断言处理可选属性
+  const variant = {
     id: `${viewedProduct.id}_variant`,
     title: 'Default Title',
     sku: '',
     barcode: '',
     ean: '',
     upc: '',
+    hs_code: null,
+    thumbnail: viewedProduct.imageUrl || null,
     inventory_quantity: 0,
     allow_backorder: false,
     manage_inventory: true,
@@ -237,6 +254,7 @@ export function adaptViewedProductToMedusaProduct(
     options: [],
     calculated_price: viewedProduct.price
       ? {
+          id: '',
           calculated_amount: parseFloat(viewedProduct.price.amount),
           currency_code: viewedProduct.price.currencyCode,
           calculated_price: {
@@ -249,24 +267,19 @@ export function adaptViewedProductToMedusaProduct(
           original_amount: viewedProduct.compareAtPrice
             ? parseFloat(viewedProduct.compareAtPrice.amount)
             : parseFloat(viewedProduct.price.amount),
+          original_amount_with_tax: viewedProduct.compareAtPrice
+            ? parseFloat(viewedProduct.compareAtPrice.amount)
+            : parseFloat(viewedProduct.price.amount),
+          original_amount_without_tax: viewedProduct.compareAtPrice
+            ? parseFloat(viewedProduct.compareAtPrice.amount)
+            : parseFloat(viewedProduct.price.amount),
         }
       : undefined,
-    images: viewedProduct.imageUrl
-      ? [
-          {
-            id: `${viewedProduct.id}_image`,
-            url: viewedProduct.imageUrl,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            deleted_at: null,
-            metadata: {},
-          },
-        ]
-      : [],
-  };
+    images: imageData,
+  } as unknown as HttpTypes.StoreProductVariant;
 
-  // 构建产品数据
-  const product: HttpTypes.StoreProduct = {
+  // 构建产品数据 - 使用类型断言处理复杂类型
+  const product = {
     id: viewedProduct.id,
     title: viewedProduct.title,
     subtitle: null,
@@ -274,18 +287,7 @@ export function adaptViewedProductToMedusaProduct(
     handle: viewedProduct.handle,
     is_giftcard: false,
     status: 'published',
-    images: viewedProduct.imageUrl
-      ? [
-          {
-            id: `${viewedProduct.id}_image`,
-            url: viewedProduct.imageUrl,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            deleted_at: null,
-            metadata: {},
-          },
-        ]
-      : [],
+    images: imageData,
     thumbnail: viewedProduct.imageUrl || null,
     options: [],
     variants: [variant],
@@ -299,7 +301,7 @@ export function adaptViewedProductToMedusaProduct(
     deleted_at: null,
     metadata: {},
     sales_channels: [],
-  };
+  } as unknown as HttpTypes.StoreProduct;
 
   return product;
 }

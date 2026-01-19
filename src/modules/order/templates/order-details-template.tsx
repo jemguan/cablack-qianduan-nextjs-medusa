@@ -29,7 +29,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
           data-testid="back-to-overview-button"
         >
           <LocalizedClientLink href="/account/orders">
-            <XMark size={16} />
+            <XMark className="w-4 h-4" />
             <span>Back to overview</span>
         </LocalizedClientLink>
         </Button>

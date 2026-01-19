@@ -185,7 +185,7 @@ const ShippingInfoTab = ({ config }: { config?: ShippingReturnsConfig }) => {
       <div className="grid grid-cols-1 gap-y-8">
         {items.map((item) => (
           <div key={item.id} className="flex items-start gap-x-2">
-            {getIcon(item.icon, item.customIcon)}
+            {getIcon(item.icon, (item as { customIcon?: string }).customIcon)}
           <div>
               <span className="font-semibold">{item.title}</span>
             <p className="max-w-sm">

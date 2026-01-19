@@ -50,10 +50,11 @@ export default function DesktopReviews({
           reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length,
         rating_distribution: reviews.reduce(
           (acc, r) => {
-            acc[r.rating] = (acc[r.rating] || 0) + 1
+            const rating = r.rating as 1 | 2 | 3 | 4 | 5
+            acc[rating] = (acc[rating] || 0) + 1
             return acc
           },
-          { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+          { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } as Record<1 | 2 | 3 | 4 | 5, number>
         ),
         pending_count: 0,
         approved_count: reviewsCount,

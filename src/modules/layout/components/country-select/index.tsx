@@ -34,27 +34,25 @@ const getRegionCookie = (): string => {
 }
 
 const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
-  const [current, setCurrent] = useState<
-    | { country: string | undefined; region: string; label: string | undefined }
-    | undefined
-  >(undefined)
+  const [current, setCurrent] = useState<CountryOption | undefined>(undefined)
 
   const router = useRouter()
   const [currentCountryCode, setCurrentCountryCode] = useState<string>("")
 
   const { state, close } = toggleState
 
-  const options = useMemo(() => {
+  const options = useMemo((): CountryOption[] => {
     return regions
       ?.map((r) => {
         return r.countries?.map((c) => ({
-          country: c.iso_2,
+          country: c.iso_2 ?? "",
           region: r.id,
-          label: c.display_name,
+          label: c.display_name ?? "",
         }))
       })
       .flat()
-      .sort((a, b) => (a?.label ?? "").localeCompare(b?.label ?? ""))
+      .filter((o): o is CountryOption => !!o && !!o.country)
+      .sort((a, b) => a.label.localeCompare(b.label)) ?? []
   }, [regions])
 
   // Get current country code from cookie on client side

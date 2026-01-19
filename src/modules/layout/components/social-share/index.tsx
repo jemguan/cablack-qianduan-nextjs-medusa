@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { SocialShareProps, SocialPlatform } from "./types"
@@ -154,7 +154,7 @@ export function SocialShare({
       return <CheckIcon />
     }
 
-    const iconMap: Record<SocialPlatform, () => JSX.Element> = {
+    const iconMap: Record<SocialPlatform, () => React.JSX.Element> = {
       facebook: FacebookIcon,
       twitter: TwitterIcon,
       instagram: InstagramIcon,

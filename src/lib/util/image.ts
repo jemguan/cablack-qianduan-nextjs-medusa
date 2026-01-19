@@ -3,9 +3,12 @@
  * If the URL is relative, prepend the Medusa backend URL
  * Handles both local storage and S3 storage URLs
  */
-export function getImageUrl(url: string | null | undefined): string | null {
+// Fallback placeholder image
+const PLACEHOLDER_IMAGE = "/placeholder.png"
+
+export function getImageUrl(url: string | null | undefined): string {
   if (!url) {
-    return null
+    return PLACEHOLDER_IMAGE
   }
 
   // If URL is already absolute (starts with http:// or https://), return as is

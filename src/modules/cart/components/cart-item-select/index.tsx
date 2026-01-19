@@ -41,10 +41,11 @@ const CartItemSelect = React.forwardRef<HTMLButtonElement, CartItemSelectProps>(
         <SelectContent>
           {React.Children.map(children, (child) => {
             if (React.isValidElement(child) && child.type === "option") {
-              const optionValue = child.props.value
-              const optionLabel = child.props.children || optionValue
+              const childProps = child.props as { value?: string | number; children?: React.ReactNode }
+              const optionValue = childProps.value
+              const optionLabel = childProps.children || optionValue
               return (
-                <SelectItem key={optionValue} value={String(optionValue)}>
+                <SelectItem key={String(optionValue)} value={String(optionValue)}>
                   {optionLabel}
                 </SelectItem>
               )

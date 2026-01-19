@@ -65,6 +65,12 @@ export const CACHE_STRATEGIES = {
   // ==================== 静态数据 - 长期缓存 ====================
   ANNOUNCEMENT: isDevelopment ? DEV_CACHE_CONFIG : LONG_CACHE_CONFIG,
   STATIC: isDevelopment ? DEV_CACHE_CONFIG : VERY_LONG_CACHE_CONFIG,
+
+  // ==================== 页面数据 ====================
+  PAGE: isDevelopment ? DEV_CACHE_CONFIG : MEDIUM_CACHE_CONFIG,
+
+  // ==================== 公共数据 ====================
+  PUBLIC: isDevelopment ? DEV_CACHE_CONFIG : MEDIUM_CACHE_CONFIG,
 } as const
 
 // 缓存策略类型

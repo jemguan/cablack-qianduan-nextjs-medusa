@@ -35,9 +35,9 @@ const LineItemUnitPrice = ({
   let compareAtPriceAmount: number | null = null
   if (item.variant?.metadata?.compare_at_price) {
     const comparePrice = item.variant.metadata.compare_at_price
-    compareAtPriceAmount = typeof comparePrice === 'number' 
-      ? comparePrice 
-      : parseInt(comparePrice, 10)
+    compareAtPriceAmount = typeof comparePrice === 'number'
+      ? comparePrice
+      : parseInt(String(comparePrice), 10)
     
     if (isNaN(compareAtPriceAmount)) {
       compareAtPriceAmount = null
