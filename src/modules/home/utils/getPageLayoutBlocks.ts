@@ -6,18 +6,21 @@
 import type { MedusaConfig } from '@lib/admin-api/config';
 import type { HttpTypes } from '@medusajs/types';
 import { getPageLayoutBlocks } from '@lib/admin-api/pageLayoutUtils';
-import { handleFeaturedCollectionsBlock, handleCollageHeroBlock, handleBrandShowcaseBlock, handleTextBlockBlock, handleBannerBlockBlock, handleFAQBlock, handleFeaturedBlogBlock, handleFeaturedProductBlock } from './blockHandlers';
 import type { BlogPost } from '@lib/data/blogs';
+import {
+  type BlockConfig,
+  handleFeaturedCollectionsBlock,
+  handleCollageHeroBlock,
+  handleBrandShowcaseBlock,
+  handleTextBlockBlock,
+  handleBannerBlockBlock,
+  handleFAQBlock,
+  handleFeaturedBlogBlock,
+  handleFeaturedProductBlock,
+} from './handlers';
 
-export interface BlockConfig {
-  id: string;
-  type: string;
-  enabled: boolean;
-  order: number;
-  config: Record<string, any>;
-  componentName?: string; // 组件名称，用于动态导入
-  props?: Record<string, any>;
-}
+// 重新导出 BlockConfig 类型供外部使用
+export type { BlockConfig } from './handlers';
 
 /**
  * 获取首页的布局 blocks
