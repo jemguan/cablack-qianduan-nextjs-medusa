@@ -1,12 +1,14 @@
 "use client"
 
+import { memo } from "react"
 import { Text, clx } from "@medusajs/ui"
 import { VariantPrice } from "types/global"
 
-export default function PreviewPriceClient({ 
-  price, 
-  selectedVariant 
-}: { 
+// 使用 memo 优化，避免父组件渲染时不必要的重渲染
+const PreviewPriceClient = memo(function PreviewPriceClient({
+  price,
+  selectedVariant
+}: {
   price: VariantPrice
   selectedVariant?: any
 }) {
@@ -42,5 +44,7 @@ export default function PreviewPriceClient({
       </Text>
     </div>
   )
-}
+})
+
+export default PreviewPriceClient
 

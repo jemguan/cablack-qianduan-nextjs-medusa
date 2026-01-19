@@ -5,17 +5,22 @@ import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import PreviewPriceClient from "./preview-price-client"
-import QuickViewModal from "./quick-view-modal"
 import VariantSelector from "./variant-selector"
 import QuickAddButton from "./quick-add-button"
-import { useState, useMemo, useEffect } from "react"
+import { memo, useState, useMemo, useEffect, useCallback } from "react"
 import { isEqual } from "lodash"
 import Eye from "@modules/common/icons/eye"
 import Image from "next/image"
+import dynamic from "next/dynamic"
 import { getImageUrl } from "@lib/util/image"
 import ProductRating from "../reviews/ProductRating"
 import WishlistButton from "@modules/wishlist/components/wishlist-button"
 import type { LoyaltyAccount } from "@/types/loyalty"
+
+// 动态导入 QuickViewModal，仅在需要时加载（减少初始 JS 包大小）
+const QuickViewModal = dynamic(() => import("./quick-view-modal"), {
+  ssr: false,
+})
 
 const optionsAsKeymap = (
   variantOptions: HttpTypes.StoreProductVariant["options"]
@@ -39,7 +44,7 @@ type ProductPreviewProps = {
   membershipProductIds?: Record<string, boolean> | null
 }
 
-const ProductPreview = ({
+const ProductPreview = memo(function ProductPreview({
   product,
   isFeatured,
   region,
@@ -47,7 +52,7 @@ const ProductPreview = ({
   customer,
   loyaltyAccount,
   membershipProductIds,
-}: ProductPreviewProps) => {
+}: ProductPreviewProps) {
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false)
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
 
@@ -71,18 +76,19 @@ const ProductPreview = ({
   }, [product.variants, options])
 
   // 获取选中变体的价格，如果没有选中则获取最便宜的价格
-  const selectedVariantPrice = selectedVariant 
+  const selectedVariantPrice = selectedVariant
     ? getProductPrice({ product, variantId: selectedVariant.id }).variantPrice
     : null
   const cheapestPrice = getProductPrice({ product }).cheapestPrice
   const displayPrice = selectedVariantPrice || cheapestPrice
 
-  const handleOptionChange = (optionId: string, value: string) => {
+  // 使用 useCallback 优化事件处理函数，避免子组件不必要的重渲染
+  const handleOptionChange = useCallback((optionId: string, value: string) => {
     setOptions((prev) => ({
       ...prev,
       [optionId]: value,
     }))
-  }
+  }, [])
 
   // Get images for selected variant (same logic as product detail page)
   const displayImages = useMemo(() => {
@@ -335,6 +341,6 @@ const ProductPreview = ({
       />
     </>
   )
-}
+})
 
 export default ProductPreview

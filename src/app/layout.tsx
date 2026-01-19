@@ -1,6 +1,7 @@
 import { getBaseURL } from "@lib/util/env"
 import { Metadata } from "next"
 import { Suspense } from "react"
+import { Inter } from "next/font/google"
 import "styles/globals.css"
 import { ThemeProvider } from "@modules/common/components/theme-toggle"
 import { ScrollToTop } from "@components/ScrollToTop"
@@ -8,6 +9,14 @@ import { getPageTitleConfig } from "@lib/data/page-title-config"
 import { listAnnouncements } from "@lib/data/announcements"
 import AnnouncementBar from "@modules/layout/components/announcement-bar"
 import AffiliateTracker from "@components/affiliate-tracker"
+
+// 字体优化：使用 next/font 自动托管字体文件
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  preload: true,
+  variable: "--font-inter",
+})
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = await getPageTitleConfig()
@@ -45,7 +54,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
   const announcements = await listAnnouncements()
   
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         {/* 资源预连接 - 优化网络请求 */}
         <link rel="preconnect" href={medusaBackendUrl} />

@@ -108,14 +108,17 @@ PauseIcon.displayName = 'PauseIcon'
 export const ImageModuleComponent = memo(function ImageModuleComponent({
   module,
   isMobile = false,
+  priority = false,
 }: {
   module: Extract<CollageModule, { type: 'image' }>
   isMobile?: boolean
+  /** 是否优先加载（用于首屏图片，提升 LCP） */
+  priority?: boolean
 }) {
   const { imageUrl, alt, link, openInNewTab = DEFAULT_MODULE_CONFIG.image.openInNewTab } = module
 
-  const hoverClass = isMobile 
-    ? 'active:scale-95 duration-300' 
+  const hoverClass = isMobile
+    ? 'active:scale-95 duration-300'
     : 'hover:scale-105 hover:shadow-2xl duration-500'
   const shadowClass = isMobile ? 'shadow-md' : 'shadow-lg'
 
@@ -124,8 +127,9 @@ export const ImageModuleComponent = memo(function ImageModuleComponent({
       <img
         src={imageUrl}
         alt={alt || 'Image Module'}
-        loading="lazy"
-        decoding="async"
+        loading={priority ? "eager" : "lazy"}
+        decoding={priority ? "sync" : "async"}
+        fetchPriority={priority ? "high" : "auto"}
         className={`w-full h-full object-cover rounded-lg ${shadowClass}`}
       />
     </div>
@@ -546,16 +550,19 @@ export function ModuleContent({
   products,
   isMobile = false,
   region,
+  priority = false,
 }: {
   module: CollageModule
   overlayOpacity?: number
   products?: HttpTypes.StoreProduct[]
   isMobile?: boolean
   region?: HttpTypes.StoreRegion
+  /** 是否优先加载（用于首屏图片，提升 LCP） */
+  priority?: boolean
 }) {
   switch (module.type) {
     case 'image':
-      return <ImageModuleComponent module={module} isMobile={isMobile} />
+      return <ImageModuleComponent module={module} isMobile={isMobile} priority={priority} />
     case 'collection':
       return <CollectionModuleComponent module={module} isMobile={isMobile} />
     case 'video':
