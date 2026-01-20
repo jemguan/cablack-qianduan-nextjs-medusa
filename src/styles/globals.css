@@ -2,6 +2,22 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+/**
+ * 全局样式
+ *
+ * 模块化文件（仅供参考，不使用 @import）：
+ * - base.css: CSS 变量和基础样式
+ * - mobile.css: 移动端优化样式
+ * - utilities.css: 工具类样式
+ * - components.css: 组件样式
+ * - animations.css: 动画效果
+ * - vendors/stripe.css: Stripe 支付组件样式
+ */
+
+/* ========================================
+   BASE - CSS 变量和基础样式
+   ======================================== */
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -88,11 +104,10 @@
   }
   body {
     @apply bg-background text-foreground transition-colors duration-200;
-    /* 防止移动端文本选择问题 */
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
   }
-  
+
   /* 尊重用户的动画偏好设置 */
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -104,7 +119,7 @@
       scroll-behavior: auto !important;
     }
   }
-  
+
   /* 移动端优化：防止长时间点击进入文本选择模式 */
   @media (max-width: 768px) {
     * {
@@ -115,8 +130,7 @@
       -webkit-touch-callout: none;
       -webkit-tap-highlight-color: transparent;
     }
-    
-    /* 允许输入框和文本区域选择文本 - 重要：确保输入框可以正常输入 */
+
     input,
     textarea,
     [contenteditable="true"],
@@ -129,8 +143,7 @@
       user-select: text !important;
       -webkit-touch-callout: default;
     }
-    
-    /* 改善触摸行为 */
+
     button,
     a,
     [role="button"],
@@ -142,16 +155,14 @@
       -webkit-tap-highlight-color: transparent;
       -webkit-touch-callout: none;
     }
-    
-    /* 可滚动区域 */
+
     [data-testid="nav-menu-popup"],
     .overflow-y-auto,
     .overflow-y-scroll {
       touch-action: pan-y;
       -webkit-overflow-scrolling: touch;
     }
-    
-    /* 清除文本选择状态 */
+
     body::selection,
     body::-moz-selection {
       background: transparent;
@@ -159,8 +170,11 @@
   }
 }
 
+/* ========================================
+   UTILITIES - 工具类样式
+   ======================================== */
+
 @layer utilities {
-  /* Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -170,8 +184,8 @@
   }
 
   .no-scrollbar {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   input:focus ~ label,
@@ -206,6 +220,10 @@
   }
 }
 
+/* ========================================
+   COMPONENTS - 组件样式
+   ======================================== */
+
 @layer components {
   /* 主题过渡效果 */
   .theme-transitioning * {
@@ -235,7 +253,7 @@
   .dark [data-testid="checkout-layout"] {
     background-color: hsl(var(--background)) !important;
   }
-  
+
   [data-testid="checkout-container"] {
     background-color: hsl(var(--background));
   }
@@ -299,6 +317,7 @@
     color: hsl(var(--primary-foreground));
   }
 
+  /* 文字尺寸类 */
   .text-xsmall-regular {
     @apply text-[10px] leading-4 font-normal;
   }
@@ -368,6 +387,37 @@
     color: hsl(var(--foreground)) !important;
   }
 
+  /* Add to Cart 按钮边框颜色强制覆盖 */
+  button[class*="bg-orange-600"]:not(:disabled),
+  button[class*="bg-orange-600"]:not(:disabled):hover,
+  button[class*="bg-orange-600"]:not(:disabled):focus,
+  button[class*="bg-orange-600"]:not(:disabled):active {
+    border-color: rgb(234 88 12) !important;
+    border-width: 2px !important;
+    border-style: solid !important;
+  }
+
+  button[class*="bg-orange-600"]:not(:disabled):hover,
+  button[class*="bg-orange-600"]:not(:disabled):focus {
+    border-color: rgb(194 65 12) !important;
+  }
+
+  button[class*="shadow-buttons-inverted"][class*="bg-orange-600"]:not(:disabled),
+  button[class*="shadow-buttons-inverted"][class*="bg-orange-600"]:not(:disabled):hover {
+    border-color: rgb(234 88 12) !important;
+    border-width: 2px !important;
+    border-style: solid !important;
+    box-shadow: none !important;
+  }
+
+  button[class*="shadow-buttons-inverted"][class*="bg-orange-600"]:not(:disabled):hover {
+    border-color: rgb(194 65 12) !important;
+  }
+
+  button[class*="bg-orange-600"]:disabled {
+    border-color: hsl(var(--ui-border-base)) !important;
+  }
+
   /* Stripe PaymentElement dark mode styles */
   .stripe-payment-container {
     background-color: transparent;
@@ -377,7 +427,6 @@
     background-color: transparent;
   }
 
-  /* Override Stripe PaymentElement internal styles for dark mode */
   .dark .stripe-payment-container * {
     color: hsl(var(--foreground)) !important;
   }
@@ -419,82 +468,49 @@
     color: hsl(var(--destructive)) !important;
   }
 
-  /* Stripe iframe and shadow DOM styles */
   .dark .stripe-payment-container iframe {
     background-color: hsl(var(--background)) !important;
   }
 
   /* Shadcn/ui animations */
   @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   @keyframes fade-out {
-    from {
-      opacity: 1;
-    }
-    to {
-      opacity: 0;
-    }
+    from { opacity: 1; }
+    to { opacity: 0; }
   }
 
   @keyframes zoom-in {
-    from {
-      transform: scale(0.95);
-    }
-    to {
-      transform: scale(1);
-    }
+    from { transform: scale(0.95); }
+    to { transform: scale(1); }
   }
 
   @keyframes zoom-out {
-    from {
-      transform: scale(1);
-    }
-    to {
-      transform: scale(0.95);
-    }
+    from { transform: scale(1); }
+    to { transform: scale(0.95); }
   }
 
   @keyframes slide-in-from-top-2 {
-    from {
-      transform: translateY(-0.5rem);
-    }
-    to {
-      transform: translateY(0);
-    }
+    from { transform: translateY(-0.5rem); }
+    to { transform: translateY(0); }
   }
 
   @keyframes slide-in-from-bottom-2 {
-    from {
-      transform: translateY(0.5rem);
-    }
-    to {
-      transform: translateY(0);
-    }
+    from { transform: translateY(0.5rem); }
+    to { transform: translateY(0); }
   }
 
   @keyframes slide-in-from-left-2 {
-    from {
-      transform: translateX(-0.5rem);
-    }
-    to {
-      transform: translateX(0);
-    }
+    from { transform: translateX(-0.5rem); }
+    to { transform: translateX(0); }
   }
 
   @keyframes slide-in-from-right-2 {
-    from {
-      transform: translateX(0.5rem);
-    }
-    to {
-      transform: translateX(0);
-    }
+    from { transform: translateX(0.5rem); }
+    to { transform: translateX(0); }
   }
 
   .animate-in {
@@ -535,38 +551,5 @@
 
   .slide-in-from-right-2 {
     animation: slide-in-from-right-2 0.15s ease-out;
-  }
-
-  /* Add to Cart 按钮边框颜色强制覆盖 */
-  button[class*="bg-orange-600"]:not(:disabled),
-  button[class*="bg-orange-600"]:not(:disabled):hover,
-  button[class*="bg-orange-600"]:not(:disabled):focus,
-  button[class*="bg-orange-600"]:not(:disabled):active {
-    border-color: rgb(234 88 12) !important;
-    border-width: 2px !important;
-    border-style: solid !important;
-  }
-
-  button[class*="bg-orange-600"]:not(:disabled):hover,
-  button[class*="bg-orange-600"]:not(:disabled):focus {
-    border-color: rgb(194 65 12) !important;
-  }
-
-  /* 覆盖 Medusa UI Button 的 shadow-buttons 样式 */
-  button[class*="shadow-buttons-inverted"][class*="bg-orange-600"]:not(:disabled),
-  button[class*="shadow-buttons-inverted"][class*="bg-orange-600"]:not(:disabled):hover {
-    border-color: rgb(234 88 12) !important;
-    border-width: 2px !important;
-    border-style: solid !important;
-    box-shadow: none !important;
-  }
-
-  button[class*="shadow-buttons-inverted"][class*="bg-orange-600"]:not(:disabled):hover {
-    border-color: rgb(194 65 12) !important;
-  }
-
-  /* 覆盖 disabled 状态的边框 */
-  button[class*="bg-orange-600"]:disabled {
-    border-color: hsl(var(--ui-border-base)) !important;
   }
 }

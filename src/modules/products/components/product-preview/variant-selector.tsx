@@ -3,7 +3,8 @@
 import { HttpTypes } from "@medusajs/types"
 import { clx } from "@medusajs/ui"
 import React, { useMemo, useState, useRef, useEffect } from "react"
-import { isEqual } from "lodash"
+import { optionsAsKeymap, findVariantByOptions } from "@lib/util/options"
+import { useIsMobile } from "@lib/hooks/use-mobile"
 
 type VariantSelectorProps = {
   product: HttpTypes.StoreProduct
@@ -11,15 +12,6 @@ type VariantSelectorProps = {
   onOptionChange: (optionId: string, value: string) => void
   disabled?: boolean
   compact?: boolean
-}
-
-const optionsAsKeymap = (
-  variantOptions: HttpTypes.StoreProductVariant["options"]
-) => {
-  return variantOptions?.reduce((acc: Record<string, string>, varopt: any) => {
-    acc[varopt.option_id] = varopt.value
-    return acc
-  }, {})
 }
 
 // Check if a color value (for color detection)
@@ -75,30 +67,12 @@ const VariantSelector: React.FC<VariantSelectorProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const [showExpandButton, setShowExpandButton] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
+  const isMobile = useIsMobile()
   const containerRef = useRef<HTMLDivElement>(null)
   const itemsRef = useRef<HTMLDivElement>(null)
 
-  // Check if mobile device
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
   const selectedVariant = useMemo(() => {
-    if (!product.variants || product.variants.length === 0) {
-      return null
-    }
-
-    return product.variants.find((v) => {
-      const variantOptions = optionsAsKeymap(v.options)
-      return isEqual(variantOptions, options)
-    })
+    return findVariantByOptions(product.variants, options)
   }, [product.variants, options])
 
   // Check if we need to show expand button (only in compact mode)

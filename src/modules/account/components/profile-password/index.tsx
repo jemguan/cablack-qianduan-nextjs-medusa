@@ -13,9 +13,8 @@ type MyInformationProps = {
 const ProfilePassword: React.FC<MyInformationProps> = ({ customer }) => {
   const [successState, setSuccessState] = React.useState(false)
 
-  // TODO: Add support for password updates
   const updatePassword = async () => {
-    toast.info("Password update is not implemented")
+    toast.info("Please use the 'Forgot Password' feature to reset your password")
   }
 
   const clearState = () => {

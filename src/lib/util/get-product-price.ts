@@ -2,7 +2,30 @@ import { HttpTypes } from "@medusajs/types"
 import { getPercentageDiff } from "./get-percentage-diff"
 import { convertToLocale } from "./money"
 
-export const getPricesForVariant = (variant: any) => {
+/**
+ * 变体的计算价格类型
+ */
+type CalculatedPrice = {
+  calculated_amount: number
+  original_amount: number
+  currency_code: string
+  calculated_price: {
+    price_list_type?: string | null
+  }
+}
+
+/**
+ * 带有计算价格的变体类型
+ */
+type VariantWithCalculatedPrice = HttpTypes.StoreProductVariant & {
+  calculated_price?: CalculatedPrice
+  metadata?: {
+    compare_at_price?: string | number
+    [key: string]: unknown
+  }
+}
+
+export const getPricesForVariant = (variant: VariantWithCalculatedPrice | null | undefined) => {
   if (!variant?.calculated_price?.calculated_amount) {
     return null
   }
@@ -98,12 +121,13 @@ export function getProductPrice({
       return null
     }
 
-    const cheapestVariant: any = product.variants
-      .filter((v: any) => !!v.calculated_price)
-      .sort((a: any, b: any) => {
+    const variantsWithPrice = product.variants as VariantWithCalculatedPrice[]
+    const cheapestVariant = variantsWithPrice
+      .filter((v) => !!v.calculated_price)
+      .sort((a, b) => {
         return (
-          a.calculated_price.calculated_amount -
-          b.calculated_price.calculated_amount
+          (a.calculated_price?.calculated_amount || 0) -
+          (b.calculated_price?.calculated_amount || 0)
         )
       })[0]
 
@@ -115,9 +139,9 @@ export function getProductPrice({
       return null
     }
 
-    const variant: any = product.variants?.find(
+    const variant = product.variants?.find(
       (v) => v.id === variantId || v.sku === variantId
-    )
+    ) as VariantWithCalculatedPrice | undefined
 
     if (!variant) {
       return null
