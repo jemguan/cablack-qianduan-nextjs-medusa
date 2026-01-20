@@ -9,9 +9,9 @@ import { getAuthHeaders, getCacheOptions, getCacheTag, getRegionCountryCode } fr
 import { getRegion, retrieveRegion } from "./regions"
 
 // 用于排序的超精简字段（只包含排序所需的最小字段）
-// 包含：ID、创建时间、价格计算、库存信息
+// 包含：ID、创建时间、发布时间、价格计算、库存信息
 const SORT_ONLY_FIELDS =
-  "id,created_at,*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder"
+  "id,created_at,+metadata,*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder"
 
 // 用于列表视图的精简字段（只包含必要的显示信息）
 // 包含：价格计算、库存信息、变体选项、变体图片、产品选项
@@ -240,22 +240,34 @@ const getSortedProductIds = async (
       }
 
       // 计算每个产品的排序信息
-      const productsWithMeta = allProducts.map((product) => ({
-        id: product.id,
-        minPrice: getMinPrice(product),
-        createdAt: product.created_at ? new Date(product.created_at).getTime() : 0,
-        outOfStock: isProductOutOfStock(product),
-      }))
+      // published_at 存储在 metadata.published_at 中
+      const productsWithMeta = allProducts.map((product) => {
+        const metadata = product.metadata as Record<string, unknown> | null
+        const publishedAtStr = metadata?.published_at as string | undefined
+        return {
+          id: product.id,
+          minPrice: getMinPrice(product),
+          createdAt: product.created_at ? new Date(product.created_at).getTime() : 0,
+          publishedAt: publishedAtStr ? new Date(publishedAtStr).getTime() : 0,
+          outOfStock: isProductOutOfStock(product),
+        }
+      })
 
-      // 排序逻辑：先按库存状态（有货在前），再按指定排序方式
+      // 排序逻辑：
+      // 1. 有库存的产品排在前面
+      // 2. 缺货的产品排在后面
+      // 3. 在各自分组内按用户选择的排序方式排序
       productsWithMeta.sort((a, b) => {
-        // 先按库存状态排序：有货的在前，缺货的在后
+        // 有库存的排在缺货的前面
         if (a.outOfStock !== b.outOfStock) {
           return a.outOfStock ? 1 : -1
         }
-        
-        // 再按指定排序方式
-        if (sortBy === "price_asc") {
+
+        // 按用户选择的排序方式
+        if (sortBy === "published_at") {
+          // 发布日期：按发布时间降序（最新发布的在前）
+          return b.publishedAt - a.publishedAt
+        } else if (sortBy === "price_asc") {
           return a.minPrice - b.minPrice
         } else if (sortBy === "price_desc") {
           return b.minPrice - a.minPrice
@@ -296,7 +308,7 @@ const getSortedProductIds = async (
 export const listProductsWithSort = async ({
   page = 1,
   queryParams,
-  sortBy = "created_at",
+  sortBy = "published_at",
   countryCode,
 }: {
   page?: number

@@ -18,7 +18,7 @@ export default function CollectionTemplate({
   countryCode: string
 }) {
   const pageNumber = page ? parseInt(page) : 1
-  const sort = sortBy || "created_at"
+  const sort = sortBy || "published_at"
 
   return (
     <div className="flex flex-col small:flex-row small:items-start py-6 content-container">

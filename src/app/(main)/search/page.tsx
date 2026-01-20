@@ -66,8 +66,8 @@ export default async function SearchPage(props: Props) {
   }
 
   const pageNumber = page ? parseInt(page) : 1
-  // 默认按最新上架排序
-  const safeSortBy: SortOptions = sortBy || "created_at"
+  // 默认按发布日期排序
+  const safeSortBy: SortOptions = sortBy || "published_at"
 
   // 并行获取搜索结果和会员数据
   const [searchResult, customer, loyaltyAccountResponse, loyaltyConfigResponse] = await Promise.all([

@@ -18,7 +18,7 @@ export default function BrandTemplate({
   countryCode: string
 }) {
   const pageNumber = page ? parseInt(page) : 1
-  const sort = sortBy || "created_at"
+  const sort = sortBy || "published_at"
   const productIds = brand.products?.map((p: any) => p?.id || p).filter(Boolean) || []
 
   return (

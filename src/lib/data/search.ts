@@ -18,7 +18,7 @@ export const searchProducts = async ({
   countryCode,
   regionId,
   limit = 12,
-  sortBy = "created_at",
+  sortBy = "published_at",
 }: {
   searchTerm: string
   pageParam?: number
@@ -60,6 +60,7 @@ export const searchProducts = async ({
   }
 
   // 将 sortBy 转换为 Medusa 的 order 参数格式
+  // 注意：published_at 存储在 metadata 中，无法通过 API 直接排序，需要客户端排序
   let order: string
   switch (sortBy) {
     case "price_asc":
@@ -67,6 +68,10 @@ export const searchProducts = async ({
       break
     case "price_desc":
       order = "-variants.calculated_price.calculated_amount"
+      break
+    case "published_at":
+      // published_at 在 metadata 中，使用 created_at 作为 API 排序，客户端再按 published_at 排序
+      order = "-created_at"
       break
     case "created_at":
     default:

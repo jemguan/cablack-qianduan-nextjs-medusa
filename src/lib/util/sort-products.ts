@@ -1,8 +1,9 @@
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
-interface MinPricedProduct extends HttpTypes.StoreProduct {
+interface SortableProduct extends HttpTypes.StoreProduct {
   _minPrice?: number
+  _publishedAt?: number
 }
 
 /**
@@ -48,48 +49,52 @@ export function sortProducts(
   products: HttpTypes.StoreProduct[],
   sortBy: SortOptions
 ): HttpTypes.StoreProduct[] {
-  let sortedProducts = products as MinPricedProduct[]
+  let sortedProducts = products as SortableProduct[]
 
-  if (["price_asc", "price_desc"].includes(sortBy)) {
-    // Precompute the minimum price for each product
-    sortedProducts.forEach((product) => {
-      if (product.variants && product.variants.length > 0) {
-        product._minPrice = Math.min(
-          ...product.variants.map(
-            (variant) => variant?.calculated_price?.calculated_amount || 0
-          )
+  // 预计算排序所需的信息
+  sortedProducts.forEach((product) => {
+    // 计算最低价格
+    if (product.variants && product.variants.length > 0) {
+      product._minPrice = Math.min(
+        ...product.variants.map(
+          (variant) => variant?.calculated_price?.calculated_amount || 0
         )
-      } else {
-        product._minPrice = Infinity
-      }
-    })
-
-    // Sort products based on the precomputed minimum prices
-    sortedProducts.sort((a, b) => {
-      const diff = a._minPrice! - b._minPrice!
-      return sortBy === "price_asc" ? diff : -diff
-    })
-  }
-
-  if (sortBy === "created_at") {
-    sortedProducts.sort((a, b) => {
-      return (
-        new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime()
       )
-    })
-  }
+    } else {
+      product._minPrice = Infinity
+    }
 
-  // 在所有排序完成后，将缺货产品移到列表后面
-  // 保持有货产品之间的相对顺序不变，缺货产品之间的相对顺序不变
+    // 获取发布时间（存储在 metadata.published_at）
+    const metadata = product.metadata as Record<string, unknown> | null
+    const publishedAtStr = metadata?.published_at as string | undefined
+    product._publishedAt = publishedAtStr ? new Date(publishedAtStr).getTime() : 0
+  })
+
+  // 排序逻辑：
+  // 1. 有库存的产品排在前面
+  // 2. 缺货的产品排在后面
+  // 3. 在各自分组内按用户选择的排序方式排序
   sortedProducts.sort((a, b) => {
     const aOutOfStock = isProductOutOfStock(a)
     const bOutOfStock = isProductOutOfStock(b)
 
-    // 如果都是缺货或都有货，保持原有顺序（返回 0）
-    if (aOutOfStock === bOutOfStock) return 0
+    // 有库存的排在缺货的前面
+    if (aOutOfStock !== bOutOfStock) {
+      return aOutOfStock ? 1 : -1
+    }
 
-    // 缺货的排在后面
-    return aOutOfStock ? 1 : -1
+    // 按用户选择的排序方式
+    if (sortBy === "published_at") {
+      // 发布日期：按发布时间降序（最新发布的在前）
+      return (b._publishedAt || 0) - (a._publishedAt || 0)
+    } else if (sortBy === "price_asc") {
+      return (a._minPrice || 0) - (b._minPrice || 0)
+    } else if (sortBy === "price_desc") {
+      return (b._minPrice || 0) - (a._minPrice || 0)
+    } else {
+      // created_at: 按创建时间降序（最新的在前）
+      return new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime()
+    }
   })
 
   return sortedProducts
