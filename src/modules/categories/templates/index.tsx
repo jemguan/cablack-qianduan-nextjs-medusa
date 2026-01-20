@@ -25,6 +25,19 @@ export default function CategoryTemplate({
 
   if (!category || !countryCode) notFound()
 
+  // 构建分类的完整路径
+  const buildCategoryPath = (cat: HttpTypes.StoreProductCategory): string => {
+    const path: string[] = []
+    let current: HttpTypes.StoreProductCategory | null = cat
+    while (current) {
+      if (current.handle) {
+        path.unshift(current.handle)
+      }
+      current = current.parent_category || null
+    }
+    return path.join("/")
+  }
+
   const parents = [] as HttpTypes.StoreProductCategory[]
 
   const getParents = (category: HttpTypes.StoreProductCategory) => {
@@ -52,7 +65,7 @@ export default function CategoryTemplate({
                   {hasHandle ? (
                     <LocalizedClientLink
                       className="mr-4 hover:text-black"
-                      href={`/categories/${parent.handle}`}
+                      href={`/categories/${buildCategoryPath(parent)}`}
                       data-testid="sort-by-link"
                     >
                       {parent.name}
@@ -75,10 +88,13 @@ export default function CategoryTemplate({
           <div className="mb-8 text-base-large">
             <ul className="grid grid-cols-1 gap-2">
               {category.category_children?.map((c) => {
-                const hasHandle = c.handle && c.handle.trim() !== ""
+                // 子分类路径 = 当前分类路径 + 子分类 handle
+                const currentPath = buildCategoryPath(category)
+                const childPath = c.handle ? `${currentPath}/${c.handle}` : ""
+                const hasPath = childPath && childPath.trim() !== ""
                 return (
                   <li key={c.id}>
-                    <InteractiveLink href={hasHandle ? `/categories/${c.handle}` : undefined}>
+                    <InteractiveLink href={hasPath ? `/categories/${childPath}` : undefined}>
                       {c.name}
                     </InteractiveLink>
                   </li>

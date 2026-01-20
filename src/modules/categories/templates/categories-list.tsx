@@ -8,6 +8,19 @@ export default function CategoriesListTemplate({
   categories: HttpTypes.StoreProductCategory[]
   countryCode?: string
 }) {
+  // 构建分类的完整路径
+  const buildCategoryPath = (cat: HttpTypes.StoreProductCategory): string => {
+    const path: string[] = []
+    let current: HttpTypes.StoreProductCategory | null = cat
+    while (current) {
+      if (current.handle) {
+        path.unshift(current.handle)
+      }
+      current = current.parent_category || null
+    }
+    return path.join("/")
+  }
+
   if (!categories || categories.length === 0) {
     return (
       <div className="content-container py-12">
@@ -32,8 +45,8 @@ export default function CategoriesListTemplate({
 
       <ul className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8">
         {categories.map((category) => {
-          const hasHandle = category.handle && category.handle.trim() !== ""
-          const categoryLink = hasHandle ? `/categories/${category.handle}` : null
+          const categoryPath = buildCategoryPath(category)
+          const categoryLink = categoryPath ? `/categories/${categoryPath}` : null
 
           // Render non-clickable element if handle is empty
           if (!categoryLink) {

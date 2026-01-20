@@ -86,9 +86,14 @@ async function fetchCategoryByHandleInternal(
 /**
  * 根据 handle 获取分类
  * 优化：先从缓存的完整列表中查找，找不到再单独请求
+ *
+ * 注意：Medusa 中分类的 handle 是单独的（如 "anal-dildos-&-probes"），
+ * 而不是完整路径（如 "prostate-massager/anal-dildos-&-probes"）。
+ * URL 路径用于导航层级，但查询时使用最后一个 handle。
  */
 export const getCategoryByHandle = cache(async (categoryHandle: string[]) => {
-  const handle = `${categoryHandle.join("/")}`
+  // 使用最后一个 handle 来查找分类（子分类的 handle 不包含父分类路径）
+  const handle = categoryHandle[categoryHandle.length - 1]
 
   // 先尝试从缓存的完整列表中查找
   try {
