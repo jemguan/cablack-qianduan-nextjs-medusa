@@ -3,7 +3,7 @@ import { SortOptions } from "@modules/store/components/refinement-list/sort-prod
 
 interface SortableProduct extends HttpTypes.StoreProduct {
   _minPrice?: number
-  _publishedAt?: number
+  _updatedAt?: number
 }
 
 /**
@@ -64,10 +64,8 @@ export function sortProducts(
       product._minPrice = Infinity
     }
 
-    // 获取发布时间（存储在 metadata.published_at）
-    const metadata = product.metadata as Record<string, unknown> | null
-    const publishedAtStr = metadata?.published_at as string | undefined
-    product._publishedAt = publishedAtStr ? new Date(publishedAtStr).getTime() : 0
+    // 获取更新时间
+    product._updatedAt = product.updated_at ? new Date(product.updated_at).getTime() : 0
   })
 
   // 排序逻辑：
@@ -85,8 +83,8 @@ export function sortProducts(
 
     // 按用户选择的排序方式
     if (sortBy === "published_at") {
-      // 发布日期：按发布时间降序（最新发布的在前）
-      return (b._publishedAt || 0) - (a._publishedAt || 0)
+      // 发布日期（更新时间）：按更新时间降序（最新更新的在前）
+      return (b._updatedAt || 0) - (a._updatedAt || 0)
     } else if (sortBy === "price_asc") {
       return (a._minPrice || 0) - (b._minPrice || 0)
     } else if (sortBy === "price_desc") {

@@ -9,9 +9,9 @@ import { getAuthHeaders, getCacheOptions, getCacheTag, getRegionCountryCode } fr
 import { getRegion, retrieveRegion } from "./regions"
 
 // 用于排序的超精简字段（只包含排序所需的最小字段）
-// 包含：ID、创建时间、发布时间、价格计算、库存信息
+// 包含：ID、创建时间、更新时间、价格计算、库存信息
 const SORT_ONLY_FIELDS =
-  "id,created_at,+metadata,*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder"
+  "id,created_at,updated_at,*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder"
 
 // 用于列表视图的精简字段（只包含必要的显示信息）
 // 包含：价格计算、库存信息、变体选项、变体图片、产品选项
@@ -240,15 +240,12 @@ const getSortedProductIds = async (
       }
 
       // 计算每个产品的排序信息
-      // published_at 存储在 metadata.published_at 中
       const productsWithMeta = allProducts.map((product) => {
-        const metadata = product.metadata as Record<string, unknown> | null
-        const publishedAtStr = metadata?.published_at as string | undefined
         return {
           id: product.id,
           minPrice: getMinPrice(product),
           createdAt: product.created_at ? new Date(product.created_at).getTime() : 0,
-          publishedAt: publishedAtStr ? new Date(publishedAtStr).getTime() : 0,
+          updatedAt: product.updated_at ? new Date(product.updated_at).getTime() : 0,
           outOfStock: isProductOutOfStock(product),
         }
       })
@@ -265,8 +262,8 @@ const getSortedProductIds = async (
 
         // 按用户选择的排序方式
         if (sortBy === "published_at") {
-          // 发布日期：按发布时间降序（最新发布的在前）
-          return b.publishedAt - a.publishedAt
+          // 发布日期（更新时间）：按更新时间降序（最新更新的在前）
+          return b.updatedAt - a.updatedAt
         } else if (sortBy === "price_asc") {
           return a.minPrice - b.minPrice
         } else if (sortBy === "price_desc") {
