@@ -2,6 +2,7 @@
 
 import { BlogPost } from "@lib/data/blogs"
 import Link from "next/link"
+import Image from "next/image"
 import { getImageUrl } from "@lib/util/image"
 
 interface BlogCardProps {
@@ -46,11 +47,14 @@ export function BlogCard({ post }: BlogCardProps) {
   return (
     <article className="flex flex-col h-full border border-ui-border-base rounded-lg overflow-hidden hover:shadow-lg transition-shadow bg-ui-bg-base">
       {coverImageUrl && (
-        <Link href={blogLink} className="block overflow-hidden bg-ui-bg-subtle">
-          <img
+        <Link href={blogLink} className="block overflow-hidden bg-ui-bg-subtle relative aspect-video">
+          <Image
             src={coverImageUrl}
             alt={post.title}
-            className="w-full h-auto object-contain"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            quality={75}
+            className="object-cover hover:scale-105 transition-transform duration-300"
           />
         </Link>
       )}

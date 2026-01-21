@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Back from "@modules/common/icons/back"
 import FastDelivery from "@modules/common/icons/fast-delivery"
 import Refresh from "@modules/common/icons/refresh"
@@ -160,9 +161,13 @@ const ShippingInfoTab = ({ config }: { config?: ShippingReturnsConfig }) => {
 
   const getIcon = (iconType?: string, customIcon?: string) => {
     if (customIcon) {
-      // If customIcon is a URL, use img tag
+      // If customIcon is a URL, use next/image
       if (customIcon.startsWith('http') || customIcon.startsWith('/')) {
-        return <img src={customIcon} alt="" className="w-6 h-6 flex-shrink-0" />
+        return (
+          <div className="w-6 h-6 flex-shrink-0 relative">
+            <Image src={customIcon} alt="" fill sizes="24px" className="object-contain" />
+          </div>
+        )
       }
       // Otherwise, treat as SVG - sanitize to prevent XSS
       return <div className="w-6 h-6 flex-shrink-0" dangerouslySetInnerHTML={{ __html: sanitizeHtml(customIcon) }} />

@@ -1,6 +1,7 @@
 "use client"
 
 import { memo } from 'react'
+import Image from 'next/image'
 import LocalizedClientLink from '@modules/common/components/localized-client-link'
 import { getGlassClassName, getGlassStyle } from '@lib/ui/glass-effect/utils'
 import type { CollageModule } from '../types'
@@ -25,6 +26,11 @@ export const CollectionModuleComponent = memo(function CollectionModuleComponent
     : 'hover:scale-105 hover:shadow-2xl duration-500'
   const titleClass = isMobile ? 'text-base drop-shadow-sm' : 'text-lg drop-shadow-md'
 
+  // 响应式 sizes
+  const sizes = isMobile
+    ? "100vw"
+    : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+
   return (
     <LocalizedClientLink
       href={collectionLink}
@@ -32,16 +38,17 @@ export const CollectionModuleComponent = memo(function CollectionModuleComponent
     >
       <div className={`relative w-full h-full rounded-lg ${getGlassClassName(true)}`} style={getGlassStyle(true)}>
         {imageUrl && (
-          <img
+          <Image
             src={imageUrl}
             alt={title || 'Collection'}
-            loading="lazy"
-            decoding="async"
-            className="w-full h-full object-cover rounded-lg mb-2"
+            fill
+            sizes={sizes}
+            quality={isMobile ? 70 : 75}
+            className="object-cover rounded-lg"
           />
         )}
         {title && (
-          <h3 className={`font-semibold text-foreground text-center ${titleClass}`}>
+          <h3 className={`absolute bottom-2 left-0 right-0 font-semibold text-foreground text-center ${titleClass}`}>
             {title}
           </h3>
         )}
