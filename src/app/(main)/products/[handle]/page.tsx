@@ -147,11 +147,41 @@ export default async function ProductPage(props: Props) {
 
   const images = getImagesForVariant(pricedProduct, selectedVariantId)
 
-  // 获取产品 HTML 描述
-  const htmlDescription = await getProductHtmlDescription(pricedProduct.id)
+  // 并行获取所有数据 - 大幅减少 API 等待时间
+  const [
+    htmlDescription,
+    optionTemplates,
+    brand,
+    customer,
+    loyaltyAccountResponse,
+    loyaltyConfigResponse,
+    medusaConfig,
+    siteConfig,
+    reviewStats,
+    reviewsResponse,
+  ] = await Promise.all([
+    getProductHtmlDescription(pricedProduct.id),
+    getProductOptionTemplates(pricedProduct.id),
+    getProductBrand(pricedProduct.id),
+    retrieveCustomer(),
+    getLoyaltyAccount(),
+    getLoyaltyConfig(),
+    getMedusaConfig(),
+    getPageTitleConfig(),
+    getReviewStats(pricedProduct.id),
+    getReviews({
+      product_id: pricedProduct.id,
+      status: "approved",
+      limit: 5,
+      offset: 0,
+      order_by: "created_at",
+      order: "DESC",
+    }),
+  ])
 
-  // 获取产品选项模板
-  const optionTemplates = await getProductOptionTemplates(pricedProduct.id)
+  const loyaltyAccount = loyaltyAccountResponse?.account || null
+  const membershipProductIds = loyaltyConfigResponse?.config?.membership_product_ids || null
+  const reviews = reviewsResponse?.reviews || []
 
   // Build breadcrumb items
   const breadcrumbItems = [
@@ -196,35 +226,6 @@ export default async function ProductPage(props: Props) {
     name: item.name,
     url: item.url
   }))
-
-  // Fetch brand information for SEO
-  const brand = await getProductBrand(pricedProduct.id)
-
-  // 获取客户和积分信息
-  const customer = await retrieveCustomer()
-  const loyaltyAccountResponse = await getLoyaltyAccount()
-  const loyaltyConfigResponse = await getLoyaltyConfig()
-  const loyaltyAccount = loyaltyAccountResponse?.account || null
-  const membershipProductIds = loyaltyConfigResponse?.config?.membership_product_ids || null
-
-  // 获取 Medusa config
-  const medusaConfig = await getMedusaConfig()
-
-  // 获取网站配置与评论信息（结构化数据使用）
-  const [siteConfig, reviewStats, reviewsResponse] = await Promise.all([
-    getPageTitleConfig(),
-    getReviewStats(pricedProduct.id),
-    getReviews({
-      product_id: pricedProduct.id,
-      status: "approved",
-      limit: 5,
-      offset: 0,
-      order_by: "created_at",
-      order: "DESC",
-    }),
-  ])
-
-  const reviews = reviewsResponse?.reviews || []
 
   return (
     <ReviewStatsProvider>

@@ -1,9 +1,30 @@
 "use client"
 
+import { Suspense } from "react"
 import { useRouter } from "next/navigation"
 import { useGoogleCallback } from "./hooks"
 
-export default function GoogleCallbackPage() {
+/**
+ * 加载状态组件
+ */
+function LoadingState() {
+  return (
+    <div className="flex items-center justify-center min-h-[600px]">
+      <div className="max-w-md w-full flex flex-col items-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ui-fg-interactive"></div>
+        <p className="text-base-regular text-ui-fg-base">
+          Authenticating with Google...
+        </p>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Google 回调内容组件
+ * 使用 useSearchParams，需要被 Suspense 包裹
+ */
+function GoogleCallbackContent() {
   const router = useRouter()
   const { loading, error, customer } = useGoogleCallback()
 
@@ -51,5 +72,17 @@ export default function GoogleCallbackPage() {
         )}
       </div>
     </div>
+  )
+}
+
+/**
+ * Google OAuth 回调页面
+ * 使用 Suspense 包裹以支持 useSearchParams
+ */
+export default function GoogleCallbackPage() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <GoogleCallbackContent />
+    </Suspense>
   )
 }

@@ -2,6 +2,7 @@ import { Metadata } from "next"
 
 import { listCartOptions, retrieveCart } from "@lib/data/cart"
 import { retrieveCustomer } from "@lib/data/customer"
+import { hasAuthToken, hasCartId } from "@lib/data/cookies"
 import { getBaseURL } from "@lib/util/env"
 import { StoreCartShippingOption } from "@medusajs/types"
 import CartMismatchBanner from "@modules/layout/components/cart-mismatch-banner"
@@ -21,12 +22,18 @@ export const metadata: Metadata = {
 }
 
 export default async function PageLayout(props: { children: React.ReactNode }) {
-  // 并行获取 customer 和 cart，减少等待时间
-  const [customer, cart] = await Promise.all([
-    retrieveCustomer(),
-    retrieveCart(),
+  // 先检查 cookie 是否存在，避免不必要的 API 调用
+  const [hasAuth, hasCart] = await Promise.all([
+    hasAuthToken(),
+    hasCartId(),
   ])
-  
+
+  // 条件性获取数据 - 只在有对应 cookie 时才发起 API 请求
+  const [customer, cart] = await Promise.all([
+    hasAuth ? retrieveCustomer() : Promise.resolve(null),
+    hasCart ? retrieveCart() : Promise.resolve(null),
+  ])
+
   // 只有在有购物车时才获取配送选项
   const shippingOptions: StoreCartShippingOption[] = cart
     ? (await listCartOptions()).shipping_options

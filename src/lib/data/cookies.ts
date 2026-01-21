@@ -72,6 +72,32 @@ export const getCartId = async () => {
   return cookies.get("_medusa_cart_id")?.value
 }
 
+/**
+ * 检查是否有 auth token（不验证有效性，仅检查存在性）
+ * 用于条件性获取用户数据，减少不必要的 API 调用
+ */
+export const hasAuthToken = async (): Promise<boolean> => {
+  try {
+    const cookies = await nextCookies()
+    return !!cookies.get("_medusa_jwt")?.value
+  } catch {
+    return false
+  }
+}
+
+/**
+ * 检查是否有 cart ID（不验证有效性，仅检查存在性）
+ * 用于条件性获取购物车数据，减少不必要的 API 调用
+ */
+export const hasCartId = async (): Promise<boolean> => {
+  try {
+    const cookies = await nextCookies()
+    return !!cookies.get("_medusa_cart_id")?.value
+  } catch {
+    return false
+  }
+}
+
 export const setCartId = async (cartId: string) => {
   const cookies = await nextCookies()
   cookies.set("_medusa_cart_id", cartId, {
