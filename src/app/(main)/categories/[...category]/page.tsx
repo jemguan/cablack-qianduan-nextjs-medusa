@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { getCategoryByHandle, listCategories } from "@lib/data/categories"
+import { getCategoryByHandle } from "@lib/data/categories"
 import { getCountryCode } from "@lib/data/regions"
 import { getPageTitle } from "@lib/data/page-title-config"
 import { HttpTypes } from "@medusajs/types"
@@ -19,25 +19,8 @@ type Props = {
   }>
 }
 
-export async function generateStaticParams() {
-  try {
-    const product_categories = await listCategories()
-
-    if (!product_categories) {
-      return []
-    }
-
-    // No countryCode in URL anymore, just generate category handles
-    return product_categories.map((category: any) => ({
-      category: [category.handle],
-    }))
-  } catch (error) {
-    // 构建时如果无法连接到后端，返回空数组
-    // Next.js 会使用动态渲染而不是静态生成
-    console.warn('Failed to generate static params for categories:', error)
-    return []
-  }
-}
+// 强制动态渲染 - 避免构建时因后端不可用而失败
+export const dynamic = "force-dynamic"
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params

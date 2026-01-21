@@ -13,6 +13,9 @@ interface SharedWishlistPageProps {
   searchParams: Promise<{ token?: string }>
 }
 
+// 强制动态渲染 - 避免构建时因后端不可用而失败
+export const dynamic = "force-dynamic"
+
 export const metadata: Metadata = {
   title: "Shared Wishlist",
   description: "View a shared wishlist.",

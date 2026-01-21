@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { getCollectionByHandle, listCollections } from "@lib/data/collections"
+import { getCollectionByHandle } from "@lib/data/collections"
 import { getCountryCode } from "@lib/data/regions"
 import { getPageTitle } from "@lib/data/page-title-config"
 import { StoreCollection } from "@medusajs/types"
@@ -21,27 +21,8 @@ type Props = {
 
 export const PRODUCT_LIMIT = 12
 
-export async function generateStaticParams() {
-  try {
-    const { collections } = await listCollections({
-      fields: "*products",
-    })
-
-    if (!collections) {
-      return []
-    }
-
-    // No countryCode in URL anymore, just generate handles
-    return collections.map((collection: StoreCollection) => ({
-      handle: collection.handle,
-    }))
-  } catch (error) {
-    // 构建时如果无法连接到后端，返回空数组
-    // Next.js 会使用动态渲染而不是静态生成
-    console.warn('Failed to generate static params for collections:', error)
-    return []
-  }
-}
+// 强制动态渲染 - 避免构建时因后端不可用而失败
+export const dynamic = "force-dynamic"
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params

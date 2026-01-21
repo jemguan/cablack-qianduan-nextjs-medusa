@@ -13,9 +13,8 @@ import { ScrollToTop } from "@components/ScrollToTop"
 import { WishlistProvider } from "@lib/context/wishlist-context"
 import { RestockNotifyProvider } from "@lib/context/restock-notify-context"
 
-// 页面级别缓存设置（5分钟）
-// 注意：购物车页面和结账页面有各自的 force-dynamic 设置，不受此影响
-export const revalidate = 300
+// 强制动态渲染 - 避免构建时因后端不可用而失败
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),

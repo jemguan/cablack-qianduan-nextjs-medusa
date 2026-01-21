@@ -9,6 +9,9 @@ import { listPages } from "@lib/data/pages"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 import Link from "next/link"
 
+// 强制动态渲染 - 避免构建时因后端不可用而失败
+export const dynamic = "force-dynamic"
+
 export const metadata: Metadata = {
   title: "Sitemap",
   description: "Browse all pages on our website.",

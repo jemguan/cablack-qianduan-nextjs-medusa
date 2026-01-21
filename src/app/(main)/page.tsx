@@ -1,5 +1,5 @@
 import { Metadata } from "next"
-import dynamic from "next/dynamic"
+import nextDynamic from "next/dynamic"
 
 import { listCategories } from "@lib/data/categories"
 import { getCurrentRegion, getCountryCode } from "@lib/data/regions"
@@ -22,7 +22,7 @@ import { TextBlock } from "@modules/home/components/text-block"
 import { BannerBlock } from "@modules/home/components/banner-block"
 
 // 非首屏组件 - 动态导入以减少初始 JS 包大小
-const BrandShowcase = dynamic(
+const BrandShowcase = nextDynamic(
   () => import("@modules/home/components/brand-showcase").then(mod => mod.BrandShowcase),
   { 
     loading: () => <div className="min-h-[200px]" />,
@@ -30,7 +30,7 @@ const BrandShowcase = dynamic(
   }
 )
 
-const FAQBlock = dynamic(
+const FAQBlock = nextDynamic(
   () => import("@modules/home/components/faq-block").then(mod => mod.FAQBlock),
   { 
     loading: () => <div className="min-h-[300px]" />,
@@ -38,7 +38,7 @@ const FAQBlock = dynamic(
   }
 )
 
-const FeaturedBlog = dynamic(
+const FeaturedBlog = nextDynamic(
   () => import("@modules/home/components/featured-blog").then(mod => mod.FeaturedBlog),
   { 
     loading: () => <div className="min-h-[400px]" />,
@@ -46,7 +46,7 @@ const FeaturedBlog = dynamic(
   }
 )
 
-const FeaturedProduct = dynamic(
+const FeaturedProduct = nextDynamic(
   () => import("@modules/home/components/featured-product").then(mod => mod.FeaturedProduct),
   { 
     loading: () => <div className="min-h-[300px]" />,
@@ -75,8 +75,8 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-// 首页缓存 5 分钟，确保 FeaturedBlog 等组件定期更新
-export const revalidate = 300
+// 强制动态渲染 - 避免构建时因后端不可用而失败
+export const dynamic = "force-dynamic"
 
 export default async function Home() {
   // 并行获取基础数据：countryCode、region、categories、config、blogs、pageTitleConfig

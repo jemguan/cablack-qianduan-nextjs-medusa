@@ -7,8 +7,8 @@ import { getPageTitle } from "@lib/data/page-title-config"
 import BlogDetailTemplate from "@modules/blogs/templates/blog-detail"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 
-// 设置页面级别的 revalidate 为 5 分钟（300 秒），确保缓存及时更新
-export const revalidate = 300
+// 强制动态渲染 - 避免构建时因后端不可用而失败
+export const dynamic = "force-dynamic"
 
 type Props = {
   params: Promise<{ url: string }>
