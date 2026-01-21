@@ -64,7 +64,7 @@ function BannerModule({ module, fillHeight = false, gridCols = 1 }: { module: Ba
         fill
         className="object-cover"
         sizes={getSizes()}
-        quality={85}
+        quality={75}
       />
     </div>
   ) : (
@@ -77,7 +77,7 @@ function BannerModule({ module, fillHeight = false, gridCols = 1 }: { module: Ba
         className="w-full h-auto object-cover"
         style={{ display: 'block' }}
         sizes={getSizes()}
-        quality={85}
+        quality={75}
       />
     </div>
   );

@@ -54,7 +54,7 @@ function BannerModule({ module, mobileGridCols = 1 }: { module: BannerModuleData
         className="w-full h-auto object-cover"
         style={{ display: 'block' }}
         sizes={getSizes()}
-        quality={85}
+        quality={75}
       />
     </div>
   );
