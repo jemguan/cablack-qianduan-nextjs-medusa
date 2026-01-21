@@ -38,6 +38,7 @@
     "react-icons": "^5.5.0",
     "react-jwt": "^2.0.0",
     "server-only": "^0.0.1",
+    "sharp": "^0.33.5",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-radix": "^2.8.0",
     "webpack": "^5"

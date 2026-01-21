@@ -35,7 +35,26 @@ const backendUrl = new URL(MEDUSA_BACKEND_URL)
  * @type {import('next').NextConfig}
  */
 const nextConfig = {
+  // 🔥 [核心优化] 针对 Railway/Docker 容器化部署
+  // 仅打包生产环境必须文件，大幅减小镜像体积 (1GB+ -> ~100MB)，提升启动速度
+  output: "standalone",
+
   reactStrictMode: true,
+
+  // 🔥 [性能优化] 自动优化第三方库的 Tree-shaking
+  // 减少客户端 JS 体积，提升首屏加载速度
+  experimental: {
+    optimizePackageImports: [
+      "@medusajs/ui",
+      "lucide-react",
+      "lodash",
+      "date-fns",
+      "@headlessui/react",
+      "clsx",
+      "tailwind-merge"
+    ],
+  },
+
   logging: {
     fetches: {
       fullUrl: true,
@@ -53,11 +72,13 @@ const nextConfig = {
     // Enable modern image formats for better compression
     formats: ["image/avif", "image/webp"],
     // Responsive image sizes - 移除过大的尺寸以减少图片下载大小
-    // 大多数设备不需要超过 1200px 宽的图片
     deviceSizes: [320, 420, 640, 750, 828, 1080, 1200],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    // Minimum cache TTL for optimized images (24 hours for better caching)
-    minimumCacheTTL: 86400,
+    
+    // 🔥 [优化] 延长图片缓存时间至 7 天 (604800秒)
+    // 电商图片通常不频繁变更，延长时间可减少服务器重复压缩的 CPU 消耗
+    minimumCacheTTL: 604800,
+    
     remotePatterns: [
       // Local development
       {
@@ -133,9 +154,28 @@ const nextConfig = {
     ],
     // Enable image optimization by default
     // Set NEXT_PUBLIC_UNOPTIMIZED_IMAGES=true to disable optimization
-    // (useful if you have many external image sources not in remotePatterns)
     unoptimized: process.env.NEXT_PUBLIC_UNOPTIMIZED_IMAGES === "true",
   },
+  
+  // 🔥 [缓存优化] 强制浏览器缓存静态资源
+  // Railway 不会自动像 Vercel 那样添加完美缓存头，需要手动配置
+  async headers() {
+    return [
+      {
+        // 匹配 public 目录下的常见静态文件
+        source: '/:all*(svg|jpg|png|woff2|woff|ttf)',
+        locale: false,
+        headers: [
+          {
+            key: 'Cache-Control',
+            // 强缓存1年，immutable 表示内容绝对不会变
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ]
+  },
+
   // Enable compression
   compress: true,
   // Optimize production builds
