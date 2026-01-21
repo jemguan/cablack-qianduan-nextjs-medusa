@@ -8,6 +8,9 @@ import Breadcrumb from "@modules/common/components/breadcrumb"
 import Schema from "@modules/common/components/seo/Schema"
 import { getBaseURL } from "@lib/util/env"
 
+// 强制动态渲染 - 避免构建时因后端不可用而失败
+export const dynamic = "force-dynamic"
+
 export async function generateMetadata(): Promise<Metadata> {
   const title = await getPageTitle("brand_list", { title: "Brands" })
   const description = "Explore all of our brands."

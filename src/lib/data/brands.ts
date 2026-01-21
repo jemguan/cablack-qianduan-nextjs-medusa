@@ -22,7 +22,7 @@ export const listBrands = async (
 ): Promise<{ brands: Brand[]; count: number }> => {
   // 获取缓存标签
   const cacheOptions = await getCacheOptions("brands")
-  
+
   // 获取缓存策略
   const cacheConfig = getCacheConfig("BRAND")
 
@@ -35,15 +35,19 @@ export const listBrands = async (
   queryParams.limit = queryParams.limit || "100"
   queryParams.offset = queryParams.offset || "0"
 
-  return sdk.client
-    .fetch<{ brands: Brand[]; count: number }>(
+  try {
+    const response = await sdk.client.fetch<{ brands: Brand[]; count: number }>(
       "/store/brands",
       {
         query: queryParams,
         next,
       }
     )
-    .then(({ brands, count }) => ({ brands, count }))
+    return { brands: response.brands || [], count: response.count || 0 }
+  } catch (error) {
+    console.error("Error fetching brands:", error)
+    return { brands: [], count: 0 }
+  }
 }
 
 export const getBrandBySlug = async (
