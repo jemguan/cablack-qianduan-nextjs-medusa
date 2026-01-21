@@ -1,5 +1,6 @@
 "use client"
 
+import Image from 'next/image';
 import Link from 'next/link';
 import type { BannerBlockProps, BannerModuleData } from './types';
 import { DEFAULT_BANNER_BLOCK_CONFIG } from './config';
@@ -36,11 +37,15 @@ function BannerModule({ module }: { module: BannerModuleData }) {
 
   const imageElement = (
     <div className="relative w-full overflow-hidden rounded-lg" style={{ padding: 0, margin: 0 }}>
-      <img
+      <Image
         src={imageUrl}
         alt="Banner image"
+        width={800}
+        height={400}
         className="w-full h-auto object-cover"
         style={{ display: 'block' }}
+        sizes="100vw"
+        quality={85}
       />
     </div>
   );

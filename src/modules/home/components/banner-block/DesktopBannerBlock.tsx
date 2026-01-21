@@ -41,7 +41,17 @@ function BannerModule({ module, fillHeight = false }: { module: BannerModuleData
   // 否则使用自然尺寸，让容器跟随图片高度
   // 有链接时添加悬停动画效果
   const hoverClass = hasLink ? 'transition-all duration-300 hover:scale-[1.005] hover:brightness-[1.02]' : '';
-  
+
+  // 根据 gridCols 动态计算 sizes
+  // 这里假设典型的网格布局：1列=100vw，2列=50vw，3列=33vw
+  const getSizes = () => {
+    const cols = module.desktopCols || 1;
+    // 桌面端根据列数计算，移动端默认全宽
+    if (cols >= 3) return "(max-width: 768px) 100vw, 33vw";
+    if (cols === 2) return "(max-width: 768px) 100vw, 50vw";
+    return "(max-width: 768px) 100vw, 100vw";
+  };
+
   const imageElement = fillHeight ? (
     <div className={`relative w-full h-full overflow-hidden rounded-lg ${hoverClass}`}>
       <Image
@@ -49,17 +59,21 @@ function BannerModule({ module, fillHeight = false }: { module: BannerModuleData
         alt="Banner image"
         fill
         className="object-cover"
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        unoptimized={imageUrl.startsWith('http') || imageUrl.startsWith('//')}
+        sizes={getSizes()}
+        quality={85}
       />
     </div>
   ) : (
     <div className={`relative w-full overflow-hidden rounded-lg ${hoverClass}`} style={{ padding: 0, margin: 0 }}>
-      <img
+      <Image
         src={imageUrl}
         alt="Banner image"
+        width={1200}
+        height={600}
         className="w-full h-auto object-cover"
         style={{ display: 'block' }}
+        sizes={getSizes()}
+        quality={85}
       />
     </div>
   );
