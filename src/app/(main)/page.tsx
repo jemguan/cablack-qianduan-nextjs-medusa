@@ -79,13 +79,14 @@ export async function generateMetadata(): Promise<Metadata> {
 export const revalidate = 300
 
 export default async function Home() {
-  // 并行获取基础数据：countryCode、region、categories、config、blogs
-  const [countryCode, region, categories, config, blogResult] = await Promise.all([
+  // 并行获取基础数据：countryCode、region、categories、config、blogs、pageTitleConfig
+  const [countryCode, region, categories, config, blogResult, pageTitleConfig] = await Promise.all([
     getCountryCode(),
     getCurrentRegion(),
     listCategories({ fields: "id, handle, name" }),
     getMedusaConfig(),
     listBlogs({ limit: "100", offset: "0" }).catch(() => ({ posts: [] })),
+    getPageTitleConfig(),
   ])
 
   if (!categories || !region) {
@@ -147,9 +148,6 @@ export default async function Home() {
 
   // 根据 pageLayouts 配置获取首页 blocks
   const pageBlocks = await getHomePageLayoutBlocks(config, categories, region, collageHeroProducts, blogArticles)
-
-  // 获取页面标题配置（用于 Schema）
-  const pageTitleConfig = await getPageTitleConfig()
 
   // 组件映射
   const componentMap: Record<string, React.ComponentType<any>> = {
