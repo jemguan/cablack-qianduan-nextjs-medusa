@@ -17,8 +17,9 @@ function getImageUrl(module: BannerModuleData): string | null {
  * 单个 Banner 模块组件（桌面端）
  * @param module - Banner 模块数据
  * @param fillHeight - 是否填充满容器高度（用于 rowSpan > 1 的情况）
+ * @param gridCols - 整体网格的列数
  */
-function BannerModule({ module, fillHeight = false }: { module: BannerModuleData; fillHeight?: boolean }) {
+function BannerModule({ module, fillHeight = false, gridCols = 1 }: { module: BannerModuleData; fillHeight?: boolean; gridCols?: number }) {
   const {
     link,
     linkTarget = '_self',
@@ -42,14 +43,17 @@ function BannerModule({ module, fillHeight = false }: { module: BannerModuleData
   // 有链接时添加悬停动画效果
   const hoverClass = hasLink ? 'transition-all duration-300 hover:scale-[1.005] hover:brightness-[1.02]' : '';
 
-  // 根据 gridCols 动态计算 sizes
-  // 这里假设典型的网格布局：1列=100vw，2列=50vw，3列=33vw
+  // 根据模块占用的列数和整体网格列数计算 sizes
+  // content-container 最大宽度是 1440px
+  // 使用像素值而非视口百分比，避免下载过大的图片
   const getSizes = () => {
-    const cols = module.desktopCols || 1;
-    // 桌面端根据列数计算，移动端默认全宽
-    if (cols >= 3) return "(max-width: 768px) 100vw, 33vw";
-    if (cols === 2) return "(max-width: 768px) 100vw, 50vw";
-    return "(max-width: 768px) 100vw, 100vw";
+    const moduleCols = module.desktopCols || 1;
+    // 计算模块实际占用的宽度比例
+    const widthRatio = moduleCols / gridCols;
+    // 桌面端最大宽度 = 1440px * 比例，移动端约 100vw
+    const maxDesktopWidth = Math.round(1440 * widthRatio);
+    // 移动端: 100vw，平板: 50vw，桌面: 实际像素宽度
+    return `(max-width: 640px) 100vw, (max-width: 1024px) ${Math.round(50 * widthRatio)}vw, ${maxDesktopWidth}px`;
   };
 
   const imageElement = fillHeight ? (
@@ -149,12 +153,12 @@ export function DesktopBannerBlock({ data }: BannerBlockProps) {
         };
 
         return (
-          <div 
-            key={module.id} 
+          <div
+            key={module.id}
             style={gridItemStyle}
             className={moduleRows > 1 ? "h-full" : ""}
           >
-            <BannerModule module={module} fillHeight={moduleRows > 1} />
+            <BannerModule module={module} fillHeight={moduleRows > 1} gridCols={cols} />
           </div>
         );
       })}

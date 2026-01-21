@@ -15,8 +15,9 @@ function getImageUrl(module: BannerModuleData): string | null {
 
 /**
  * 单个 Banner 模块组件（移动端）
+ * @param mobileGridCols - 移动端网格列数
  */
-function BannerModule({ module }: { module: BannerModuleData }) {
+function BannerModule({ module, mobileGridCols = 1 }: { module: BannerModuleData; mobileGridCols?: number }) {
   const {
     link,
     linkTarget = '_self',
@@ -35,6 +36,14 @@ function BannerModule({ module }: { module: BannerModuleData }) {
 
   const hasLink = !!link;
 
+  // 根据网格列数计算 sizes
+  // 移动端视口最大约 640px，减去 padding 约 32px = 608px
+  // 单列时约 608px，双列时约 296px
+  const getSizes = () => {
+    const maxWidth = Math.round(608 / mobileGridCols);
+    return `${maxWidth}px`;
+  };
+
   const imageElement = (
     <div className="relative w-full overflow-hidden rounded-lg" style={{ padding: 0, margin: 0 }}>
       <Image
@@ -44,7 +53,7 @@ function BannerModule({ module }: { module: BannerModuleData }) {
         height={400}
         className="w-full h-auto object-cover"
         style={{ display: 'block' }}
-        sizes="100vw"
+        sizes={getSizes()}
         quality={85}
       />
     </div>
@@ -92,7 +101,7 @@ export function MobileBannerBlock({ data }: BannerBlockProps) {
   return (
     <div style={gridStyle}>
       {visibleModules.map((module) => (
-        <BannerModule key={module.id} module={module} />
+        <BannerModule key={module.id} module={module} mobileGridCols={mobileGridCols} />
       ))}
     </div>
   );
