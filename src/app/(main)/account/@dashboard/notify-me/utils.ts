@@ -1,3 +1,4 @@
+import { createElement } from "react"
 import { Bell, AlertCircle } from "lucide-react"
 import type { RestockItem, SubscriptionStatus, ProductPrice } from "./types"
 
@@ -26,7 +27,7 @@ export function getSubscriptionStatus(item: RestockItem): SubscriptionStatus {
     return {
       label: "Purchased",
       color: "text-green-700 bg-green-50",
-      icon: AlertCircle({ size: 14 }),
+      icon: createElement(AlertCircle, { size: 14 }),
     }
   }
 
@@ -35,14 +36,14 @@ export function getSubscriptionStatus(item: RestockItem): SubscriptionStatus {
     return {
       label: `Restocked on ${restockDate}`,
       color: "text-blue-700 bg-blue-50",
-      icon: Bell({ size: 14 }),
+      icon: createElement(Bell, { size: 14 }),
     }
   }
 
   return {
     label: "Waiting for Restock",
     color: "text-amber-700 bg-amber-50",
-    icon: AlertCircle({ size: 14 }),
+    icon: createElement(AlertCircle, { size: 14 }),
   }
 }
 
