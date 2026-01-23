@@ -46,8 +46,13 @@ const ProductDescriptionAccordion: React.FC<ProductDescriptionAccordionProps> = 
 
     // 使用正则表达式直接分割 HTML 内容
     // 构建匹配所有标题的正则表达式
+    // 注意：& 在 HTML 中可能被编码为 &amp;，需要同时匹配两种形式
     const titlePattern = sectionTitles
-      .map((title) => title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .map((title) =>
+        title
+          .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+          .replace(/&/g, "(?:&|&amp;)")  // 匹配 & 或 &amp;
+      )
       .join("|")
 
     // 匹配标题和内容的正则表达式
@@ -66,8 +71,10 @@ const ProductDescriptionAccordion: React.FC<ProductDescriptionAccordionProps> = 
       const contentMatch = match[4] || "" // 内容
 
       // 找到对应的原始标题（保持大小写）
+      // 将 &amp; 转换回 & 进行比较
+      const normalizedTitleMatch = titleMatch.replace(/&amp;/gi, "&")
       const originalTitle = sectionTitles.find(
-        (t) => t.toUpperCase() === titleMatch.toUpperCase()
+        (t) => t.toUpperCase() === normalizedTitleMatch.toUpperCase()
       )
 
       if (originalTitle && contentMatch.trim()) {
@@ -88,8 +95,12 @@ const ProductDescriptionAccordion: React.FC<ProductDescriptionAccordionProps> = 
 
         // 查找包含标题的元素
         for (const title of sectionTitles) {
+          // 处理 & 和 &amp; 两种形式
+          const escapedTitle = title
+            .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+            .replace(/&/g, "(?:&|&amp;)")
           const titleRegex = new RegExp(
-            `^\\s*${title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`,
+            `^\\s*${escapedTitle}\\s*$`,
             "i"
           )
 
