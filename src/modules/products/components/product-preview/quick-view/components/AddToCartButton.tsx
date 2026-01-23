@@ -2,7 +2,7 @@
 
 import { Button } from "@medusajs/ui"
 import { Bell, BellOff } from "lucide-react"
-import { useRouter, useParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import type { AddToCartButtonProps } from "../types"
 
 /**
@@ -28,20 +28,19 @@ export function AddToCartButton({
   onClose,
 }: AddToCartButtonProps) {
   const router = useRouter()
-  const { countryCode } = useParams()
 
-  // 有选项模板时，显示 "View Details" 按钮
+  // 有选项模板时，显示 "View Details" 按钮（绿色）
   if (hasOptionTemplates && productHandle) {
     return (
       <Button
         onClick={() => {
           onClose?.()
-          router.push(`/${countryCode}/products/${productHandle}`)
+          router.push(`/products/${productHandle}`)
         }}
         variant="primary"
-        className="w-full h-10 text-white border-none !border-2 !shadow-none bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 !border-blue-600 hover:!border-blue-700 dark:!border-blue-600 dark:hover:!border-blue-700"
+        className="w-full h-10 text-white border-none !border-2 !shadow-none bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 !border-green-600 hover:!border-green-700 dark:!border-green-600 dark:hover:!border-green-700"
         style={{
-          borderColor: "rgb(37 99 235)",
+          borderColor: "rgb(22 163 74)",
           borderWidth: "2px",
           borderStyle: "solid",
         }}
