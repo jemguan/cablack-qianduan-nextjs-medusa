@@ -6,12 +6,13 @@ import type { FAQItem } from './types';
 export function parseFAQMetadata(
   metadataValue: string | null | undefined,
 ): FAQItem[] {
-  if (!metadataValue) {
+  // 检查空值或只有空格的字符串
+  if (!metadataValue || !metadataValue.trim()) {
     return [];
   }
 
   try {
-    const parsed: any = JSON.parse(metadataValue);
+    const parsed: any = JSON.parse(metadataValue.trim());
 
     // 支持两种格式：
     // 1. 直接是 FAQ 数组
