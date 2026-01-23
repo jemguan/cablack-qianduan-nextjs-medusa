@@ -1,5 +1,6 @@
 import "server-only"
 import { cookies as nextCookies } from "next/headers"
+import { invalidateRegionCache } from "./redis"
 
 export const getAuthHeaders = async (): Promise<
   { authorization: string } | {}
@@ -129,10 +130,18 @@ export const getRegionCountryCode = async (): Promise<string> => {
 
 export const setRegionCountryCode = async (countryCode: string) => {
   const cookies = await nextCookies()
-  cookies.set("_medusa_region", countryCode.toLowerCase(), {
-    maxAge: 60 * 60 * 24 * 365, // 1 year
-    httpOnly: false, // Client needs to read this
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  })
+  const currentRegion = cookies.get("_medusa_region")?.value
+
+  // 只有当区域真的变化时才设置 cookie 和清除缓存
+  if (currentRegion !== countryCode.toLowerCase()) {
+    cookies.set("_medusa_region", countryCode.toLowerCase(), {
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      httpOnly: false, // Client needs to read this
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    })
+
+    // 清除区域相关的 Redis 缓存
+    await invalidateRegionCache()
+  }
 }

@@ -3,6 +3,7 @@ import { getCacheConfig } from "@lib/config/cache"
 import { HttpTypes } from "@medusajs/types"
 import { unstable_cache } from "next/cache"
 import { cache } from "react"
+import { getCache, setCache, CACHE_KEYS, CACHE_TTL } from "./redis"
 
 /**
  * 内部获取分类列表
@@ -32,7 +33,7 @@ async function fetchCategoriesInternal(
 /**
  * 模块级别的 unstable_cache - 完整分类列表（带子分类和产品）
  */
-const cachedFullCategories = unstable_cache(
+const cachedFullCategoriesFromApi = unstable_cache(
   () => fetchCategoriesInternal(
     "*category_children, *products, *parent_category, *parent_category.parent_category",
     1000
@@ -43,6 +44,25 @@ const cachedFullCategories = unstable_cache(
     tags: ["categories"],
   }
 )
+
+/**
+ * 获取完整分类列表（优先 Redis，降级到 API）
+ */
+async function cachedFullCategories(): Promise<HttpTypes.StoreProductCategory[]> {
+  // 1. 先尝试从 Redis 获取
+  const cached = await getCache<HttpTypes.StoreProductCategory[]>(CACHE_KEYS.CATEGORY_LIST)
+  if (cached) {
+    return cached
+  }
+
+  // 2. Redis 没有或不可用，走原有逻辑
+  const categories = await cachedFullCategoriesFromApi()
+
+  // 3. 写入 Redis（如果可用），使用较短 TTL 避免内存占用过大
+  await setCache(CACHE_KEYS.CATEGORY_LIST, categories, CACHE_TTL.MEDIUM)
+
+  return categories
+}
 
 /**
  * 获取分类列表

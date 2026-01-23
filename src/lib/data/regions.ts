@@ -6,14 +6,15 @@ import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { getCacheOptions, getRegionCountryCode } from "./cookies"
 import { cache } from "react"
+import { getCache, setCache, CACHE_KEYS, CACHE_TTL } from "./redis"
 
 /**
- * 内部实现：获取所有区域
+ * 内部实现：从 API 获取所有区域
  */
-const _listRegionsInternal = async () => {
+const _fetchRegionsFromApi = async () => {
   // 获取缓存标签
   const cacheOptions = await getCacheOptions("regions")
-  
+
   // 获取缓存策略
   const cacheConfig = getCacheConfig("REGION")
 
@@ -30,6 +31,27 @@ const _listRegionsInternal = async () => {
     })
     .then(({ regions }) => regions)
     .catch(medusaError)
+}
+
+/**
+ * 内部实现：获取所有区域（优先 Redis，降级到 API）
+ */
+const _listRegionsInternal = async () => {
+  // 1. 先尝试从 Redis 获取
+  const cached = await getCache<HttpTypes.StoreRegion[]>(CACHE_KEYS.REGION_LIST)
+  if (cached) {
+    return cached
+  }
+
+  // 2. Redis 没有或不可用，走原有逻辑
+  const regions = await _fetchRegionsFromApi()
+
+  // 3. 写入 Redis（如果可用）
+  if (regions) {
+    await setCache(CACHE_KEYS.REGION_LIST, regions, CACHE_TTL.EXTRA_LONG)
+  }
+
+  return regions
 }
 
 /**
@@ -60,14 +82,25 @@ export const retrieveRegion = async (id: string) => {
     .catch(medusaError)
 }
 
+// 内存缓存作为二级降级
 const regionMap = new Map<string, HttpTypes.StoreRegion>()
 
 export const getRegion = async (countryCode: string) => {
   try {
+    // 1. 先检查内存缓存
     if (regionMap.has(countryCode)) {
       return regionMap.get(countryCode)
     }
 
+    // 2. 尝试从 Redis 获取 country -> region 映射
+    const redisKey = `${CACHE_KEYS.REGION_MAP}:${countryCode}`
+    const cachedRegion = await getCache<HttpTypes.StoreRegion>(redisKey)
+    if (cachedRegion) {
+      regionMap.set(countryCode, cachedRegion)
+      return cachedRegion
+    }
+
+    // 3. 从 API 获取所有区域并构建映射
     const regions = await listRegions()
 
     if (!regions) {
@@ -83,6 +116,11 @@ export const getRegion = async (countryCode: string) => {
     const region = countryCode
       ? regionMap.get(countryCode)
       : regionMap.get("ca")
+
+    // 4. 写入 Redis（如果可用）
+    if (region) {
+      await setCache(redisKey, region, CACHE_TTL.EXTRA_LONG)
+    }
 
     return region
   } catch (e: any) {

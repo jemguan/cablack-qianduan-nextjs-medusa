@@ -96,34 +96,14 @@ export const listProducts = async ({
     }
   }
 
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
-
-  const cacheOptions = await getCacheOptions("products")
-  const productsInventoryTag = await getCacheTag("products-inventory")
-  
-  // 添加产品库存相关的缓存标签，以便在库存变化时失效缓存
-  const existingTags = (cacheOptions as { tags?: string[] })?.tags || []
-  const next = {
-    ...cacheOptions,
-    ...(productsInventoryTag ? {
-      tags: [...existingTags, productsInventoryTag].filter(Boolean)
-    } : {}),
-  }
-
-  // 如果 noCache 为 true，禁用缓存（用于搜索等动态查询）
-  const cacheConfig = noCache 
-    ? { cache: "no-store" as const }
-    : getCacheConfig("PRODUCT_LIST")
-
   // 根据使用场景选择字段
   // 如果 queryParams.fields 以 "=" 开头，表示完全替换默认字段
   const shouldReplaceFields = queryParams?.fields?.startsWith("=")
-  const fieldsToUse = shouldReplaceFields && queryParams?.fields
-    ? queryParams.fields.substring(1) // 移除 "=" 前缀
-    : undefined
-  
+  const fieldsToUse =
+    shouldReplaceFields && queryParams?.fields
+      ? queryParams.fields.substring(1) // 移除 "=" 前缀
+      : undefined
+
   const defaultFields = useListViewFields ? LIST_VIEW_FIELDS : FULL_FIELDS
 
   // If custom fields are provided, merge them with default fields using + prefix
@@ -131,43 +111,68 @@ export const listProducts = async ({
   const fields = fieldsToUse
     ? fieldsToUse
     : queryParams?.fields
-    ? queryParams.fields.startsWith("+") || queryParams.fields.startsWith("-")
-      ? `${defaultFields}${queryParams.fields}`
-      : `${defaultFields}+${queryParams.fields}`
-    : defaultFields
+      ? queryParams.fields.startsWith("+") || queryParams.fields.startsWith("-")
+        ? `${defaultFields}${queryParams.fields}`
+        : `${defaultFields}+${queryParams.fields}`
+      : defaultFields
 
   // Remove fields from queryParams to avoid duplication
   const { fields: _, ...restQueryParams } = queryParams || {}
 
-  return sdk.client
-    .fetch<{ products: HttpTypes.StoreProduct[]; count: number }>(
-      `/store/products`,
-      {
-        method: "GET",
-        query: {
-          limit,
-          offset,
-          region_id: region?.id,
-          fields,
-          ...restQueryParams,
-        },
-        headers,
-        next,
-        ...cacheConfig,
-      }
-    )
-    .then(({ products, count }) => {
-      const nextPage = count > offset + limit ? pageParam + 1 : null
+  // 产品列表不使用 Redis 缓存（数据量大，依赖 Next.js ISR 60秒缓存）
+  // Redis 只用于小数据：分类、区域、品牌
 
-      return {
-        response: {
-          products,
-          count,
-        },
-        nextPage: nextPage,
-        queryParams,
-      }
-    })
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  const cacheOptions = await getCacheOptions("products")
+  const productsInventoryTag = await getCacheTag("products-inventory")
+
+  // 添加产品库存相关的缓存标签，以便在库存变化时失效缓存
+  const existingTags = (cacheOptions as { tags?: string[] })?.tags || []
+  const next = {
+    ...cacheOptions,
+    ...(productsInventoryTag
+      ? {
+          tags: [...existingTags, productsInventoryTag].filter(Boolean),
+        }
+      : {}),
+  }
+
+  // 如果 noCache 为 true，禁用缓存（用于搜索等动态查询）
+  const cacheConfig = noCache
+    ? { cache: "no-store" as const }
+    : getCacheConfig("PRODUCT_LIST")
+
+  const response = await sdk.client.fetch<{
+    products: HttpTypes.StoreProduct[]
+    count: number
+  }>(`/store/products`, {
+    method: "GET",
+    query: {
+      limit,
+      offset,
+      region_id: region?.id,
+      fields,
+      ...restQueryParams,
+    },
+    headers,
+    next,
+    ...cacheConfig,
+  })
+
+  const { products, count } = response
+  const nextPage = count > offset + limit ? pageParam + 1 : null
+
+  return {
+    response: {
+      products,
+      count,
+    },
+    nextPage,
+    queryParams,
+  }
 }
 
 /**
