@@ -12,6 +12,7 @@ import { BannerBlock } from "@modules/home/components/banner-block"
 
 import type { OptionTemplate } from "@lib/data/option-templates"
 import type { MedusaConfig } from "@lib/admin-api/config"
+import type { Brand } from "@lib/data/brands"
 
 type ProductTemplateInnerProps = {
   product: HttpTypes.StoreProduct
@@ -25,6 +26,7 @@ type ProductTemplateInnerProps = {
   loyaltyAccount?: any
   membershipProductIds?: Record<string, boolean> | null
   medusaConfig?: MedusaConfig | null
+  brand?: Brand | null
 }
 
 const ProductTemplateInner: React.FC<ProductTemplateInnerProps> = ({
@@ -39,6 +41,7 @@ const ProductTemplateInner: React.FC<ProductTemplateInnerProps> = ({
   loyaltyAccount,
   membershipProductIds,
   medusaConfig,
+  brand,
 }) => {
   if (!product || !product.id) {
     return notFound()
@@ -56,7 +59,8 @@ const ProductTemplateInner: React.FC<ProductTemplateInnerProps> = ({
     customer,
     loyaltyAccount,
     membershipProductIds,
-    optionTemplates
+    optionTemplates,
+    brand
   )
 
   // 组件映射

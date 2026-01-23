@@ -263,6 +263,7 @@ export default async function ProductPage(props: Props) {
         loyaltyAccount={loyaltyAccount}
         membershipProductIds={membershipProductIds}
         medusaConfig={medusaConfig}
+        brand={brand}
       />
     </ReviewStatsProvider>
   )

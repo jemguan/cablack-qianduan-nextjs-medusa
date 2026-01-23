@@ -16,6 +16,7 @@ import {
 } from './blockHandlers';
 import type { LoyaltyAccount } from '@/types/loyalty';
 import type { OptionTemplate } from '@lib/data/option-templates';
+import type { Brand } from '@lib/data/brands';
 
 export interface BlockConfig {
   id: string;
@@ -40,6 +41,7 @@ export interface BlockConfig {
  * @param loyaltyAccount 积分账户信息
  * @param membershipProductIds 会员产品 ID 列表
  * @param optionTemplates 选项模板列表
+ * @param brand 品牌信息
  * @returns 排序后的 block 配置数组
  */
 export function getProductPageLayoutBlocks(
@@ -53,7 +55,8 @@ export function getProductPageLayoutBlocks(
   customer?: HttpTypes.StoreCustomer | null,
   loyaltyAccount?: LoyaltyAccount | null,
   membershipProductIds?: Record<string, boolean> | null,
-  optionTemplates?: OptionTemplate[]
+  optionTemplates?: OptionTemplate[],
+  brand?: Brand | null
 ): BlockConfig[] {
   // 从 pageLayouts 获取 blocks
   const blocks = getPageLayoutBlocks(config, 'product');
@@ -86,6 +89,7 @@ export function getProductPageLayoutBlocks(
           loyaltyAccount,
           membershipProductIds,
           optionTemplates: optionTemplates || [],
+          brand,
         },
       },
     ];
@@ -106,11 +110,12 @@ export function getProductPageLayoutBlocks(
       customer,
       loyaltyAccount,
       membershipProductIds,
-      optionTemplates
+      optionTemplates,
+      brand
     );
     if (blockConfig) {
       blockConfigs.push(blockConfig);
-      
+
     }
   }
 
@@ -138,7 +143,8 @@ function getBlockConfigForBlock(
   customer?: HttpTypes.StoreCustomer | null,
   loyaltyAccount?: LoyaltyAccount | null,
   membershipProductIds?: Record<string, boolean> | null,
-  optionTemplates?: OptionTemplate[]
+  optionTemplates?: OptionTemplate[],
+  brand?: Brand | null
 ): BlockConfig | null {
   switch (block.type) {
     case 'productContent':
@@ -165,7 +171,8 @@ function getBlockConfigForBlock(
         customer,
         loyaltyAccount,
         membershipProductIds,
-        optionTemplates
+        optionTemplates,
+        brand
       );
 
     case 'faq':

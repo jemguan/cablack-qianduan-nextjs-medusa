@@ -5,6 +5,7 @@ import TwoColumnLayout from "../../templates/layouts/two-column-layout"
 import ThreeColumnLayout from "../../templates/layouts/three-column-layout"
 import { LoyaltyAccount } from "@/types/loyalty"
 import type { OptionTemplate } from "@lib/data/option-templates"
+import type { Brand } from "@lib/data/brands"
 
 type ProductContentProps = {
   product: HttpTypes.StoreProduct
@@ -22,6 +23,8 @@ type ProductContentProps = {
   membershipProductIds?: Record<string, boolean> | null
   /** 选项模板列表 */
   optionTemplates?: OptionTemplate[]
+  /** 品牌信息 */
+  brand?: Brand | null
 }
 
 const ProductContent: React.FC<ProductContentProps> = ({
@@ -36,6 +39,7 @@ const ProductContent: React.FC<ProductContentProps> = ({
   loyaltyAccount,
   membershipProductIds,
   optionTemplates = [],
+  brand,
 }) => {
   if (layout === 'three-column') {
     return (
@@ -50,6 +54,7 @@ const ProductContent: React.FC<ProductContentProps> = ({
         loyaltyAccount={loyaltyAccount}
         membershipProductIds={membershipProductIds}
         optionTemplates={optionTemplates}
+        brand={brand}
       />
     )
   }
@@ -66,6 +71,7 @@ const ProductContent: React.FC<ProductContentProps> = ({
       loyaltyAccount={loyaltyAccount}
       membershipProductIds={membershipProductIds}
       optionTemplates={optionTemplates}
+      brand={brand}
     />
   )
 }

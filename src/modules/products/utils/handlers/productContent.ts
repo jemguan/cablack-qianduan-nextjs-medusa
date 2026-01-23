@@ -7,6 +7,7 @@ import type { HttpTypes } from "@medusajs/types"
 import type { BlockBase, BlockConfig } from "./types"
 import type { LoyaltyAccount } from "@/types/loyalty"
 import type { OptionTemplate } from "@lib/data/option-templates"
+import type { Brand } from "@lib/data/brands"
 
 export function handleProductContentBlock(
   block: BlockBase,
@@ -19,7 +20,8 @@ export function handleProductContentBlock(
   customer?: HttpTypes.StoreCustomer | null,
   loyaltyAccount?: LoyaltyAccount | null,
   membershipProductIds?: Record<string, boolean> | null,
-  optionTemplates?: OptionTemplate[]
+  optionTemplates?: OptionTemplate[],
+  brand?: Brand | null
 ): BlockConfig | null {
   // 确定布局类型，默认为 two-column
   const layout = blockConfig.layout || "two-column"
@@ -49,6 +51,7 @@ export function handleProductContentBlock(
       loyaltyAccount,
       membershipProductIds,
       optionTemplates: optionTemplates || [],
+      brand,
     },
   }
 }

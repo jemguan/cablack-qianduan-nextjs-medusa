@@ -6,6 +6,7 @@ import ProductTemplateInner from "./product-template-inner"
 import type { HttpTypes } from "@medusajs/types"
 import type { OptionTemplate } from "@lib/data/option-templates"
 import type { MedusaConfig } from "@lib/admin-api/config"
+import type { Brand } from "@lib/data/brands"
 
 type ProductTemplateWrapperProps = {
   product: HttpTypes.StoreProduct
@@ -19,6 +20,7 @@ type ProductTemplateWrapperProps = {
   loyaltyAccount?: any
   membershipProductIds?: Record<string, boolean> | null
   medusaConfig?: MedusaConfig | null
+  brand?: Brand | null
 }
 
 export default function ProductTemplateWrapper({
@@ -33,6 +35,7 @@ export default function ProductTemplateWrapper({
   loyaltyAccount,
   membershipProductIds,
   medusaConfig,
+  brand,
 }: ProductTemplateWrapperProps) {
   return (
     <OptionTemplateSelectionProvider>
@@ -48,6 +51,7 @@ export default function ProductTemplateWrapper({
         loyaltyAccount={loyaltyAccount}
         membershipProductIds={membershipProductIds}
         medusaConfig={medusaConfig}
+        brand={brand}
       />
     </OptionTemplateSelectionProvider>
   )
