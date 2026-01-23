@@ -388,12 +388,17 @@ export function DesktopStickyAddToCart({
             )}
           </div>
 
-          {/* 必选选项错误提示 */}
+          {/* 必选选项错误提示 - 桌面端详细版，与产品详情页一致 */}
           {!isValidOptionSelections && missingRequiredOptions.length > 0 && (
-            <div className="flex-shrink-0 ml-2">
-              <Text className="text-xs text-ui-fg-error whitespace-nowrap">
-                Select required options
+            <div className="flex-shrink-0 ml-2 p-2 rounded bg-ui-bg-subtle border border-ui-border-base">
+              <Text className="text-xs text-ui-fg-error font-medium">
+                Please select the following options:
               </Text>
+              <ul className="mt-1 text-xs text-ui-fg-subtle list-disc list-inside">
+                {missingRequiredOptions.map((option, index) => (
+                  <li key={index}>{option}</li>
+                ))}
+              </ul>
             </div>
           )}
         </div>

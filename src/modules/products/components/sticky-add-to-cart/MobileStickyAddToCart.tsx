@@ -356,16 +356,11 @@ export function MobileStickyAddToCart({
             </Button>
           )}
 
-          {/* 必选选项错误提示 */}
+          {/* 必选选项错误提示 - 移动端简洁版 */}
           {!isValidOptionSelections && missingRequiredOptions.length > 0 && (
-            <div className="p-2 rounded bg-ui-bg-subtle border border-ui-border-base">
-              <Text className="text-xs text-ui-fg-error font-medium">请选择以下选项：</Text>
-              <ul className="mt-1 text-xs text-ui-fg-subtle list-disc list-inside">
-                {missingRequiredOptions.map((option, index) => (
-                  <li key={index}>{option}</li>
-                ))}
-              </ul>
-            </div>
+            <Text className="text-xs text-ui-fg-error font-medium text-center">
+              Select required options
+            </Text>
           )}
         </div>
       </div>
