@@ -7,7 +7,7 @@ import {
   Transition,
 } from "@headlessui/react"
 import { XMark } from "@medusajs/icons"
-import { Fragment, useMemo } from "react"
+import { Fragment, useMemo, useState, useEffect } from "react"
 import { Text } from "@medusajs/ui"
 import VariantSelector from "./variant-selector"
 import ProductPrice from "../product-price"
@@ -20,6 +20,7 @@ import type { QuickViewModalProps } from "./quick-view/types"
 import { getVariantImages } from "./quick-view/utils"
 import { useQuickViewState, useQuickViewActions } from "./quick-view/hooks"
 import { AddToCartButton } from "./quick-view/components"
+import { getProductOptionTemplates, type OptionTemplate } from "@lib/data/option-templates"
 
 const QuickViewModal: React.FC<QuickViewModalProps> = ({
   product,
@@ -30,6 +31,34 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   loyaltyAccount,
   membershipProductIds,
 }) => {
+  // 选项模板状态
+  const [optionTemplates, setOptionTemplates] = useState<OptionTemplate[]>([])
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
+
+  // 当 modal 打开时获取选项模板
+  useEffect(() => {
+    if (isOpen && product.id) {
+      setIsLoadingTemplates(true)
+      getProductOptionTemplates(product.id)
+        .then((templates) => {
+          // 只保留有效的模板（激活且有选项）
+          const validTemplates = templates.filter(
+            (t) => t.is_active && t.options?.some((o) => o.choices && o.choices.length > 0)
+          )
+          setOptionTemplates(validTemplates)
+        })
+        .catch(() => {
+          setOptionTemplates([])
+        })
+        .finally(() => {
+          setIsLoadingTemplates(false)
+        })
+    }
+  }, [isOpen, product.id])
+
+  // 检查产品是否有有效的选项模板
+  const hasOptionTemplates = optionTemplates.length > 0
+
   // 使用自定义 hooks 管理状态
   const {
     options,
@@ -190,7 +219,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                         selectedVariant={selectedVariant}
                         isValidVariant={isValidVariant}
                         inStock={inStock}
-                        isAdding={isAdding}
+                        isAdding={isAdding || isLoadingTemplates}
                         isMembershipProduct={isMembershipProduct}
                         isLoggedIn={isLoggedIn}
                         isVip={isVip}
@@ -200,6 +229,9 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                         onAddToCart={handleAddToCart}
                         onNotifyMe={handleNotifyMe}
                         onLoginRequired={handleLoginRequired}
+                        hasOptionTemplates={hasOptionTemplates}
+                        productHandle={product.handle}
+                        onClose={onClose}
                       />
                     </div>
 

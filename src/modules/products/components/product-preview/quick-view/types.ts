@@ -32,4 +32,10 @@ export interface AddToCartButtonProps {
   onAddToCart: () => void
   onNotifyMe: () => void
   onLoginRequired: () => void
+  /** 产品是否有选项模板（如果有，需要去详情页选择） */
+  hasOptionTemplates?: boolean
+  /** 产品 handle（用于跳转详情页） */
+  productHandle?: string
+  /** 关闭 modal 回调 */
+  onClose?: () => void
 }
