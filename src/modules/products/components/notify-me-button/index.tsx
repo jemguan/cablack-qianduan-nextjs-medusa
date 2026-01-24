@@ -63,16 +63,17 @@ export default function NotifyMeButton({
 
   const buttonLabel = isSubscribed ? "Notified" : "Notify Me"
 
+  // 已订阅时显示绿色，未订阅时显示蓝色
+  const subscriptionClassName = isSubscribed
+    ? "bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800 text-black dark:text-white"
+    : "bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 text-black dark:text-white"
+
   return (
     <Button
       onClick={handleToggleSubscription}
       disabled={isLoading || isTogglingSubscription}
-      variant={isSubscribed ? "secondary" : "secondary"}
-      className={`flex items-center gap-2 border-none !shadow-none transition-all ${sizeStyles[size]} ${className} ${
-        isSubscribed
-          ? "bg-ui-bg-base hover:bg-ui-bg-base-hover"
-          : "bg-ui-bg-base hover:bg-ui-bg-base-hover"
-      }`}
+      variant="secondary"
+      className={`flex items-center gap-2 border-none !shadow-none transition-all ${sizeStyles[size]} ${className} ${subscriptionClassName}`}
       isLoading={isTogglingSubscription || isLoading}
       data-testid="notify-me-button"
     >

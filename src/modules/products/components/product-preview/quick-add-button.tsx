@@ -250,13 +250,17 @@ const QuickAddButton: React.FC<QuickAddButtonProps> = ({
   }
 
   // If variant is not in stock, show Notify Me button
+  // 已订阅时显示绿色，未订阅时显示蓝色
   if (!inStock) {
     return (
       <Button
         onClick={handleNotifyMe}
         variant="secondary"
         className={clx(
-          "w-full transition-all duration-200 text-black dark:text-white bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 border-blue-200 dark:border-blue-800",
+          "w-full transition-all duration-200 text-black dark:text-white",
+          isSubscribed
+            ? "bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800 border-green-200 dark:border-green-800"
+            : "bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 border-blue-200 dark:border-blue-800",
           compact ? "h-8 text-xs" : "h-10"
         )}
         disabled={isTogglingNotify || isNotifyLoading}
