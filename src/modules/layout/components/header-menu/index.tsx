@@ -56,24 +56,69 @@ const HeaderMenu = ({ menuItems }: HeaderMenuProps) => {
             {/* Submenu if exists */}
             {item.children && item.children.length > 0 && (
               <div className="absolute top-full left-0 hidden group-hover:block pt-2 min-w-[200px] z-50">
-                <div className="bg-card border border-border rounded-lg shadow-md overflow-hidden">
+                <div className="bg-card border border-border rounded-lg shadow-md">
                   <ul className="flex flex-col py-2">
                     {item.children.map((child) => {
-                      const isChildActive = pathname === child.url || pathname.startsWith(`${child.url}/`)
+                      const childUrl = child.url?.trim() || ""
+                      const hasChildUrl = childUrl !== ""
+                      const isChildActive = hasChildUrl && (pathname === child.url || pathname.startsWith(`${child.url}/`))
+                      const hasGrandchildren = child.children && child.children.length > 0
+
                       return (
-                        <li key={child.id}>
+                        <li key={child.id} className={clx("relative", hasGrandchildren && "[&:hover>.submenu-level3]:block")}>
                           <LocalizedClientLink
                             href={child.url}
                             className={clx(
-                              "block px-4 py-2 text-small-regular transition-all",
-                              isChildActive 
-                                ? "text-primary font-semibold bg-muted/30" 
-                                : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+                              "flex items-center justify-between px-4 py-2 text-small-regular transition-all",
+                              isChildActive
+                                ? "text-primary font-semibold bg-muted/30"
+                                : hasChildUrl
+                                  ? "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+                                  : "text-muted-foreground hover:bg-muted/30 cursor-default"
                             )}
-                            {...(child.openInNewTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                            {...(child.openInNewTab && hasChildUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                           >
-                            {child.label}
+                            <span>{child.label}</span>
+                            {hasGrandchildren && (
+                              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                            )}
                           </LocalizedClientLink>
+
+                          {/* Third level menu */}
+                          {hasGrandchildren && (
+                            <div className="submenu-level3 absolute left-full top-0 hidden pl-2 min-w-[180px] z-[60]">
+                              <div className="bg-card border border-border rounded-lg shadow-md">
+                                <ul className="flex flex-col py-2">
+                                  {child.children!.map((grandchild) => {
+                                    const grandchildUrl = grandchild.url?.trim() || ""
+                                    const hasGrandchildUrl = grandchildUrl !== ""
+                                    const isGrandchildActive = hasGrandchildUrl && (pathname === grandchild.url || pathname.startsWith(`${grandchild.url}/`))
+
+                                    return (
+                                      <li key={grandchild.id}>
+                                        <LocalizedClientLink
+                                          href={grandchild.url}
+                                          className={clx(
+                                            "block px-4 py-2 text-small-regular transition-all whitespace-nowrap",
+                                            isGrandchildActive
+                                              ? "text-primary font-semibold bg-muted/30"
+                                              : hasGrandchildUrl
+                                                ? "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+                                                : "text-muted-foreground cursor-default"
+                                          )}
+                                          {...(grandchild.openInNewTab && hasGrandchildUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                                        >
+                                          {grandchild.label}
+                                        </LocalizedClientLink>
+                                      </li>
+                                    )
+                                  })}
+                                </ul>
+                              </div>
+                            </div>
+                          )}
                         </li>
                       )
                     })}

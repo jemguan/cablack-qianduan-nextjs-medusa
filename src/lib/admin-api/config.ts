@@ -1,11 +1,17 @@
 /**
  * Medusa 配置读取逻辑
- * 从管理前端 API 获取配置
+ * 从管理前端 API 和 Medusa Store API 获取配置
  */
 
 import { get } from './adminApi';
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
+
+// Medusa Backend URL
+const MEDUSA_BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || process.env.MEDUSA_BACKEND_URL || 'http://localhost:9000';
+
+// Medusa Publishable API Key（Store API 需要）
+const MEDUSA_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || '';
 
 export interface MedusaConfig {
   brand?: {
@@ -232,7 +238,66 @@ export interface MedusaCategory {
 }
 
 /**
- * 内部实现：获取 Medusa 配置
+ * 内部实现：从 Medusa Store API 获取 Layout 配置（Header/Footer）
+ */
+interface LayoutConfigResponse {
+  success: boolean;
+  data?: {
+    headerConfig: MedusaConfig['headerConfig'];
+    footerConfig: MedusaConfig['footerConfig'];
+  };
+}
+
+const _getLayoutConfigFromMedusa = async (): Promise<LayoutConfigResponse['data'] | null> => {
+  const url = `${MEDUSA_BACKEND_URL}/store/layout-config`;
+  console.log('[Layout Config] Fetching from:', url);
+
+  try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Store API 需要 Publishable API Key
+    if (MEDUSA_PUBLISHABLE_KEY) {
+      headers['x-publishable-api-key'] = MEDUSA_PUBLISHABLE_KEY;
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+      next: { revalidate: 300 }, // 5 分钟缓存
+    });
+
+    if (!response.ok) {
+      console.warn('[Layout Config] Failed to fetch from Medusa:', response.status, response.statusText);
+      return null;
+    }
+
+    const data: LayoutConfigResponse = await response.json();
+    console.log('[Layout Config] Response:', JSON.stringify(data, null, 2));
+
+    if (data.success && data.data) {
+      return data.data;
+    }
+    console.warn('[Layout Config] No data in response or success=false');
+    return null;
+  } catch (error) {
+    console.error('[Layout Config] Failed to fetch from Medusa:', error);
+    return null;
+  }
+};
+
+/**
+ * 使用 unstable_cache 进行跨请求缓存（5分钟）
+ */
+const cachedLayoutConfig = unstable_cache(
+  _getLayoutConfigFromMedusa,
+  ["layout-config"],
+  { revalidate: 300 }
+);
+
+/**
+ * 内部实现：获取 Medusa 配置（旧的 Admin API，用于其他配置）
  */
 const _getMedusaConfigInternal = async (): Promise<MedusaConfig | null> => {
   try {
@@ -258,10 +323,37 @@ const cachedMedusaConfig = unstable_cache(
 
 /**
  * 获取 Medusa 配置
- * 使用 cache() 在单次渲染周期内去重
- * 使用 unstable_cache 在跨请求间缓存（5分钟）
+ * 优先从 Medusa Store API 获取 Header/Footer 配置
+ * 其他配置继续从旧的 Admin API 获取
  */
-export const getMedusaConfig = cache(cachedMedusaConfig);
+export const getMedusaConfig = cache(async (): Promise<MedusaConfig | null> => {
+  // 并行获取两个数据源
+  const [layoutConfig, otherConfig] = await Promise.all([
+    cachedLayoutConfig(),
+    cachedMedusaConfig(),
+  ]);
+
+  console.log('[getMedusaConfig] layoutConfig:', layoutConfig ? 'has data' : 'null');
+  console.log('[getMedusaConfig] otherConfig:', otherConfig ? 'has data' : 'null');
+
+  // 如果两个都没有数据，返回 null
+  if (!layoutConfig && !otherConfig) {
+    console.warn('[getMedusaConfig] Both sources returned null');
+    return null;
+  }
+
+  // 合并配置，Layout 配置优先
+  const mergedConfig = {
+    ...otherConfig,
+    headerConfig: layoutConfig?.headerConfig || otherConfig?.headerConfig,
+    footerConfig: layoutConfig?.footerConfig || otherConfig?.footerConfig,
+  };
+
+  console.log('[getMedusaConfig] headerConfig source:', layoutConfig?.headerConfig ? 'layoutConfig' : 'otherConfig');
+  console.log('[getMedusaConfig] footerConfig source:', layoutConfig?.footerConfig ? 'layoutConfig' : 'otherConfig');
+
+  return mergedConfig;
+});
 
 /**
  * 获取 Medusa 目录树

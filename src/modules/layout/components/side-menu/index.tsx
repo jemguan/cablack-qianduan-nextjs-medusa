@@ -214,7 +214,8 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                                         const childUrl = child.url?.trim() || ""
                                         const hasChildUrl = childUrl !== ""
                                         const isChildActive = hasChildUrl && (pathname === childUrl || pathname.startsWith(`${childUrl}/`) || pathname.includes(`/${childUrl.replace(/^\//, '')}`))
-                                        
+                                        const hasGrandchildren = child.children && child.children.length > 0
+
                                         return (
                                           <li key={child.id}>
                                             <LocalizedClientLink
@@ -230,6 +231,35 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                                             >
                                               {child.label}
                                             </LocalizedClientLink>
+
+                                            {/* 三级菜单 */}
+                                            {hasGrandchildren && (
+                                              <ul className="flex flex-col gap-2 ml-4 border-l border-primary/10 pl-4 mt-2">
+                                                {child.children!.map((grandchild: MenuItem) => {
+                                                  const grandchildUrl = grandchild.url?.trim() || ""
+                                                  const hasGrandchildUrl = grandchildUrl !== ""
+                                                  const isGrandchildActive = hasGrandchildUrl && (pathname === grandchildUrl || pathname.startsWith(`${grandchildUrl}/`) || pathname.includes(`/${grandchildUrl.replace(/^\//, '')}`))
+
+                                                  return (
+                                                    <li key={grandchild.id}>
+                                                      <LocalizedClientLink
+                                                        href={grandchild.url}
+                                                        className={clx(
+                                                          "text-base transition-all",
+                                                          hasGrandchildUrl && "hover:pl-2",
+                                                          isGrandchildActive ? "text-primary font-medium" : hasGrandchildUrl ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground"
+                                                        )}
+                                                        onClick={hasGrandchildUrl ? close : undefined}
+                                                        data-testid={`${grandchild.id}-link`}
+                                                        {...(grandchild.openInNewTab && hasGrandchildUrl ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                                      >
+                                                        {grandchild.label}
+                                                      </LocalizedClientLink>
+                                                    </li>
+                                                  )
+                                                })}
+                                              </ul>
+                                            )}
                                           </li>
                                         )
                                       })}
