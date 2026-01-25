@@ -96,12 +96,11 @@ export function StickyAddToCart({
       template.options.forEach((option) => {
         if (option.is_required) {
           const selectedChoices = selectedChoicesByTemplate[template.id] || []
-          // 检查该选项下是否有选择被选中
           const hasSelection = (option.choices || []).some((choice) =>
             selectedChoices.includes(choice.id)
           )
           if (!hasSelection) {
-            missing.push(`${template.title} - ${option.name}`)
+            missing.push(option.name)
           }
         }
       })
