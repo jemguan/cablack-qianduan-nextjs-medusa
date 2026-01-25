@@ -21,12 +21,13 @@ export function ThemeToggle({
   const iconSize = THEME_CONFIG.iconSizes[size];
 
   // 使用 Medusa UI 风格的按钮样式，与导航栏其他按钮保持一致
-  const buttonClassName = className || `inline-flex items-center justify-center text-ui-fg-subtle hover:text-ui-fg-base focus:outline-none transition-colors ${THEME_CONFIG.buttonSizes[size]}`;
+  const buttonClassName = className || `inline-flex items-center justify-center focus:outline-none transition-colors ${THEME_CONFIG.buttonSizes[size]}`;
 
   return (
     <button
       onClick={toggleTheme}
       className={buttonClassName}
+      style={{ color: 'var(--header-icon-color, inherit)' }}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
