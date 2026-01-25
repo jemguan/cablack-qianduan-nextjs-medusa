@@ -54,7 +54,6 @@ export default async function Nav() {
               className="flex items-center gap-x-2 transition-opacity hover:opacity-80"
               data-testid="nav-store-link"
             >
-              {/* Logo - 使用 Next.js Image 组件优化加载 */}
               {hasLightLogo && (
                 <div className={clx(
                   "relative w-auto dark:hidden",
@@ -67,6 +66,7 @@ export default async function Nav() {
                     width={120}
                     height={40}
                     priority
+                    unoptimized={true}
                     className="w-auto h-full object-contain"
                     sizes="120px"
                   />
@@ -84,12 +84,12 @@ export default async function Nav() {
                     width={120}
                     height={40}
                     priority
+                    unoptimized={true}
                     className="w-auto h-full object-contain"
                     sizes="120px"
                   />
                 </div>
               )}
-              {/* Fallback: Use light logo for dark mode if dark logo not available */}
               {hasLightLogo && !hasDarkLogo && (
                 <div className={clx(
                   "relative w-auto hidden dark:block",
@@ -102,6 +102,7 @@ export default async function Nav() {
                     width={120}
                     height={40}
                     priority
+                    unoptimized={true}
                     className="w-auto h-full object-contain"
                     sizes="120px"
                   />
