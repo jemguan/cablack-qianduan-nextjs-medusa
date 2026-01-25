@@ -94,7 +94,8 @@ const HeaderCountrySelect = ({ regions }: HeaderCountrySelectProps) => {
     >
       <Popover className="relative h-full">
         <PopoverButton 
-          className="h-full focus:outline-none px-2 text-ui-fg-subtle hover:text-ui-fg-base active:text-ui-fg-base transition-colors flex items-center justify-center gap-x-1.5 touch-manipulation"
+          className="h-full focus:outline-none px-2 transition-colors flex items-center justify-center gap-x-1.5 touch-manipulation"
+          style={{ color: 'var(--header-icon-color, inherit)' }}
           aria-label="Select Country"
           onClick={() => {
             // 点击时切换状态（手机端）

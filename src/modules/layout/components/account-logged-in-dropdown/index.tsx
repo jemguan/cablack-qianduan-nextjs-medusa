@@ -92,7 +92,8 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
     >
       <Popover className="relative h-full">
         <PopoverButton 
-          className="h-full focus:outline-none p-2 text-ui-fg-subtle hover:text-ui-fg-base transition-colors flex items-center justify-center"
+          className="h-full focus:outline-none p-2 transition-colors flex items-center justify-center"
+          style={{ color: 'var(--header-icon-color, inherit)' }}
           aria-label="Account"
           data-testid="nav-account-link"
         >

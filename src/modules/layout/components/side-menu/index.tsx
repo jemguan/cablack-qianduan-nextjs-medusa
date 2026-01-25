@@ -130,7 +130,8 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                 <div className="relative flex h-full">
                   <PopoverButton
                     data-testid="nav-menu-button"
-                    className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none text-ui-fg-subtle hover:text-ui-fg-base"
+                    className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none"
+                    style={{ color: 'var(--header-icon-color, inherit)' }}
                   >
                     <MenuIcon className="w-6 h-6" />
                   </PopoverButton>
