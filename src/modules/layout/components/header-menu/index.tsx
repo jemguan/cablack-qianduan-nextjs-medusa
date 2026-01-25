@@ -38,20 +38,14 @@ const HeaderMenu = ({ menuItems }: HeaderMenuProps) => {
             <LocalizedClientLink
               href={item.url}
               className={clx(
-                "text-small-regular transition-all duration-200 py-1",
-                hasUrl && "hover:text-foreground",
-                isActive ? "text-foreground font-semibold" : hasUrl ? "text-muted-foreground" : "text-muted-foreground cursor-default"
+                "text-small-regular transition-all duration-200 py-1 px-3 border border-border rounded-md",
+                hasUrl && "hover:text-[var(--header-link-hover-color)] hover:border-[var(--header-menu-indicator-color)]",
+                isActive ? "text-[var(--header-menu-active-color)] font-semibold border-[var(--header-menu-indicator-color)]" : hasUrl ? "text-[var(--header-text-color)]" : "text-[var(--header-text-color)] cursor-default"
               )}
               {...(item.openInNewTab && hasUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
             >
               {item.label}
             </LocalizedClientLink>
-            
-            {/* Hover indicator */}
-            <div className={clx(
-              "absolute bottom-0 left-0 w-full h-0.5 bg-primary transition-all duration-200 transform scale-x-0 group-hover:scale-x-100",
-              isActive && "scale-x-100"
-            )} />
 
             {/* Submenu if exists */}
             {item.children && item.children.length > 0 && (
