@@ -12,6 +12,7 @@ import HeaderMenu from "@modules/layout/components/header-menu"
 import ThemeToggleButton from "@modules/layout/components/theme-toggle-button"
 import SearchBox from "@modules/layout/components/search-box"
 import HeaderCountrySelect from "@modules/layout/components/header-country-select"
+import DynamicBackground from "@modules/layout/components/dynamic-background"
 import { getMedusaConfig } from "@lib/admin-api/config"
 import { clx } from "@medusajs/ui"
 import { FaUser, FaShoppingBag } from "react-icons/fa"
@@ -38,11 +39,26 @@ export default async function Nav() {
   // Check if logo URLs are valid (not empty strings)
   const hasLightLogo = logo?.lightLogoUrl && logo.lightLogoUrl.trim() !== ''
   const hasDarkLogo = logo?.darkLogoUrl && logo.darkLogoUrl.trim() !== ''
+  
+  // Background color settings
+  const background = headerConfig?.background
+  const hasCustomBackground = background?.lightBackgroundColor || background?.darkBackgroundColor
 
   return (
     <div className="sticky top-0 inset-x-0 z-50">
-      <header className="relative h-16 mx-auto border-b duration-200 bg-background/90 backdrop-blur-xl border-border overflow-visible z-50">
-        <nav className="content-container flex items-center justify-between w-full h-full text-foreground overflow-visible relative">
+      <DynamicBackground
+        as="header"
+        lightBackgroundColor={background?.lightBackgroundColor}
+        darkBackgroundColor={background?.darkBackgroundColor}
+        className={clx(
+          "relative mx-auto duration-200 overflow-visible z-50",
+          !hasCustomBackground && "bg-background/90 backdrop-blur-xl"
+        )}
+      >
+        <nav 
+          className="content-container flex items-center justify-between w-full py-3 small:py-4 text-foreground overflow-visible relative"
+          style={{ color: 'var(--header-text-color)' }}
+        >
           {/* Left: Branding & Mobile Menu */}
           <div className="flex-1 basis-0 h-full flex items-center gap-x-4">
             <div className="h-full flex items-center small:hidden">
@@ -51,20 +67,21 @@ export default async function Nav() {
             
             <LocalizedClientLink
               href="/"
-              className="flex items-center gap-x-2 transition-opacity hover:opacity-80"
+              className="flex items-center gap-x-2 transition-opacity hover:opacity-80 hover:text-[var(--header-link-hover-color)]"
               data-testid="nav-store-link"
             >
               {hasLightLogo && (
-                <div className={clx(
-                  "relative w-auto dark:hidden",
-                  logo.mobileHeightClass && logo.mobileHeightClass.trim() ? logo.mobileHeightClass : "h-8",
-                  logo.desktopHeightClass && logo.desktopHeightClass.trim() ? logo.desktopHeightClass : "small:h-10"
-                )}>
+                <div 
+                  className="logo-light-container relative w-auto dark:hidden"
+                  style={{
+                    height: `${logo.mobileHeightPx || 32}px`,
+                  }}
+                >
                   <Image
                     src={logo.lightLogoUrl!}
                     alt={logo.logoAlt || "Logo"}
                     width={120}
-                    height={40}
+                    height={logo.mobileHeightPx || 32}
                     priority
                     unoptimized={true}
                     className="w-auto h-full object-contain"
@@ -73,16 +90,17 @@ export default async function Nav() {
                 </div>
               )}
               {hasDarkLogo && (
-                <div className={clx(
-                  "relative w-auto hidden dark:block",
-                  logo.mobileHeightClass && logo.mobileHeightClass.trim() ? logo.mobileHeightClass : "h-8",
-                  logo.desktopHeightClass && logo.desktopHeightClass.trim() ? logo.desktopHeightClass : "small:h-10"
-                )}>
+                <div 
+                  className="logo-dark-container relative w-auto hidden dark:block"
+                  style={{
+                    height: `${logo.mobileHeightPx || 32}px`,
+                  }}
+                >
                   <Image
                     src={logo.darkLogoUrl!}
                     alt={logo.logoAlt || "Logo"}
                     width={120}
-                    height={40}
+                    height={logo.mobileHeightPx || 32}
                     priority
                     unoptimized={true}
                     className="w-auto h-full object-contain"
@@ -91,16 +109,17 @@ export default async function Nav() {
                 </div>
               )}
               {hasLightLogo && !hasDarkLogo && (
-                <div className={clx(
-                  "relative w-auto hidden dark:block",
-                  logo.mobileHeightClass && logo.mobileHeightClass.trim() ? logo.mobileHeightClass : "h-8",
-                  logo.desktopHeightClass && logo.desktopHeightClass.trim() ? logo.desktopHeightClass : "small:h-10"
-                )}>
+                <div 
+                  className="logo-fallback-container relative w-auto hidden dark:block"
+                  style={{
+                    height: `${logo.mobileHeightPx || 32}px`,
+                  }}
+                >
                   <Image
                     src={logo.lightLogoUrl!}
                     alt={logo.logoAlt || "Logo"}
                     width={120}
-                    height={40}
+                    height={logo.mobileHeightPx || 32}
                     priority
                     unoptimized={true}
                     className="w-auto h-full object-contain"
@@ -108,6 +127,17 @@ export default async function Nav() {
                   />
                 </div>
               )}
+              <style dangerouslySetInnerHTML={{
+                __html: `
+                  @media (min-width: 768px) {
+                    .logo-light-container,
+                    .logo-dark-container,
+                    .logo-fallback-container {
+                      height: ${logo?.desktopHeightPx || 40}px !important;
+                    }
+                  }
+                `
+              }} />
               
               {/* Brand Name */}
               {showBrandName && (brand?.brandNamePart1 || brand?.brandNamePart2) && (
@@ -140,6 +170,7 @@ export default async function Nav() {
           </div>
 
           {/* Center: Search Box */}
+          
           <div className="hidden small:flex flex-1 justify-center items-center px-4">
             <Suspense fallback={<div className="w-full max-w-2xl h-10" />}>
               <SearchBox variant="desktop" regionId={currentRegionId} defaultExpanded={true} />
@@ -150,10 +181,10 @@ export default async function Nav() {
           <div className="flex items-center gap-x-4 h-full flex-1 basis-0 justify-end">
             <Suspense fallback={
               <div className="hidden small:flex p-2">
-                <FaUser size={20} />
+                <FaUser size={20} style={{ color: 'var(--header-icon-color)' }} />
               </div>
             }>
-              <div className="hidden small:flex items-center h-full relative">
+              <div className="hidden small:flex items-center h-full relative" style={{ color: 'var(--header-icon-color)' }}>
                 <AccountButton />
               </div>
             </Suspense>
@@ -164,27 +195,37 @@ export default async function Nav() {
                   className="p-2 text-ui-fg-subtle hover:text-ui-fg-base transition-colors flex items-center justify-center relative"
                   href="/cart"
                   aria-label="Cart"
+                  style={{ color: 'var(--header-icon-color)' }}
                 >
                   <FaShoppingBag size={20} />
                 </LocalizedClientLink>
               }
             >
-              <CartButton />
+              <div style={{ color: 'var(--header-icon-color)' }}>
+                <CartButton />
+              </div>
             </Suspense>
             {regions && regions.length > 0 && (
               <HeaderCountrySelect regions={regions} />
             )}
           </div>
         </nav>
-      </header>
+      </DynamicBackground>
       
       {/* Desktop Menu - Separate Container Below Header (NOT inside header) */}
       {headerMenuItems.length > 0 && (
-        <div className="hidden small:block border-b border-border bg-background/90 backdrop-blur-xl relative z-40 overflow-visible">
+        <DynamicBackground
+          lightBackgroundColor={background?.lightBackgroundColor}
+          darkBackgroundColor={background?.darkBackgroundColor}
+          className={clx(
+            "hidden small:block relative z-40 overflow-visible",
+            !hasCustomBackground && "bg-background/90 backdrop-blur-xl"
+          )}
+        >
           <div className="content-container flex items-center justify-center gap-x-8 py-1 overflow-visible">
             <HeaderMenu menuItems={headerMenuItems} />
           </div>
-        </div>
+        </DynamicBackground>
       )}
     </div>
   )
