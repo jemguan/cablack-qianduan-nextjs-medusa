@@ -15,12 +15,13 @@ export function Announcement({
   imageUrl,
   lightLogoUrl,
   darkLogoUrl,
+  imageSizePx = 20,
   className,
 }: AnnouncementProps) {
   if (!text) return null
 
-  // 确定使用的图片 URL（优先使用 imageUrl，然后是 lightLogoUrl）
   const displayImageUrl = imageUrl || lightLogoUrl
+  const imageSize = `${imageSizePx}px`
 
   return (
     <div
@@ -30,27 +31,29 @@ export function Announcement({
       )}
     >
       <div className="flex items-center justify-start gap-2 text-sm text-foreground">
-        {/* 图片/Logo */}
         {displayImageUrl && (
-          <div className="flex-shrink-0 relative w-5 h-5">
+          <div className="flex-shrink-0 relative" style={{ width: imageSize, height: imageSize }}>
             {darkLogoUrl ? (
               <>
                 <img
                   src={lightLogoUrl || displayImageUrl}
                   alt="Announcement"
-                  className="dark:hidden w-5 h-5 object-contain"
+                  className="dark:hidden object-contain"
+                  style={{ width: imageSize, height: imageSize }}
                 />
                 <img
                   src={darkLogoUrl}
                   alt="Announcement"
-                  className="hidden dark:block w-5 h-5 object-contain"
+                  className="hidden dark:block object-contain"
+                  style={{ width: imageSize, height: imageSize }}
                 />
               </>
             ) : (
               <img
                 src={displayImageUrl}
                 alt="Announcement"
-                className="w-5 h-5 object-contain"
+                className="object-contain"
+                style={{ width: imageSize, height: imageSize }}
               />
             )}
           </div>

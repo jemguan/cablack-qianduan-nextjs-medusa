@@ -14,6 +14,8 @@ export interface AnnouncementProps {
   lightLogoUrl?: string;
   /** 暗色主题 Logo URL（可选） */
   darkLogoUrl?: string;
+  /** 图片大小（px，可选） */
+  imageSizePx?: number;
   /** 自定义类名 */
   className?: string;
 }
