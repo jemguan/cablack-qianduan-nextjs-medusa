@@ -94,8 +94,8 @@ export interface MedusaConfig {
       lightLogoUrl?: string;
       darkLogoUrl?: string;
       logoAlt?: string;
-      mobileHeightClass?: string;
-      desktopHeightClass?: string;
+      mobileHeightPx?: number;
+      desktopHeightPx?: number;
     };
     brand?: {
       brandNamePart1?: string;
@@ -126,6 +126,24 @@ export interface MedusaConfig {
         }>;
       }>;
     };
+    background?: {
+      lightBackgroundColor?: string;
+      darkBackgroundColor?: string;
+    };
+    colors?: {
+      lightTextColor?: string;
+      darkTextColor?: string;
+      lightLinkHoverColor?: string;
+      darkLinkHoverColor?: string;
+      lightMenuActiveColor?: string;
+      darkMenuActiveColor?: string;
+      lightMenuIndicatorColor?: string;
+      darkMenuIndicatorColor?: string;
+      lightIconColor?: string;
+      darkIconColor?: string;
+      lightBorderColor?: string;
+      darkBorderColor?: string;
+    };
   };
   footerConfig?: {
     logo?: {
@@ -153,6 +171,26 @@ export interface MedusaConfig {
         }>;
       }>;
     };
+    background?: {
+      lightBackgroundColor?: string;
+      darkBackgroundColor?: string;
+    };
+    copyrightBackground?: {
+      lightBackgroundColor?: string;
+      darkBackgroundColor?: string;
+    };
+    colors?: {
+      lightTextColor?: string;
+      darkTextColor?: string;
+      lightHeadingColor?: string;
+      darkHeadingColor?: string;
+      lightLinkColor?: string;
+      darkLinkColor?: string;
+      lightLinkHoverColor?: string;
+      darkLinkHoverColor?: string;
+      lightCopyrightTextColor?: string;
+      darkCopyrightTextColor?: string;
+    };
     announcement?: {
       enabled?: boolean;
       text?: string;
@@ -161,6 +199,7 @@ export interface MedusaConfig {
       imageUrl?: string;
       lightLogoUrl?: string;
       darkLogoUrl?: string;
+      imageSizePx?: number;
     };
     newsletter?: {
       enabled?: boolean;

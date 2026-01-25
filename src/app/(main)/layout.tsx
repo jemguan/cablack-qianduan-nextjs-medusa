@@ -4,10 +4,12 @@ import { listCartOptions, retrieveCart } from "@lib/data/cart"
 import { retrieveCustomer } from "@lib/data/customer"
 import { hasAuthToken, hasCartId } from "@lib/data/cookies"
 import { getBaseURL } from "@lib/util/env"
+import { getMedusaConfig } from "@lib/admin-api/config"
 import { StoreCartShippingOption } from "@medusajs/types"
 import CartMismatchBanner from "@modules/layout/components/cart-mismatch-banner"
 import Footer from "@modules/layout/templates/footer"
 import Nav from "@modules/layout/templates/nav"
+import DynamicColors from "@modules/layout/components/dynamic-colors"
 import FreeShippingPriceNudge from "@modules/shipping/components/free-shipping-price-nudge"
 import { ScrollToTop } from "@components/ScrollToTop"
 import { WishlistProvider } from "@lib/context/wishlist-context"
@@ -28,9 +30,10 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
   ])
 
   // 条件性获取数据 - 只在有对应 cookie 时才发起 API 请求
-  const [customer, cart] = await Promise.all([
+  const [customer, cart, config] = await Promise.all([
     hasAuth ? retrieveCustomer() : Promise.resolve(null),
     hasCart ? retrieveCart() : Promise.resolve(null),
+    getMedusaConfig(),
   ])
 
   // 只有在有购物车时才获取配送选项
@@ -41,6 +44,7 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
   return (
     <WishlistProvider customer={customer}>
       <RestockNotifyProvider customer={customer}>
+        <DynamicColors config={config} />
         <ScrollToTop />
         <Nav />
         {customer && cart && (
