@@ -59,9 +59,12 @@ function buildContentSecurityPolicy(): string {
  * 添加安全响应头
  * 防止常见的 Web 攻击（XSS、点击劫持、MIME 嗅探等）
  */
-function addSecurityHeaders(response: NextResponse): NextResponse {
-  // 防止点击劫持 - 禁止在 iframe 中嵌入
-  response.headers.set("X-Frame-Options", "DENY")
+function addSecurityHeaders(response: NextResponse, pathname: string): NextResponse {
+  const isPreviewPath = pathname.startsWith("/preview/")
+  
+  if (!isPreviewPath) {
+    response.headers.set("X-Frame-Options", "DENY")
+  }
 
   // 防止 MIME 类型嗅探
   response.headers.set("X-Content-Type-Options", "nosniff")
@@ -229,8 +232,7 @@ export async function middleware(request: NextRequest) {
       })
     }
 
-    // Add security headers to redirect response
-    return addSecurityHeaders(response)
+    return addSecurityHeaders(response, request.nextUrl.pathname)
   }
 
   // Check for affiliate code in URL parameter (?ref=KOL_CODE)
@@ -297,11 +299,9 @@ export async function middleware(request: NextRequest) {
       })
     }
 
-    // Add security headers
-    return addSecurityHeaders(response)
+    return addSecurityHeaders(response, request.nextUrl.pathname)
   }
 
-  // Add security headers to normal response
   const response = NextResponse.next()
   
   // Set affiliate code cookie if present in URL (even if other cookies are set)
@@ -324,7 +324,7 @@ export async function middleware(request: NextRequest) {
     })
   }
   
-  return addSecurityHeaders(response)
+  return addSecurityHeaders(response, request.nextUrl.pathname)
 }
 
 export const config = {
