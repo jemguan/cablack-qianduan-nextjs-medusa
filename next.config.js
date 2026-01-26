@@ -180,6 +180,19 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // Power optimizations
   poweredByHeader: false,
+
+  async rewrites() {
+    return [
+      {
+        source: "/.well-known/ucp",
+        destination: `${MEDUSA_BACKEND_URL}/.well-known/ucp`,
+      },
+      {
+        source: "/ucp/:path*",
+        destination: `${MEDUSA_BACKEND_URL}/ucp/:path*`,
+      },
+    ]
+  },
 }
 
 module.exports = withBundleAnalyzer(nextConfig)
