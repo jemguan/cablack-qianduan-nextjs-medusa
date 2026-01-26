@@ -167,114 +167,83 @@ const LineItemCustomOptions = ({
     return dollars > 0 ? `+$${dollars.toFixed(2)}` : `$${dollars.toFixed(2)}`
   }
 
-  // 按模板和选项分组
-  // 结构: Map<templateId, Map<optionId, Choice[]>>
-  const groupedChoices = new Map<string, {
-    templateTitle: string
-    options: Map<string, { optionName: string; choices: Choice[] }>
+  // 按选项分组（不再按模板分组，直接用选项名称作为标题）
+  // 结构: Map<optionId, { optionName: string; choices: Choice[] }>
+  const groupedByOption = new Map<string, {
+    optionName: string
+    choices: Choice[]
   }>()
 
   choices.forEach((choice) => {
-    const templateId = choice.option?.template?.id || "unknown"
-    const templateTitle = choice.option?.template?.title || "Options"
     const optionId = choice.option?.id || "unknown"
-    const optionName = choice.option?.name || ""
+    const optionName = choice.option?.name || "Options"
 
-    if (!groupedChoices.has(templateId)) {
-      groupedChoices.set(templateId, {
-        templateTitle,
-        options: new Map(),
-      })
-    }
-
-    const templateGroup = groupedChoices.get(templateId)!
-    if (!templateGroup.options.has(optionId)) {
-      templateGroup.options.set(optionId, {
+    if (!groupedByOption.has(optionId)) {
+      groupedByOption.set(optionId, {
         optionName,
         choices: [],
       })
     }
 
-    templateGroup.options.get(optionId)!.choices.push(choice)
+    groupedByOption.get(optionId)!.choices.push(choice)
   })
 
-  // 转换为数组以便处理
-  const groupedChoicesArray = Array.from(groupedChoices.entries())
+  const groupedOptionsArray = Array.from(groupedByOption.entries())
 
-  // 手机端限制显示3个模板（无论是否 forceSingleColumn）
-  const visibleTemplates = isMobile && !isExpanded
-    ? groupedChoicesArray.slice(0, 3)
-    : groupedChoicesArray
+  const visibleOptions = isMobile && !isExpanded
+    ? groupedOptionsArray.slice(0, 3)
+    : groupedOptionsArray
 
-  // 移动端超过3个模板时显示展开按钮
-  const hasMoreTemplates = isMobile && groupedChoicesArray.length > 3
+  const hasMoreOptions = isMobile && groupedOptionsArray.length > 3
 
-  // 确定网格列数
   const gridCols = forceSingleColumn ? 'grid-cols-1' : (isMobile ? 'grid-cols-1' : 'grid-cols-2')
 
   return (
     <div className={`flex flex-col gap-2 mt-2 ${className}`}>
-      {/* 一行显示2个模板（桌面端）或1个模板（移动端/强制单列） */}
       <div className={`grid gap-2 ${gridCols}`}>
-        {visibleTemplates.map(([templateId, templateData]) => (
-          <div key={templateId} className="flex flex-col gap-1.5 p-2 rounded border border-border/50 bg-muted/30">
+        {visibleOptions.map(([optionId, optionData]) => (
+          <div key={optionId} className="flex flex-col gap-1.5 p-2 rounded border border-border/50 bg-muted/30">
             <Text className="text-xs font-medium text-muted-foreground">
-              {templateData.templateTitle}:
+              {optionData.optionName}:
             </Text>
 
-            {/* 每个模板里的选择一行1个 */}
             <div className="flex flex-col gap-1">
-              {Array.from(templateData.options.entries()).map(([optionId, optionData]) => (
-                <div key={optionId} className="flex flex-col gap-0.5">
-                  {/* 选项名称（如果有多个选项） */}
-                  {templateData.options.size > 1 && optionData.optionName && (
-                    <Text className="text-xs text-muted-foreground italic">
-                      {optionData.optionName}:
-                    </Text>
-                  )}
+              {optionData.choices.map((choice) => {
+                const priceText = formatPrice(choice.price_adjustment)
+                return (
+                  <div
+                    key={choice.id}
+                    className="flex items-center gap-2 text-xs p-1.5 rounded bg-muted/50 border border-border/30"
+                  >
+                    {choice.image_url && (
+                      <ChoiceImage
+                        imageUrl={choice.image_url}
+                        alt={choice.title}
+                        sizeClassName="w-8 h-8"
+                        rounded={true}
+                        showBorder={false}
+                      />
+                    )}
 
-                  {/* 选择列表 - 一行1个 */}
-                  {optionData.choices.map((choice) => {
-                    const priceText = formatPrice(choice.price_adjustment)
-                    return (
-                      <div
-                        key={choice.id}
-                        className="flex items-center gap-2 text-xs p-1.5 rounded bg-muted/50 border border-border/30"
-                      >
-                        {/* 选择图片 - 使用优化后的组件 */}
-                        {choice.image_url && (
-                          <ChoiceImage
-                            imageUrl={choice.image_url}
-                            alt={choice.title}
-                            sizeClassName="w-8 h-8"
-                            rounded={true}
-                            showBorder={false}
-                          />
-                        )}
-
-                        {/* 选择标题和价格 */}
-                        <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                          <Text className="text-xs text-foreground truncate leading-tight">
-                            {choice.title}
-                          </Text>
-                          {priceText && (
-                            <Text className="text-xs text-muted-foreground flex-shrink-0 font-medium">
-                              {priceText}
-                            </Text>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              ))}
+                    <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                      <Text className="text-xs text-foreground truncate leading-tight">
+                        {choice.title}
+                      </Text>
+                      {priceText && (
+                        <Text className="text-xs text-muted-foreground flex-shrink-0 font-medium">
+                          {priceText}
+                        </Text>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         ))}
       </div>
 
-      {/* 展开/收起按钮（仅移动端且超过3个模板时显示） */}
-      {hasMoreTemplates && (
+      {hasMoreOptions && (
         <Button
           variant="transparent"
           size="small"
@@ -289,7 +258,7 @@ const LineItemCustomOptions = ({
           ) : (
             <>
               <ChevronDownMini className="w-3 h-3" />
-              <span>Show More ({groupedChoicesArray.length - 3})</span>
+              <span>Show More ({groupedOptionsArray.length - 3})</span>
             </>
           )}
         </Button>
