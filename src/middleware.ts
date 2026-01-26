@@ -17,7 +17,6 @@ const regionMapCache = {
 function buildContentSecurityPolicy(): string {
   const backendUrl = BACKEND_URL || ""
   
-  // 解析后端 URL 的域名用于 CSP
   let backendHost = ""
   try {
     if (backendUrl) {
@@ -28,27 +27,17 @@ function buildContentSecurityPolicy(): string {
   }
 
   const directives = [
-    // 默认策略：只允许同源
     "default-src 'self'",
-    // 脚本：允许同源、内联脚本（Next.js 需要）、Stripe、Cloudflare Insights
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://m.stripe.com https://static.cloudflareinsights.com",
-    // 样式：允许同源、内联样式
     "style-src 'self' 'unsafe-inline'",
-    // 图片：允许同源、data URL、常见 CDN、图标库和后端
     `img-src 'self' data: blob: https://*.amazonaws.com https://*.cloudfront.net https://*.digitaloceanspaces.com https://cdn.shopify.com https://logo.clearbit.com ${backendHost}`.trim(),
-    // 字体：允许同源和 data URL
     "font-src 'self' data:",
-    // 连接：允许同源、后端 API、Stripe 和 Cloudflare Insights
     `connect-src 'self' ${backendHost} https://api.stripe.com https://m.stripe.com wss://*.stripe.com https://cloudflareinsights.com`.trim(),
-    // frame：允许 Stripe iframe
     "frame-src 'self' https://js.stripe.com https://m.stripe.com https://hooks.stripe.com",
-    // 表单：只允许同源
+    `frame-ancestors 'self' ${backendHost} http://localhost:9000 http://localhost:7001`,
     "form-action 'self'",
-    // 基础 URI：只允许同源
     "base-uri 'self'",
-    // 对象：禁用
     "object-src 'none'",
-    // 升级不安全请求（生产环境）
     ...(process.env.NODE_ENV === "production" ? ["upgrade-insecure-requests"] : []),
   ]
 
@@ -60,12 +49,6 @@ function buildContentSecurityPolicy(): string {
  * 防止常见的 Web 攻击（XSS、点击劫持、MIME 嗅探等）
  */
 function addSecurityHeaders(response: NextResponse, pathname: string): NextResponse {
-  const isPreviewPath = pathname.startsWith("/preview/")
-  
-  if (!isPreviewPath) {
-    response.headers.set("X-Frame-Options", "DENY")
-  }
-
   // 防止 MIME 类型嗅探
   response.headers.set("X-Content-Type-Options", "nosniff")
 

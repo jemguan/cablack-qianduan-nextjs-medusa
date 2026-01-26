@@ -162,13 +162,11 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // 匹配 public 目录下的常见静态文件
         source: '/:all*(svg|jpg|png|woff2|woff|ttf)',
         locale: false,
         headers: [
           {
             key: 'Cache-Control',
-            // 强缓存1年，immutable 表示内容绝对不会变
             value: 'public, max-age=31536000, immutable',
           },
         ],
