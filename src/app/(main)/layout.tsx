@@ -9,11 +9,12 @@ import { StoreCartShippingOption } from "@medusajs/types"
 import CartMismatchBanner from "@modules/layout/components/cart-mismatch-banner"
 import Footer from "@modules/layout/templates/footer"
 import Nav from "@modules/layout/templates/nav"
-import DynamicColors from "@modules/layout/components/dynamic-colors"
+import PreviewAwareColors from "@modules/layout/components/dynamic-colors/preview-aware-colors"
 import FreeShippingPriceNudge from "@modules/shipping/components/free-shipping-price-nudge"
 import { ScrollToTop } from "@components/ScrollToTop"
 import { WishlistProvider } from "@lib/context/wishlist-context"
 import { RestockNotifyProvider } from "@lib/context/restock-notify-context"
+import { PreviewConfigProvider } from "@lib/context/preview-config-context"
 
 // 强制动态渲染 - 避免构建时因后端不可用而失败
 export const dynamic = "force-dynamic"
@@ -42,25 +43,27 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
     : []
 
   return (
-    <WishlistProvider customer={customer}>
-      <RestockNotifyProvider customer={customer}>
-        <DynamicColors config={config} />
-        <ScrollToTop />
-        <Nav />
-        {customer && cart && (
-          <CartMismatchBanner customer={customer} cart={cart} />
-        )}
+    <PreviewConfigProvider>
+      <WishlistProvider customer={customer}>
+        <RestockNotifyProvider customer={customer}>
+          <PreviewAwareColors serverConfig={config} />
+          <ScrollToTop />
+          <Nav />
+          {customer && cart && (
+            <CartMismatchBanner customer={customer} cart={cart} />
+          )}
 
-        {cart && (
-          <FreeShippingPriceNudge
-            variant="progress-bar"
-            cart={cart}
-            shippingOptions={shippingOptions}
-          />
-        )}
-        {props.children}
-        <Footer />
-      </RestockNotifyProvider>
-    </WishlistProvider>
+          {cart && (
+            <FreeShippingPriceNudge
+              variant="progress-bar"
+              cart={cart}
+              shippingOptions={shippingOptions}
+            />
+          )}
+          {props.children}
+          <Footer />
+        </RestockNotifyProvider>
+      </WishlistProvider>
+    </PreviewConfigProvider>
   )
 }

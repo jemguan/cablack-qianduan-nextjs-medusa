@@ -50,6 +50,7 @@ export default async function Nav() {
         as="header"
         lightBackgroundColor={background?.lightBackgroundColor}
         darkBackgroundColor={background?.darkBackgroundColor}
+        previewConfigKey="header"
         className={clx(
           "relative mx-auto duration-200 overflow-visible z-50",
           !hasCustomBackground && "bg-background/90 backdrop-blur-xl"
@@ -217,6 +218,7 @@ export default async function Nav() {
         <DynamicBackground
           lightBackgroundColor={background?.lightBackgroundColor}
           darkBackgroundColor={background?.darkBackgroundColor}
+          previewConfigKey="header"
           className={clx(
             "hidden small:block relative z-40 overflow-visible",
             !hasCustomBackground && "bg-background/90 backdrop-blur-xl"

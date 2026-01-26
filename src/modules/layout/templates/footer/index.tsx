@@ -33,6 +33,7 @@ export default async function Footer() {
       as="footer"
       lightBackgroundColor={background?.lightBackgroundColor}
       darkBackgroundColor={background?.darkBackgroundColor}
+      previewConfigKey="footer"
       className={clx(
         "border-t border-border w-full",
         !hasCustomBackground && "bg-background"
@@ -356,6 +357,7 @@ export default async function Footer() {
       <DynamicBackground
         lightBackgroundColor={copyrightBackground?.lightBackgroundColor}
         darkBackgroundColor={copyrightBackground?.darkBackgroundColor}
+        previewConfigKey="footerCopyright"
         className={clx(
           "w-full",
           !hasCustomCopyrightBackground && "bg-transparent"
