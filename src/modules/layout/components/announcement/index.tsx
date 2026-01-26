@@ -4,72 +4,121 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import type { AnnouncementProps } from "./types"
 
-/**
- * Announcement 组件
- * 用于在 Footer 中显示公告信息
- */
 export function Announcement({
+  title,
+  subtitle,
   text,
   link,
   linkText,
   imageUrl,
   lightLogoUrl,
   darkLogoUrl,
-  imageSizePx = 20,
+  paymentMethods,
   className,
 }: AnnouncementProps) {
-  if (!text) return null
+  const hasContent = title || subtitle || text || imageUrl || lightLogoUrl
+  if (!hasContent) return null
 
   const displayImageUrl = imageUrl || lightLogoUrl
-  const imageSize = `${imageSizePx}px`
 
   return (
     <div
       className={cn(
-        "w-full bg-muted border border-border rounded-md py-3 px-4",
+        "text-sm",
         className
       )}
+      style={{ color: 'var(--footer-text-color)' }}
     >
-      <div className="flex items-center justify-start gap-2 text-sm text-foreground">
-        {displayImageUrl && (
-          <div className="flex-shrink-0 relative" style={{ width: imageSize, height: imageSize }}>
-            {darkLogoUrl ? (
-              <>
-                <img
-                  src={lightLogoUrl || displayImageUrl}
-                  alt="Announcement"
-                  className="dark:hidden object-contain"
-                  style={{ width: imageSize, height: imageSize }}
-                />
-                <img
-                  src={darkLogoUrl}
-                  alt="Announcement"
-                  className="hidden dark:block object-contain"
-                  style={{ width: imageSize, height: imageSize }}
-                />
-              </>
-            ) : (
+      {displayImageUrl && (
+        <div className="w-full mb-3">
+          {darkLogoUrl ? (
+            <>
               <img
-                src={displayImageUrl}
+                src={lightLogoUrl || displayImageUrl}
                 alt="Announcement"
-                className="object-contain"
-                style={{ width: imageSize, height: imageSize }}
+                className="dark:hidden w-full h-auto object-contain"
               />
+              <img
+                src={darkLogoUrl}
+                alt="Announcement"
+                className="hidden dark:block w-full h-auto object-contain"
+              />
+            </>
+          ) : (
+            <img
+              src={displayImageUrl}
+              alt="Announcement"
+              className="w-full h-auto object-contain"
+            />
+          )}
+        </div>
+      )}
+
+      {title && (
+        <h3 className="block text-center text-lg font-semibold mb-1 text-[var(--footer-heading-color)]">{title}</h3>
+      )}
+
+      {subtitle && (
+        <h4 className="block text-center text-base font-medium mb-2 text-[var(--footer-text-color)]">{subtitle}</h4>
+      )}
+
+      {text && (
+        <p className="block text-center mb-2 text-[var(--footer-text-color)]">{text}</p>
+      )}
+
+      {link && (
+        <Link
+          href={link}
+          className="block text-center font-medium underline hover:no-underline transition-all mb-3 text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
+        >
+          {linkText || "了解更多"}
+        </Link>
+      )}
+
+      {paymentMethods && paymentMethods.length > 0 && (() => {
+        const MAX_VISIBLE = 8
+        const validMethods = paymentMethods.filter(method => {
+          return method.iconUrl || method.lightIconUrl || method.darkIconUrl
+        })
+        const visibleMethods = validMethods.slice(0, MAX_VISIBLE)
+        const remainingCount = validMethods.length - MAX_VISIBLE
+        
+        return (
+          <div className="mt-4 pt-4 border-t" style={{ borderColor: 'color-mix(in srgb, var(--footer-text-color) 30%, transparent)' }}>
+            <div className="grid grid-cols-4 small:grid-cols-8 gap-1.5">
+              {visibleMethods.map((method, index) => {
+                const iconSrc = method.iconUrl || method.lightIconUrl || method.darkIconUrl
+                
+                return (
+                  <div
+                    key={index}
+                    className="p-1 flex items-center justify-center aspect-[3/2]"
+                  >
+                    <img
+                      src={iconSrc}
+                      alt={method.name}
+                      title={method.name}
+                      className="max-h-full max-w-full object-contain"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.parentElement!.style.display = 'none'
+                      }}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+            {remainingCount > 0 && (
+              <p 
+                className="text-xs text-center mt-2 text-[var(--footer-text-color)] opacity-70"
+                title={validMethods.slice(MAX_VISIBLE).map(m => m.name).join(', ')}
+              >
+                +{remainingCount} 更多
+              </p>
             )}
           </div>
-        )}
-
-        {/* 文字内容 */}
-        <span className="flex-1 text-left">{text}</span>
-        {link && (
-          <Link
-            href={link}
-            className="font-medium underline hover:no-underline transition-all flex-shrink-0"
-          >
-            {linkText || "了解更多"}
-          </Link>
-        )}
-      </div>
+        )
+      })()}
     </div>
   )
 }

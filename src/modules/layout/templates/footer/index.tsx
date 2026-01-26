@@ -43,17 +43,18 @@ export default async function Footer() {
           {/* 桌面端布局：公告在左侧，菜单在右侧 */}
           <div className="hidden small:flex gap-x-8 items-start">
             {/* 公告区域 - 左侧 */}
-            {footerConfig?.announcement?.enabled &&
-              footerConfig.announcement.text && (
-                <div className="flex-shrink-0 w-[280px]">
+            {footerConfig?.announcement?.enabled && (
+                <div className="flex-shrink-0 w-[450px]">
                   <Announcement
+                    title={footerConfig.announcement.title}
+                    subtitle={footerConfig.announcement.subtitle}
                     text={footerConfig.announcement.text}
                     link={footerConfig.announcement.link}
                     linkText={footerConfig.announcement.linkText}
                     imageUrl={footerConfig.announcement.imageUrl}
                     lightLogoUrl={footerConfig.announcement.lightLogoUrl}
                     darkLogoUrl={footerConfig.announcement.darkLogoUrl}
-                    imageSizePx={footerConfig.announcement.imageSizePx}
+                    paymentMethods={footerConfig.announcement.paymentMethods}
                   />
                 </div>
               )}
@@ -64,7 +65,7 @@ export default async function Footer() {
             {footerConfig?.menu?.menuItems && footerConfig.menu.menuItems.length > 0 ? (
               footerConfig.menu.menuItems.map((menuItem) => (
                 <div key={menuItem.id} className="flex flex-col gap-y-2">
-                  <span className="txt-small-plus txt-ui-fg-base text-[var(--footer-heading-color)]">
+                  <span className="text-base font-semibold txt-ui-fg-base text-[var(--footer-heading-color)]">
                     {menuItem.label}
                   </span>
                   <ul className="grid grid-cols-1 gap-2 text-ui-fg-subtle txt-small">
@@ -82,14 +83,14 @@ export default async function Footer() {
                                 href={child.url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="hover:text-ui-fg-base text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
+                                className="text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
                               >
                                 {child.label}
                               </a>
                             ) : (
                               <LocalizedClientLink
                                 href={child.url}
-                                className="hover:text-ui-fg-base text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
+                                className="text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
                               >
                                 {child.label}
                               </LocalizedClientLink>
@@ -108,14 +109,14 @@ export default async function Footer() {
                             href={menuItem.url}
                             target="_blank"
                             rel="noreferrer"
-                            className="hover:text-ui-fg-base text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
+                            className="text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
                           >
                             {menuItem.label}
                           </a>
                         ) : (
                           <LocalizedClientLink
                             href={menuItem.url}
-                            className="hover:text-ui-fg-base text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
+                            className="text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
                           >
                             {menuItem.label}
                           </LocalizedClientLink>
@@ -216,7 +217,7 @@ export default async function Footer() {
             )}
 
               {/* Newsletter 和 SocialShare 区域 */}
-              <div className="flex flex-col gap-y-4">
+              <div className="flex flex-col gap-y-4 col-span-2">
                 {/* Newsletter 组件 */}
                 {footerConfig?.newsletter?.enabled && (
                   <Newsletter
@@ -247,7 +248,7 @@ export default async function Footer() {
             {footerConfig?.menu?.menuItems && footerConfig.menu.menuItems.length > 0 ? (
               footerConfig.menu.menuItems.map((menuItem) => (
                 <div key={menuItem.id} className="flex flex-col gap-y-2">
-                  <span className="txt-small-plus txt-ui-fg-base text-[var(--footer-heading-color)]">
+                  <span className="text-base font-semibold txt-ui-fg-base text-[var(--footer-heading-color)]">
                     {menuItem.label}
                   </span>
                   <ul className="grid grid-cols-1 gap-2 text-ui-fg-subtle txt-small">
@@ -265,14 +266,14 @@ export default async function Footer() {
                                 href={child.url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="hover:text-ui-fg-base text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
+                                className="text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
                               >
                                 {child.label}
                               </a>
                             ) : (
                               <LocalizedClientLink
                                 href={child.url}
-                                className="hover:text-ui-fg-base text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
+                                className="text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
                               >
                                 {child.label}
                               </LocalizedClientLink>
@@ -291,14 +292,14 @@ export default async function Footer() {
                             href={menuItem.url}
                             target="_blank"
                             rel="noreferrer"
-                            className="hover:text-ui-fg-base text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
+                            className="text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
                           >
                             {menuItem.label}
                           </a>
                         ) : (
                           <LocalizedClientLink
                             href={menuItem.url}
-                            className="hover:text-ui-fg-base text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
+                            className="text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
                           >
                             {menuItem.label}
                           </LocalizedClientLink>
@@ -335,17 +336,18 @@ export default async function Footer() {
           </div>
 
           {/* 移动端公告 - 最后单独一行 */}
-          {footerConfig?.announcement?.enabled &&
-            footerConfig.announcement.text && (
+          {footerConfig?.announcement?.enabled && (
               <div className="small:hidden w-full">
                 <Announcement
+                  title={footerConfig.announcement.title}
+                  subtitle={footerConfig.announcement.subtitle}
                   text={footerConfig.announcement.text}
                   link={footerConfig.announcement.link}
                   linkText={footerConfig.announcement.linkText}
                   imageUrl={footerConfig.announcement.imageUrl}
                   lightLogoUrl={footerConfig.announcement.lightLogoUrl}
                   darkLogoUrl={footerConfig.announcement.darkLogoUrl}
-                  imageSizePx={footerConfig.announcement.imageSizePx}
+                  paymentMethods={footerConfig.announcement.paymentMethods}
                 />
               </div>
             )}
@@ -359,15 +361,15 @@ export default async function Footer() {
           !hasCustomCopyrightBackground && "bg-transparent"
         )}
       >
-        <div className="content-container flex flex-col items-center small:items-start w-full mb-0 pt-[12px] pb-[12px] gap-y-2 text-ui-fg-muted">
+        <div className="content-container flex flex-col items-center justify-center w-full mb-0 pt-[12px] pb-[12px] gap-y-2 text-ui-fg-muted">
           {/* 版权信息、Sitemap 和 PoweredBy - 桌面端同一行 */}
-          <div className="flex flex-col sm:flex-row items-center gap-x-4 gap-y-1">
+          <div className="flex flex-col sm:flex-row items-center justify-center w-full gap-x-4 gap-y-1">
             {footerConfig?.copyright?.enabled && footerConfig.copyright.text ? (
-              <Text className="txt-compact-small text-center sm:text-left text-[var(--footer-copyright-text-color)]">
+              <Text className="txt-compact-small text-center text-[var(--footer-copyright-text-color)]">
                 {footerConfig.copyright.text.replace('{year}', new Date().getFullYear().toString())}
               </Text>
             ) : !footerConfig?.copyright?.enabled && !footerConfig?.poweredBy?.enabled ? (
-              <Text className="txt-compact-small text-center sm:text-left text-[var(--footer-copyright-text-color)]">
+              <Text className="txt-compact-small text-center text-[var(--footer-copyright-text-color)]">
                 © {new Date().getFullYear()} Onahole Station. All rights reserved.
               </Text>
             ) : null}
@@ -385,7 +387,7 @@ export default async function Footer() {
                           href={link.url}
                           target={link.openInNewTab ? "_blank" : "_self"}
                           rel={link.openInNewTab ? "noreferrer" : undefined}
-                          className="hover:text-ui-fg-base transition-colors"
+                          className="hover:text-[var(--footer-link-hover-color)] transition-colors"
                         >
                           {link.text}
                         </a>

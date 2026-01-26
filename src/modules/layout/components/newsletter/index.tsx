@@ -80,12 +80,12 @@ export function Newsletter({
     return (
       <div className={cn("w-full", className)}>
         {title && (
-          <h3 className="text-lg font-semibold text-foreground mb-2">
+          <h3 className="text-lg font-semibold mb-2 text-[var(--footer-heading-color)]">
             {title}
           </h3>
         )}
         {description && (
-          <p className="text-sm text-muted-foreground mb-4">{description}</p>
+          <p className="text-sm mb-4 text-[var(--footer-text-color)]">{description}</p>
         )}
         <div className="flex gap-2">
           <div className="flex-1 h-10 bg-muted/20 rounded-md animate-pulse" />
@@ -98,12 +98,12 @@ export function Newsletter({
   return (
     <div className={cn("w-full", className)}>
       {title && (
-        <h3 className="text-lg font-semibold text-foreground mb-2">
+        <h3 className="text-lg font-semibold mb-2 text-[var(--footer-heading-color)]">
           {title}
         </h3>
       )}
       {description && (
-        <p className="text-sm text-muted-foreground mb-4">{description}</p>
+        <p className="text-sm mb-4 text-[var(--footer-text-color)]">{description}</p>
       )}
 
       {(formState === "idle" || formState === "submitting" || formState === "error") && (

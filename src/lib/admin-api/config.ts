@@ -193,6 +193,8 @@ export interface MedusaConfig {
     };
     announcement?: {
       enabled?: boolean;
+      title?: string;
+      subtitle?: string;
       text?: string;
       link?: string;
       linkText?: string;
@@ -200,6 +202,12 @@ export interface MedusaConfig {
       lightLogoUrl?: string;
       darkLogoUrl?: string;
       imageSizePx?: number;
+      paymentMethods?: Array<{
+        name: string;
+        iconUrl?: string;
+        lightIconUrl?: string;
+        darkIconUrl?: string;
+      }>;
     };
     newsletter?: {
       enabled?: boolean;

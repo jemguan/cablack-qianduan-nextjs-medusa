@@ -34,8 +34,8 @@ function buildContentSecurityPolicy(): string {
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://m.stripe.com https://static.cloudflareinsights.com",
     // 样式：允许同源、内联样式
     "style-src 'self' 'unsafe-inline'",
-    // 图片：允许同源、data URL、常见 CDN 和后端
-    `img-src 'self' data: blob: https://*.amazonaws.com https://*.cloudfront.net https://*.digitaloceanspaces.com https://cdn.shopify.com ${backendHost}`.trim(),
+    // 图片：允许同源、data URL、常见 CDN、图标库和后端
+    `img-src 'self' data: blob: https://*.amazonaws.com https://*.cloudfront.net https://*.digitaloceanspaces.com https://cdn.shopify.com https://logo.clearbit.com ${backendHost}`.trim(),
     // 字体：允许同源和 data URL
     "font-src 'self' data:",
     // 连接：允许同源、后端 API、Stripe 和 Cloudflare Insights
