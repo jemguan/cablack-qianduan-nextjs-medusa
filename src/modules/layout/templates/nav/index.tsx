@@ -1,5 +1,4 @@
 import { Suspense } from "react"
-import Image from "next/image"
 
 import { listRegions, getRegion } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
@@ -13,6 +12,7 @@ import ThemeToggleButton from "@modules/layout/components/theme-toggle-button"
 import SearchBox from "@modules/layout/components/search-box"
 import HeaderCountrySelect from "@modules/layout/components/header-country-select"
 import DynamicBackground from "@modules/layout/components/dynamic-background"
+import PreviewLogo from "@modules/layout/components/preview-logo"
 import { getMedusaConfig } from "@lib/admin-api/config"
 import { clx } from "@medusajs/ui"
 import { FaUser, FaShoppingBag } from "react-icons/fa"
@@ -71,74 +71,7 @@ export default async function Nav() {
               className="flex items-center gap-x-2 transition-opacity hover:opacity-80 hover:text-[var(--header-link-hover-color)]"
               data-testid="nav-store-link"
             >
-              {hasLightLogo && (
-                <div 
-                  className="logo-light-container relative w-auto dark:hidden"
-                  style={{
-                    height: `${logo.mobileHeightPx || 32}px`,
-                  }}
-                >
-                  <Image
-                    src={logo.lightLogoUrl!}
-                    alt={logo.logoAlt || "Logo"}
-                    width={120}
-                    height={logo.mobileHeightPx || 32}
-                    priority
-                    unoptimized={true}
-                    className="w-auto h-full object-contain"
-                    sizes="120px"
-                  />
-                </div>
-              )}
-              {hasDarkLogo && (
-                <div 
-                  className="logo-dark-container relative w-auto hidden dark:block"
-                  style={{
-                    height: `${logo.mobileHeightPx || 32}px`,
-                  }}
-                >
-                  <Image
-                    src={logo.darkLogoUrl!}
-                    alt={logo.logoAlt || "Logo"}
-                    width={120}
-                    height={logo.mobileHeightPx || 32}
-                    priority
-                    unoptimized={true}
-                    className="w-auto h-full object-contain"
-                    sizes="120px"
-                  />
-                </div>
-              )}
-              {hasLightLogo && !hasDarkLogo && (
-                <div 
-                  className="logo-fallback-container relative w-auto hidden dark:block"
-                  style={{
-                    height: `${logo.mobileHeightPx || 32}px`,
-                  }}
-                >
-                  <Image
-                    src={logo.lightLogoUrl!}
-                    alt={logo.logoAlt || "Logo"}
-                    width={120}
-                    height={logo.mobileHeightPx || 32}
-                    priority
-                    unoptimized={true}
-                    className="w-auto h-full object-contain"
-                    sizes="120px"
-                  />
-                </div>
-              )}
-              <style dangerouslySetInnerHTML={{
-                __html: `
-                  @media (min-width: 768px) {
-                    .logo-light-container,
-                    .logo-dark-container,
-                    .logo-fallback-container {
-                      height: ${logo?.desktopHeightPx || 40}px !important;
-                    }
-                  }
-                `
-              }} />
+              <PreviewLogo serverConfig={logo} type="header" />
               
               {/* Brand Name */}
               {showBrandName && (brand?.brandNamePart1 || brand?.brandNamePart2) && (
