@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { subscribeToNewsletter } from "@lib/data/newsletter"
+import { usePreviewConfig } from "@lib/context/preview-config-context"
 import type { NewsletterProps, NewsletterFormState } from "./types"
 
 /**
@@ -17,11 +18,18 @@ import type { NewsletterProps, NewsletterFormState } from "./types"
  * - 后端发出 newsletter.signup 事件，由订阅者处理
  */
 export function Newsletter({
-  title,
-  description,
-  placeholder = "Enter your email",
+  title: serverTitle,
+  description: serverDescription,
+  placeholder: serverPlaceholder = "Enter your email",
   className,
 }: NewsletterProps) {
+  const { previewConfig, isPreviewMode } = usePreviewConfig()
+  
+  const newsletter = isPreviewMode ? previewConfig?.footerConfig?.newsletter : null
+  const title = isPreviewMode && newsletter ? newsletter.title : serverTitle
+  const description = isPreviewMode && newsletter ? newsletter.description : serverDescription
+  const placeholder = isPreviewMode && newsletter?.placeholder ? newsletter.placeholder : serverPlaceholder
+
   const [formState, setFormState] = useState<NewsletterFormState>("idle")
   const [email, setEmail] = useState("")
   const [isClient, setIsClient] = useState(false)

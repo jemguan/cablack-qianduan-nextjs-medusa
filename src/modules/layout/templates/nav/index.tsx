@@ -13,6 +13,7 @@ import SearchBox from "@modules/layout/components/search-box"
 import HeaderCountrySelect from "@modules/layout/components/header-country-select"
 import DynamicBackground from "@modules/layout/components/dynamic-background"
 import PreviewLogo from "@modules/layout/components/preview-logo"
+import PreviewBrandName from "@modules/layout/components/preview-brand-name"
 import { getMedusaConfig } from "@lib/admin-api/config"
 import { clx } from "@medusajs/ui"
 import { FaUser, FaShoppingBag } from "react-icons/fa"
@@ -34,11 +35,6 @@ export default async function Nav() {
   // Branding settings
   const brand = headerConfig?.brand
   const logo = headerConfig?.logo
-  const showBrandName = brand?.showBrandName !== false
-  
-  // Check if logo URLs are valid (not empty strings)
-  const hasLightLogo = logo?.lightLogoUrl && logo.lightLogoUrl.trim() !== ''
-  const hasDarkLogo = logo?.darkLogoUrl && logo.darkLogoUrl.trim() !== ''
   
   // Background color settings
   const background = headerConfig?.background
@@ -72,34 +68,12 @@ export default async function Nav() {
               data-testid="nav-store-link"
             >
               <PreviewLogo serverConfig={logo} type="header" />
-              
-              {/* Brand Name */}
-              {showBrandName && (brand?.brandNamePart1 || brand?.brandNamePart2) && (
-                <div className={clx(
-                  "flex items-center font-bold",
-                  brand.brandNameGapClass || "gap-1",
-                  brand.brandNameSizeClass || "text-xl",
-                  brand.brandNameTrackingClass || "tracking-tighter"
-                )}>
-                  {brand.brandNamePart1 && (
-                    <span className={brand.brandNamePart1ColorClass || "text-foreground"}>
-                      {brand.brandNamePart1}
-                    </span>
-                  )}
-                  {brand.brandNamePart2 && (
-                    <span className={brand.brandNamePart2ColorClass || "text-primary"}>
-                      {brand.brandNamePart2}
-                    </span>
-                  )}
-                </div>
-              )}
-              
-              {/* Fallback Name if nothing configured */}
-              {!hasLightLogo && !hasDarkLogo && !brand?.brandNamePart1 && !brand?.brandNamePart2 && (
-                <span className="txt-compact-xlarge-plus uppercase text-foreground font-bold">
-                  Onahole Station
-                </span>
-              )}
+              <PreviewBrandName 
+                serverConfig={brand} 
+                serverLogoConfig={logo}
+                type="header" 
+                fallbackName="Onahole Station"
+              />
             </LocalizedClientLink>
           </div>
 

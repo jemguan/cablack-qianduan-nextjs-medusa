@@ -9,6 +9,7 @@ import DynamicBackground from "@modules/layout/components/dynamic-background"
 import { Announcement } from "@modules/layout/components/announcement"
 import { Newsletter } from "@modules/layout/components/newsletter"
 import { SocialShare } from "@modules/layout/components/social-share"
+import { PreviewFooterMenu } from "@modules/layout/components/preview-footer-menu"
 import type { SocialPlatform } from "@modules/layout/components/social-share/types"
 
 export default async function Footer() {
@@ -60,73 +61,9 @@ export default async function Footer() {
                 </div>
               )}
 
-            {/* 菜单区域 - 右侧 */}
             <div className="text-small-regular gap-10 md:gap-x-16 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 flex-1">
-            {/* 使用动态配置的菜单 */}
             {footerConfig?.menu?.menuItems && footerConfig.menu.menuItems.length > 0 ? (
-              footerConfig.menu.menuItems.map((menuItem) => (
-                <div key={menuItem.id} className="flex flex-col gap-y-2">
-                  <span className="text-base font-semibold txt-ui-fg-base text-[var(--footer-heading-color)]">
-                    {menuItem.label}
-                  </span>
-                  <ul className="grid grid-cols-1 gap-2 text-ui-fg-subtle txt-small">
-                    {menuItem.children && menuItem.children.length > 0 ? (
-                      menuItem.children.map((child) => {
-                        const hasUrl = child.url && child.url.trim() !== ""
-                        return (
-                          <li key={child.id}>
-                            {!hasUrl ? (
-                              <span className="text-ui-fg-subtle">
-                                {child.label}
-                              </span>
-                            ) : child.openInNewTab ? (
-                              <a
-                                href={child.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
-                              >
-                                {child.label}
-                              </a>
-                            ) : (
-                              <LocalizedClientLink
-                                href={child.url}
-                                className="text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
-                              >
-                                {child.label}
-                              </LocalizedClientLink>
-                            )}
-                          </li>
-                        )
-                      })
-                    ) : (
-                      <li>
-                        {!menuItem.url || menuItem.url.trim() === "" ? (
-                          <span className="text-ui-fg-subtle">
-                            {menuItem.label}
-                          </span>
-                        ) : menuItem.openInNewTab ? (
-                          <a
-                            href={menuItem.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
-                          >
-                            {menuItem.label}
-                          </a>
-                        ) : (
-                          <LocalizedClientLink
-                            href={menuItem.url}
-                            className="text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
-                          >
-                            {menuItem.label}
-                          </LocalizedClientLink>
-                        )}
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              ))
+              <PreviewFooterMenu serverMenuItems={footerConfig.menu.menuItems} />
             ) : (
               <>
                 {/* 降级方案：如果没有配置菜单，使用默认的 Categories 和 Collections */}
@@ -244,72 +181,9 @@ export default async function Footer() {
             </div>
           </div>
 
-          {/* 移动端布局：使用单列网格 */}
           <div className="small:hidden text-small-regular gap-10 grid grid-cols-2 sm:grid-cols-3">
             {footerConfig?.menu?.menuItems && footerConfig.menu.menuItems.length > 0 ? (
-              footerConfig.menu.menuItems.map((menuItem) => (
-                <div key={menuItem.id} className="flex flex-col gap-y-2">
-                  <span className="text-base font-semibold txt-ui-fg-base text-[var(--footer-heading-color)]">
-                    {menuItem.label}
-                  </span>
-                  <ul className="grid grid-cols-1 gap-2 text-ui-fg-subtle txt-small">
-                    {menuItem.children && menuItem.children.length > 0 ? (
-                      menuItem.children.map((child) => {
-                        const hasUrl = child.url && child.url.trim() !== ""
-                        return (
-                          <li key={child.id}>
-                            {!hasUrl ? (
-                              <span className="text-ui-fg-subtle">
-                                {child.label}
-                              </span>
-                            ) : child.openInNewTab ? (
-                              <a
-                                href={child.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
-                              >
-                                {child.label}
-                              </a>
-                            ) : (
-                              <LocalizedClientLink
-                                href={child.url}
-                                className="text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
-                              >
-                                {child.label}
-                              </LocalizedClientLink>
-                            )}
-                          </li>
-                        )
-                      })
-                    ) : (
-                      <li>
-                        {!menuItem.url || menuItem.url.trim() === "" ? (
-                          <span className="text-ui-fg-subtle">
-                            {menuItem.label}
-                          </span>
-                        ) : menuItem.openInNewTab ? (
-                          <a
-                            href={menuItem.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
-                          >
-                            {menuItem.label}
-                          </a>
-                        ) : (
-                          <LocalizedClientLink
-                            href={menuItem.url}
-                            className="text-[var(--footer-link-color)] hover:text-[var(--footer-link-hover-color)]"
-                          >
-                            {menuItem.label}
-                          </LocalizedClientLink>
-                        )}
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              ))
+              <PreviewFooterMenu serverMenuItems={footerConfig.menu.menuItems} />
             ) : null}
 
             {/* Newsletter 和 SocialShare - 移动端 */}

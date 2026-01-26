@@ -2,20 +2,35 @@
 
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { usePreviewConfig } from "@lib/context/preview-config-context"
 import type { AnnouncementProps } from "./types"
 
 export function Announcement({
-  title,
-  subtitle,
-  text,
-  link,
-  linkText,
-  imageUrl,
-  lightLogoUrl,
-  darkLogoUrl,
-  paymentMethods,
+  title: serverTitle,
+  subtitle: serverSubtitle,
+  text: serverText,
+  link: serverLink,
+  linkText: serverLinkText,
+  imageUrl: serverImageUrl,
+  lightLogoUrl: serverLightLogoUrl,
+  darkLogoUrl: serverDarkLogoUrl,
+  paymentMethods: serverPaymentMethods,
   className,
 }: AnnouncementProps) {
+  const { previewConfig, isPreviewMode } = usePreviewConfig()
+
+  const announcement = isPreviewMode ? previewConfig?.footerConfig?.announcement : null
+  
+  const title = isPreviewMode && announcement ? announcement.title : serverTitle
+  const subtitle = isPreviewMode && announcement ? announcement.subtitle : serverSubtitle
+  const text = isPreviewMode && announcement ? announcement.text : serverText
+  const link = isPreviewMode && announcement ? announcement.link : serverLink
+  const linkText = isPreviewMode && announcement ? announcement.linkText : serverLinkText
+  const imageUrl = isPreviewMode && announcement ? announcement.imageUrl : serverImageUrl
+  const lightLogoUrl = isPreviewMode && announcement ? announcement.lightLogoUrl : serverLightLogoUrl
+  const darkLogoUrl = isPreviewMode && announcement ? announcement.darkLogoUrl : serverDarkLogoUrl
+  const paymentMethods = isPreviewMode && announcement ? announcement.paymentMethods : serverPaymentMethods
+
   const hasContent = title || subtitle || text || imageUrl || lightLogoUrl
   if (!hasContent) return null
 

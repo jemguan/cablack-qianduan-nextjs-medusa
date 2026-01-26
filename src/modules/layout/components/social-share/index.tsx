@@ -3,6 +3,7 @@
 import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { usePreviewConfig } from "@lib/context/preview-config-context"
 import type { SocialShareProps, SocialPlatform } from "./types"
 import { PLATFORM_CONFIG } from "./config"
 import {
@@ -136,14 +137,17 @@ const CheckIcon = () => (
   </svg>
 )
 
-/**
- * 社交媒体分享组件
- * 支持多个社交平台的分享功能
- */
 export function SocialShare({
-  platforms = ["facebook", "twitter", "instagram"],
+  platforms: serverPlatforms = ["facebook", "twitter", "instagram"],
   className,
 }: SocialShareProps) {
+  const { previewConfig, isPreviewMode } = usePreviewConfig()
+  
+  const socialShare = isPreviewMode ? previewConfig?.footerConfig?.socialShare : null
+  const platforms = isPreviewMode && socialShare?.platforms 
+    ? (socialShare.platforms as SocialPlatform[])
+    : serverPlatforms
+
   const [copied, setCopied] = useState(false)
 
   /**
