@@ -31,6 +31,12 @@ interface AdminLayoutConfigFormData {
       label: string
       url: string
       openInNewTab?: boolean
+      children?: Array<{
+        id: string
+        label: string
+        url: string
+        openInNewTab?: boolean
+      }>
     }>
   }>
   header_light_background_color?: string | null
@@ -64,6 +70,12 @@ interface AdminLayoutConfigFormData {
       label: string
       url: string
       openInNewTab?: boolean
+      children?: Array<{
+        id: string
+        label: string
+        url: string
+        openInNewTab?: boolean
+      }>
     }>
   }>
   footer_light_background_color?: string | null

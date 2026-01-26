@@ -4,11 +4,12 @@ import React from "react"
 import { usePathname } from "next/navigation"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { clx } from "@medusajs/ui"
+import { usePreviewConfig } from "@lib/context/preview-config-context"
 
 interface MenuItem {
   id: string
   label: string
-  url?: string | null  // URL can be empty/null for non-clickable items
+  url?: string | null
   openInNewTab?: boolean
   children?: MenuItem[]
 }
@@ -17,8 +18,13 @@ interface HeaderMenuProps {
   menuItems: MenuItem[]
 }
 
-const HeaderMenu = ({ menuItems }: HeaderMenuProps) => {
+const HeaderMenu = ({ menuItems: serverMenuItems }: HeaderMenuProps) => {
   const pathname = usePathname()
+  const { previewConfig, isPreviewMode } = usePreviewConfig()
+
+  const menuItems: MenuItem[] = isPreviewMode && previewConfig?.headerConfig?.menu?.menuItems
+    ? (previewConfig.headerConfig.menu.menuItems as MenuItem[])
+    : serverMenuItems
 
   return (
     <div className="hidden small:flex items-center gap-x-8 py-1">

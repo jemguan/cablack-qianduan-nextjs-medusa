@@ -123,6 +123,12 @@ export interface MedusaConfig {
           label: string;
           url: string;
           openInNewTab?: boolean;
+          children?: Array<{
+            id: string;
+            label: string;
+            url: string;
+            openInNewTab?: boolean;
+          }>;
         }>;
       }>;
     };
@@ -168,6 +174,12 @@ export interface MedusaConfig {
           label: string;
           url: string;
           openInNewTab?: boolean;
+          children?: Array<{
+            id: string;
+            label: string;
+            url: string;
+            openInNewTab?: boolean;
+          }>;
         }>;
       }>;
     };
