@@ -4,7 +4,7 @@ import { sdk } from "@lib/config"
 import medusaError from "@lib/util/medusa-error"
 import { getAuthHeaders, getCartId, getRegionCountryCode } from "../cookies"
 import { getOrSetCart } from "./cart-retrieval"
-import { revalidateProductInventoryCache, revalidateCartAndFulfillmentCache } from "./cart-cache"
+import { revalidateCartAndFulfillmentCache } from "./cart-cache"
 import { tryApplyVipDiscount } from "./cart-vip"
 
 /**
@@ -51,8 +51,9 @@ export async function addToCart({
     .then(async () => {
       await revalidateCartAndFulfillmentCache()
 
-      // 失效产品库存缓存，因为添加商品会影响库存
-      await revalidateProductInventoryCache()
+      // 注意：移除了 revalidateProductInventoryCache() 调用
+      // 因为它会导致整个产品列表重新渲染，造成按钮闪烁
+      // 库存会在页面刷新或用户重新访问时更新
 
       // 自动为 VIP 会员应用专属折扣码
       await tryApplyVipDiscount(cart.id)
@@ -88,9 +89,7 @@ export async function updateLineItem({
     .updateLineItem(cartId, lineId, { quantity }, {}, headers)
     .then(async () => {
       await revalidateCartAndFulfillmentCache()
-
-      // 失效产品库存缓存，因为更新商品数量会影响库存
-      await revalidateProductInventoryCache()
+      // 注意：移除了 revalidateProductInventoryCache() 调用以避免按钮闪烁
     })
     .catch(medusaError)
 }
@@ -118,9 +117,7 @@ export async function deleteLineItem(lineId: string): Promise<{ success: boolean
       .deleteLineItem(cartId, lineId, {}, headers)
       .then(async () => {
         await revalidateCartAndFulfillmentCache()
-
-        // 失效产品库存缓存，因为删除商品会影响库存
-        await revalidateProductInventoryCache()
+        // 注意：移除了 revalidateProductInventoryCache() 调用以避免按钮闪烁
       })
 
     return { success: true }

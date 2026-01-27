@@ -7,7 +7,7 @@ import { FaShoppingBag, FaCheck } from "react-icons/fa"
 import { Bell, BellOff } from "lucide-react"
 import { useRestockNotify } from "@lib/context/restock-notify-context"
 import { useParams, useRouter } from "next/navigation"
-import { useState, useMemo } from "react"
+import { useState, useMemo, memo } from "react"
 import { isEqual } from "lodash"
 import type { LoyaltyAccount } from "@/types/loyalty"
 
@@ -34,7 +34,7 @@ const optionsAsKeymap = (
   }, {})
 }
 
-const QuickAddButton: React.FC<QuickAddButtonProps> = ({
+const QuickAddButton = memo(function QuickAddButton({
   product,
   selectedVariant,
   options,
@@ -43,7 +43,7 @@ const QuickAddButton: React.FC<QuickAddButtonProps> = ({
   customer,
   loyaltyAccount,
   membershipProductIds,
-}) => {
+}: QuickAddButtonProps) {
   const [isAdding, setIsAdding] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [isTogglingNotify, setIsTogglingNotify] = useState(false)
@@ -304,7 +304,7 @@ const QuickAddButton: React.FC<QuickAddButtonProps> = ({
       )}
     </Button>
   )
-}
+})
 
 export default QuickAddButton
 

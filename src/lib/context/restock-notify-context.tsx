@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useCallback,
   useMemo,
+  useRef,
 } from "react"
 import { HttpTypes } from "@medusajs/types"
 import {
@@ -27,6 +28,7 @@ interface RestockNotifyContextValue {
 
   // Methods
   isSubscribedToVariant: (variantId: string) => boolean
+  isSubscribedToProduct: (productId: string) => boolean
   toggleRestockSubscription: (
     product: HttpTypes.StoreProduct,
     variant: HttpTypes.StoreProductVariant,
@@ -91,12 +93,47 @@ export const RestockNotifyProvider = ({
     return () => clearInterval(interval)
   }, [isAuthenticated, loadSubscriptions])
 
-  // 检查是否订阅了某变体
+  // 使用 useMemo 创建订阅 ID 的 Set，避免每次都遍历数组
+  const subscribedVariantIds = useMemo(() => {
+    return new Set(
+      subscriptions
+        .filter((sub) => sub.status === "active")
+        .map((sub) => sub.variant_id)
+    )
+  }, [subscriptions])
+
+  const subscribedProductIds = useMemo(() => {
+    return new Set(
+      subscriptions
+        .filter((sub) => sub.status === "active")
+        .map((sub) => sub.product_id)
+    )
+  }, [subscriptions])
+
+  // 使用 ref 存储最新的 Set，让函数保持稳定引用
+  const subscribedVariantIdsRef = useRef(subscribedVariantIds)
+  const subscribedProductIdsRef = useRef(subscribedProductIds)
+
+  // 同步更新 ref
+  useEffect(() => {
+    subscribedVariantIdsRef.current = subscribedVariantIds
+    subscribedProductIdsRef.current = subscribedProductIds
+  }, [subscribedVariantIds, subscribedProductIds])
+
+  // 检查是否订阅了某变体 - 函数引用保持稳定
   const isSubscribedToVariant = useCallback(
     (variantId: string): boolean => {
-      return subscriptions.some((sub) => sub.variant_id === variantId && sub.status === "active")
+      return subscribedVariantIdsRef.current.has(variantId)
     },
-    [subscriptions]
+    [] // 空依赖数组，函数引用永远稳定
+  )
+
+  // 检查是否订阅了某产品的任意变体 - 函数引用保持稳定
+  const isSubscribedToProduct = useCallback(
+    (productId: string): boolean => {
+      return subscribedProductIdsRef.current.has(productId)
+    },
+    [] // 空依赖数组，函数引用永远稳定
   )
 
   // 订阅产品补货通知
@@ -194,6 +231,7 @@ export const RestockNotifyProvider = ({
     subscriptions,
     itemCount: subscriptions.length,
     isSubscribedToVariant,
+    isSubscribedToProduct,
     toggleRestockSubscription,
     subscribe,
     unsubscribe,
