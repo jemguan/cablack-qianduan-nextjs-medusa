@@ -36,6 +36,60 @@ type ProductPreviewProps = {
   membershipProductIds?: Record<string, boolean> | null
 }
 
+// 自定义 memo 比较函数，避免因对象引用变化导致不必要的重渲染
+// 这解决了当 cart 缓存失效时，整个产品列表按钮闪烁的问题
+const arePropsEqual = (
+  prevProps: ProductPreviewProps,
+  nextProps: ProductPreviewProps
+): boolean => {
+  // 比较 product id 和 variants
+  if (prevProps.product.id !== nextProps.product.id) return false
+  if (prevProps.product.variants?.length !== nextProps.product.variants?.length) return false
+
+  // 比较 variants 的库存状态（这会影响按钮显示）
+  const prevVariants = prevProps.product.variants || []
+  const nextVariants = nextProps.product.variants || []
+  for (let i = 0; i < prevVariants.length; i++) {
+    if (prevVariants[i].inventory_quantity !== nextVariants[i].inventory_quantity) return false
+    if (prevVariants[i].manage_inventory !== nextVariants[i].manage_inventory) return false
+    if (prevVariants[i].allow_backorder !== nextVariants[i].allow_backorder) return false
+  }
+
+  // 比较 region id
+  if (prevProps.region.id !== nextProps.region.id) return false
+
+  // 比较 priority（会影响图片加载）
+  if (prevProps.priority !== nextProps.priority) return false
+
+  // 比较 customer id（影响登录状态和会员产品按钮）
+  if (prevProps.customer?.id !== nextProps.customer?.id) return false
+
+  // 比较 loyaltyAccount 关键字段（影响 VIP 状态）
+  const prevLoyalty = prevProps.loyaltyAccount
+  const nextLoyalty = nextProps.loyaltyAccount
+  if (prevLoyalty?.is_member !== nextLoyalty?.is_member) return false
+  if (prevLoyalty?.membership_expires_at !== nextLoyalty?.membership_expires_at) return false
+
+  // 比较 membershipProductIds（影响会员产品判断）
+  const prevMemberIds = prevProps.membershipProductIds
+  const nextMemberIds = nextProps.membershipProductIds
+  if (prevMemberIds !== nextMemberIds) {
+    // 只有当两者都存在且不同时才检查
+    if (prevMemberIds && nextMemberIds) {
+      const prevKeys = Object.keys(prevMemberIds)
+      const nextKeys = Object.keys(nextMemberIds)
+      if (prevKeys.length !== nextKeys.length) return false
+      for (const key of prevKeys) {
+        if (prevMemberIds[key] !== nextMemberIds[key]) return false
+      }
+    } else {
+      return false
+    }
+  }
+
+  return true
+}
+
 const ProductPreview = memo(function ProductPreview({
   product,
   isFeatured: _isFeatured,
@@ -214,6 +268,6 @@ const ProductPreview = memo(function ProductPreview({
       />
     </>
   )
-})
+}, arePropsEqual)
 
 export default ProductPreview
