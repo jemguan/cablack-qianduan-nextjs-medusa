@@ -46,7 +46,7 @@ export function MobileFeaturedCollections({
     // 网格布局
     return (
       <ul 
-          className="grid gap-x-6 gap-y-24"
+          className="grid gap-x-6 gap-y-24 place-items-center"
           style={{
             gridTemplateColumns: `repeat(${mobileCols}, minmax(0, 1fr))`
           }}

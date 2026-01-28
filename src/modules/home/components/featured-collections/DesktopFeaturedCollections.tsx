@@ -72,7 +72,7 @@ export function DesktopFeaturedCollections({
   // 网格布局
   return (
     <ul 
-        className="grid gap-x-6 gap-y-24 small:gap-y-36"
+        className="grid gap-x-6 gap-y-24 small:gap-y-36 place-items-center"
         style={{
           gridTemplateColumns: `repeat(${desktopCols}, minmax(0, 1fr))`
         }}
