@@ -12,10 +12,10 @@ export default function BrandsListTemplate({
     return (
       <div className="content-container py-12">
         <div className="mb-8 text-2xl-semi">
-          <h1>所有品牌</h1>
+          <h1>All Brands</h1>
         </div>
         <div className="text-center py-12">
-          <p className="text-ui-fg-subtle">暂无品牌</p>
+          <p className="text-ui-fg-subtle">No brands available</p>
         </div>
       </div>
     )
@@ -32,7 +32,7 @@ export default function BrandsListTemplate({
   return (
     <div className="content-container py-12">
       <div className="mb-8 text-2xl-semi">
-        <h1>所有品牌</h1>
+        <h1>All Brands</h1>
       </div>
       <ul className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8">
         {brandCards.map((brand) => (
