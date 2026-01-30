@@ -270,10 +270,59 @@ export function PreviewConfigProvider({ children }: PreviewConfigProviderProps) 
     console.log('[PreviewConfig] Processing config update:', event.data.config)
 
     const adminConfig = event.data.config as AdminLayoutConfigFormData
+    const sections = event.data.sections as Array<{
+      id: string
+      type: string
+      enabled: boolean
+      position: number
+      settings: Record<string, any>
+    }> | undefined
     const transformedConfig = transformAdminConfigToMedusaConfig(adminConfig)
-    
+
+    // 将 sections 中的 banner-block 等转换为 pageLayouts + blockConfigs
+    if (sections && sections.length > 0) {
+      const sectionTypeToBlockType: Record<string, string> = {
+        'banner-block': 'bannerBlock',
+        'featured-collections': 'featuredCollections',
+        'faq': 'faq',
+      }
+
+      const enabledSections = sections
+        .filter((s) => s.enabled && sectionTypeToBlockType[s.type])
+        .sort((a, b) => a.position - b.position)
+
+      if (enabledSections.length > 0) {
+        if (!transformedConfig.pageLayouts) transformedConfig.pageLayouts = {}
+        if (!transformedConfig.pageLayouts.home) transformedConfig.pageLayouts.home = { blocks: [] }
+        if (!transformedConfig.blockConfigs) transformedConfig.blockConfigs = {}
+
+        for (const section of enabledSections) {
+          const blockType = sectionTypeToBlockType[section.type]
+
+          // 移除旧的同类型 block
+          transformedConfig.pageLayouts.home.blocks = transformedConfig.pageLayouts.home.blocks.filter(
+            (b) => b.type !== blockType
+          )
+
+          transformedConfig.pageLayouts.home.blocks.push({
+            id: section.id,
+            type: blockType,
+            enabled: section.enabled,
+            order: section.position,
+          })
+
+          if (!transformedConfig.blockConfigs[blockType]) transformedConfig.blockConfigs[blockType] = {}
+          // 清除旧配置
+          for (const oldId of Object.keys(transformedConfig.blockConfigs[blockType])) {
+            if (oldId !== section.id) delete transformedConfig.blockConfigs[blockType][oldId]
+          }
+          transformedConfig.blockConfigs[blockType][section.id] = section.settings
+        }
+      }
+    }
+
     console.log('[PreviewConfig] Transformed config:', transformedConfig)
-    
+
     setPreviewConfig(transformedConfig)
     setIsPreviewMode(true)
   }, [])

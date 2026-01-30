@@ -5,7 +5,7 @@
 
 import { HttpTypes } from '@medusajs/types';
 import { listProducts } from '@lib/data/products';
-import { FeaturedCollectionsClient } from './FeaturedCollectionsClient';
+import { PreviewAwareFeaturedCollections } from './PreviewAwareFeaturedCollections';
 
 /**
  * 判断产品是否有库存
@@ -117,29 +117,27 @@ export default async function FeaturedCollections({
   const finalViewAllUrl = viewAllUrl || `/categories/${category.handle}`;
 
   return (
-    <div className="content-container py-12 small:py-24">
-      <FeaturedCollectionsClient
-        category={category}
-        region={region}
-        products={productsInStock}
-        title={title}
-        subtitle={subtitle}
-        showTitle={showTitle}
-        showSubtitle={showSubtitle}
-        titleAlign={titleAlign}
-        maxCount={maxCount}
-        desktopCols={desktopCols}
-        desktopMaxCount={desktopMaxCount}
-        desktopEnableCarousel={desktopEnableCarousel}
-        desktopCarouselConfig={desktopCarouselConfig}
-        mobileLayout={mobileLayout}
-        mobileCols={mobileCols}
-        mobileCarouselConfig={mobileCarouselConfig}
-        showViewAll={showViewAll}
-        viewAllUrl={finalViewAllUrl}
-        viewAllText={viewAllText}
-      />
-    </div>
+    <PreviewAwareFeaturedCollections
+      category={category}
+      region={region}
+      products={productsInStock}
+      title={title}
+      subtitle={subtitle}
+      showTitle={showTitle}
+      showSubtitle={showSubtitle}
+      titleAlign={titleAlign}
+      maxCount={maxCount}
+      desktopCols={desktopCols}
+      desktopMaxCount={desktopMaxCount}
+      desktopEnableCarousel={desktopEnableCarousel}
+      desktopCarouselConfig={desktopCarouselConfig}
+      mobileLayout={mobileLayout}
+      mobileCols={mobileCols}
+      mobileCarouselConfig={mobileCarouselConfig}
+      showViewAll={showViewAll}
+      viewAllUrl={finalViewAllUrl}
+      viewAllText={viewAllText}
+    />
   );
 }
 

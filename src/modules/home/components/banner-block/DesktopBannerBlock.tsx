@@ -125,8 +125,6 @@ export function DesktopBannerBlock({ data }: BannerBlockProps) {
   const hasRowSpan = visibleModules.some(m => (m.rowSpan || 1) > 1);
 
   // 使用CSS Grid布局
-  // 如果有模块使用了 rowSpan，使用 1fr 让每行高度相等
-  // 否则使用 auto 让行高度由内容决定
   const gridStyle: React.CSSProperties = {
     display: 'grid',
     gridTemplateColumns: `repeat(${cols}, 1fr)`,

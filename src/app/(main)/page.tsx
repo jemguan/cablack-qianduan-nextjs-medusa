@@ -19,7 +19,8 @@ import { getBaseURL } from "@lib/util/env"
 import { CollageHero } from "@modules/home/components/collage-hero"
 import FeaturedCollections from "@modules/home/components/featured-collections"
 import { TextBlock } from "@modules/home/components/text-block"
-import { BannerBlock } from "@modules/home/components/banner-block"
+import { PreviewAwareBannerBlock } from "@modules/home/components/banner-block"
+import { PreviewFeaturedCollectionsPlaceholder } from "@modules/home/components/featured-collections/PreviewFeaturedCollectionsPlaceholder"
 
 // 非首屏组件 - 动态导入以减少初始 JS 包大小
 const BrandShowcase = nextDynamic(
@@ -31,8 +32,8 @@ const BrandShowcase = nextDynamic(
 )
 
 const FAQBlock = nextDynamic(
-  () => import("@modules/home/components/faq-block").then(mod => mod.FAQBlock),
-  { 
+  () => import("@modules/home/components/faq-block").then(mod => mod.PreviewAwareFAQBlock),
+  {
     loading: () => <div className="min-h-[300px]" />,
     ssr: true
   }
@@ -149,13 +150,18 @@ export default async function Home() {
   // 根据 pageLayouts 配置获取首页 blocks
   const pageBlocks = await getHomePageLayoutBlocks(config, categories, region, collageHeroProducts, blogArticles)
 
+  // 收集已渲染的 featured-collections block IDs（供预览占位组件排除用）
+  const renderedFcBlockIds = pageBlocks
+    .filter((b) => b.componentName === "FeaturedCollections")
+    .map((b) => b.id)
+
   // 组件映射
   const componentMap: Record<string, React.ComponentType<any>> = {
     FeaturedCollections,
     CollageHero,
     BrandShowcase,
     TextBlock,
-    BannerBlock,
+    BannerBlock: PreviewAwareBannerBlock,
     FAQBlock,
     FeaturedBlog,
     FeaturedProduct,
@@ -187,6 +193,12 @@ export default async function Home() {
           />
         )
       })}
+
+      {/* 预览模式下的 FeaturedCollections 占位：当服务端尚未保存 section 时在客户端渲染 */}
+      <PreviewFeaturedCollectionsPlaceholder
+        region={region}
+        renderedBlockIds={renderedFcBlockIds}
+      />
     </>
   )
 }

@@ -299,11 +299,20 @@ export interface MedusaCategory {
 /**
  * 内部实现：从 Medusa Store API 获取 Layout 配置（Header/Footer）
  */
+interface PageSectionData {
+  id: string;
+  section_type: string;
+  position: number;
+  enabled: boolean;
+  settings: Record<string, any>;
+}
+
 interface LayoutConfigResponse {
   success: boolean;
   data?: {
     headerConfig: MedusaConfig['headerConfig'];
     footerConfig: MedusaConfig['footerConfig'];
+    pageSections?: Record<string, PageSectionData[]>;
   };
 }
 
@@ -402,7 +411,7 @@ export const getMedusaConfig = cache(async (): Promise<MedusaConfig | null> => {
   }
 
   // 合并配置，Layout 配置优先
-  const mergedConfig = {
+  const mergedConfig: MedusaConfig = {
     ...otherConfig,
     headerConfig: layoutConfig?.headerConfig || otherConfig?.headerConfig,
     footerConfig: layoutConfig?.footerConfig || otherConfig?.footerConfig,
@@ -410,6 +419,61 @@ export const getMedusaConfig = cache(async (): Promise<MedusaConfig | null> => {
 
   console.log('[getMedusaConfig] headerConfig source:', layoutConfig?.headerConfig ? 'layoutConfig' : 'otherConfig');
   console.log('[getMedusaConfig] footerConfig source:', layoutConfig?.footerConfig ? 'layoutConfig' : 'otherConfig');
+
+  // 将 pageSections 转换为 pageLayouts + blockConfigs 格式，覆盖 shopify-admin 的配置
+  if (layoutConfig?.pageSections) {
+    const pageSections = layoutConfig.pageSections;
+    console.log('[getMedusaConfig] pageSections found, pages:', Object.keys(pageSections));
+
+    for (const [pageType, sections] of Object.entries(pageSections)) {
+      if (!sections || sections.length === 0) continue;
+
+      // 将 section_type 映射为前端期望的 block type
+      const sectionTypeToBlockType: Record<string, string> = {
+        'banner-block': 'bannerBlock',
+        'featured-collections': 'featuredCollections',
+        'faq': 'faq',
+      };
+
+      for (const section of sections) {
+        const blockType = sectionTypeToBlockType[section.section_type];
+        if (!blockType) continue; // 只处理已映射的类型
+
+        // 确保 pageLayouts 存在
+        if (!mergedConfig.pageLayouts) mergedConfig.pageLayouts = {};
+        if (!mergedConfig.pageLayouts[pageType]) mergedConfig.pageLayouts[pageType] = { blocks: [] };
+
+        // 移除同类型的旧 block（来自 shopify-admin）
+        mergedConfig.pageLayouts[pageType].blocks = mergedConfig.pageLayouts[pageType].blocks.filter(
+          (b) => b.type !== blockType
+        );
+
+        // 添加新的 block
+        mergedConfig.pageLayouts[pageType].blocks.push({
+          id: section.id,
+          type: blockType,
+          enabled: section.enabled,
+          order: section.position,
+        });
+
+        // 确保 blockConfigs 存在
+        if (!mergedConfig.blockConfigs) mergedConfig.blockConfigs = {};
+        if (!mergedConfig.blockConfigs[blockType]) mergedConfig.blockConfigs[blockType] = {};
+
+        // 移除同类型的旧 config
+        for (const oldId of Object.keys(mergedConfig.blockConfigs[blockType])) {
+          if (oldId !== section.id) {
+            delete mergedConfig.blockConfigs[blockType][oldId];
+          }
+        }
+
+        // 设置新的 config
+        mergedConfig.blockConfigs[blockType][section.id] = section.settings;
+
+        console.log(`[getMedusaConfig] Overrode ${blockType} for ${pageType} with Medusa section ${section.id}`);
+      }
+    }
+  }
 
   return mergedConfig;
 });
