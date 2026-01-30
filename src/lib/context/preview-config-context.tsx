@@ -296,13 +296,18 @@ export function PreviewConfigProvider({ children }: PreviewConfigProviderProps) 
         if (!transformedConfig.pageLayouts.home) transformedConfig.pageLayouts.home = { blocks: [] }
         if (!transformedConfig.blockConfigs) transformedConfig.blockConfigs = {}
 
+        // 先批量移除旧的同类型 block，避免在循环中误删刚添加的
+        const typesToReplace = new Set(enabledSections.map(s => sectionTypeToBlockType[s.type]))
+        transformedConfig.pageLayouts.home.blocks = transformedConfig.pageLayouts.home.blocks.filter(
+          (b) => !typesToReplace.has(b.type)
+        )
+        for (const blockType of typesToReplace) {
+          transformedConfig.blockConfigs[blockType] = {}
+        }
+
+        // 逐个添加所有 sections（支持同类型多个 block）
         for (const section of enabledSections) {
           const blockType = sectionTypeToBlockType[section.type]
-
-          // 移除旧的同类型 block
-          transformedConfig.pageLayouts.home.blocks = transformedConfig.pageLayouts.home.blocks.filter(
-            (b) => b.type !== blockType
-          )
 
           transformedConfig.pageLayouts.home.blocks.push({
             id: section.id,
@@ -311,11 +316,6 @@ export function PreviewConfigProvider({ children }: PreviewConfigProviderProps) 
             order: section.position,
           })
 
-          if (!transformedConfig.blockConfigs[blockType]) transformedConfig.blockConfigs[blockType] = {}
-          // 清除旧配置
-          for (const oldId of Object.keys(transformedConfig.blockConfigs[blockType])) {
-            if (oldId !== section.id) delete transformedConfig.blockConfigs[blockType][oldId]
-          }
           transformedConfig.blockConfigs[blockType][section.id] = section.settings
         }
       }

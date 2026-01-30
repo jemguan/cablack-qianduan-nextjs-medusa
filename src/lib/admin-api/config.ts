@@ -435,20 +435,28 @@ export const getMedusaConfig = cache(async (): Promise<MedusaConfig | null> => {
         'faq': 'faq',
       };
 
-      for (const section of sections) {
+      // 筛选出有映射的 sections
+      const mappedSections = sections.filter(s => sectionTypeToBlockType[s.section_type]);
+      if (mappedSections.length === 0) continue;
+
+      // 确保 pageLayouts 和 blockConfigs 存在
+      if (!mergedConfig.pageLayouts) mergedConfig.pageLayouts = {};
+      if (!mergedConfig.pageLayouts[pageType]) mergedConfig.pageLayouts[pageType] = { blocks: [] };
+      if (!mergedConfig.blockConfigs) mergedConfig.blockConfigs = {};
+
+      // 先批量移除旧的同类型 block（来自 shopify-admin），避免在循环中误删刚添加的
+      const typesToReplace = new Set(mappedSections.map(s => sectionTypeToBlockType[s.section_type]));
+      mergedConfig.pageLayouts[pageType].blocks = mergedConfig.pageLayouts[pageType].blocks.filter(
+        (b) => !typesToReplace.has(b.type)
+      );
+      for (const blockType of typesToReplace) {
+        mergedConfig.blockConfigs[blockType] = {};
+      }
+
+      // 逐个添加所有 Medusa sections（支持同类型多个 block）
+      for (const section of mappedSections) {
         const blockType = sectionTypeToBlockType[section.section_type];
-        if (!blockType) continue; // 只处理已映射的类型
 
-        // 确保 pageLayouts 存在
-        if (!mergedConfig.pageLayouts) mergedConfig.pageLayouts = {};
-        if (!mergedConfig.pageLayouts[pageType]) mergedConfig.pageLayouts[pageType] = { blocks: [] };
-
-        // 移除同类型的旧 block（来自 shopify-admin）
-        mergedConfig.pageLayouts[pageType].blocks = mergedConfig.pageLayouts[pageType].blocks.filter(
-          (b) => b.type !== blockType
-        );
-
-        // 添加新的 block
         mergedConfig.pageLayouts[pageType].blocks.push({
           id: section.id,
           type: blockType,
@@ -456,21 +464,9 @@ export const getMedusaConfig = cache(async (): Promise<MedusaConfig | null> => {
           order: section.position,
         });
 
-        // 确保 blockConfigs 存在
-        if (!mergedConfig.blockConfigs) mergedConfig.blockConfigs = {};
-        if (!mergedConfig.blockConfigs[blockType]) mergedConfig.blockConfigs[blockType] = {};
-
-        // 移除同类型的旧 config
-        for (const oldId of Object.keys(mergedConfig.blockConfigs[blockType])) {
-          if (oldId !== section.id) {
-            delete mergedConfig.blockConfigs[blockType][oldId];
-          }
-        }
-
-        // 设置新的 config
         mergedConfig.blockConfigs[blockType][section.id] = section.settings;
 
-        console.log(`[getMedusaConfig] Overrode ${blockType} for ${pageType} with Medusa section ${section.id}`);
+        console.log(`[getMedusaConfig] Added ${blockType} for ${pageType}: section ${section.id}`);
       }
     }
   }
