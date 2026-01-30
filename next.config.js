@@ -122,10 +122,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "*.cloudfront.net",
       },
-      // DigitalOcean Spaces - 支持所有子域名
+      // DigitalOcean Spaces - 支持所有子域名（含多层CDN子域）
       {
         protocol: "https",
-        hostname: "*.digitaloceanspaces.com",
+        hostname: "**.digitaloceanspaces.com",
       },
       // Custom S3 hostname from environment variable
       ...(S3_HOSTNAME && S3_PATHNAME
