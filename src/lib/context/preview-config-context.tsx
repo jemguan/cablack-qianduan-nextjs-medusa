@@ -53,6 +53,11 @@ interface AdminLayoutConfigFormData {
   header_dark_menu_indicator_color?: string | null
   header_dark_icon_color?: string | null
   header_dark_border_color?: string | null
+  header_style?: 'classic' | 'inline' | null
+  header_light_inline_triangle_color?: string | null
+  header_dark_inline_triangle_color?: string | null
+  header_light_inline_active_bg_color?: string | null
+  header_dark_inline_active_bg_color?: string | null
   footer_light_logo_url?: string | null
   footer_dark_logo_url?: string | null
   footer_logo_alt?: string | null
@@ -179,6 +184,15 @@ function transformAdminConfigToMedusaConfig(adminConfig: AdminLayoutConfigFormDa
         darkIconColor: adminConfig.header_dark_icon_color || undefined,
         lightBorderColor: adminConfig.header_light_border_color || undefined,
         darkBorderColor: adminConfig.header_dark_border_color || undefined,
+      },
+      style: {
+        headerStyle: (adminConfig.header_style as 'classic' | 'inline') || 'classic',
+      },
+      inlineColors: {
+        lightTriangleColor: adminConfig.header_light_inline_triangle_color || undefined,
+        darkTriangleColor: adminConfig.header_dark_inline_triangle_color || undefined,
+        lightActiveBgColor: adminConfig.header_light_inline_active_bg_color || undefined,
+        darkActiveBgColor: adminConfig.header_dark_inline_active_bg_color || undefined,
       },
     },
     footerConfig: {

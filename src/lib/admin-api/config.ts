@@ -150,6 +150,15 @@ export interface MedusaConfig {
       lightBorderColor?: string;
       darkBorderColor?: string;
     };
+    style?: {
+      headerStyle?: 'classic' | 'inline';
+    };
+    inlineColors?: {
+      lightTriangleColor?: string;
+      darkTriangleColor?: string;
+      lightActiveBgColor?: string;
+      darkActiveBgColor?: string;
+    };
   };
   footerConfig?: {
     logo?: {

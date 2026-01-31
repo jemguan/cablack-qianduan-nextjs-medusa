@@ -1,0 +1,428 @@
+{
+  "version": "2.6",
+  "children": [
+    {
+      "type": "frame",
+      "id": "Z6joD",
+      "x": 0,
+      "y": 0,
+      "name": "Storefront Header",
+      "width": 1280,
+      "height": 68,
+      "fill": "$--background",
+      "padding": [
+        0,
+        48
+      ],
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "1k6tN",
+          "name": "Left - Brand",
+          "gap": 10,
+          "padding": [
+            16,
+            0
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "yd2wG",
+              "name": "Logo",
+              "width": 36,
+              "height": 36,
+              "fill": "$--foreground",
+              "cornerRadius": 8,
+              "layout": "none",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "V47Yy",
+                  "x": 9,
+                  "y": 8,
+                  "name": "logoText",
+                  "fill": "$--background",
+                  "content": "OS",
+                  "fontFamily": "Geist",
+                  "fontSize": 14,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "FexUk",
+              "name": "brandName",
+              "gap": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "HdOdB",
+                  "name": "brandPart1",
+                  "fill": "$--foreground",
+                  "content": "Onahole",
+                  "fontFamily": "Geist",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "ZMNP3",
+                  "name": "brandPart2",
+                  "fill": "$--primary",
+                  "content": "Station",
+                  "fontFamily": "Geist",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "PPOkc",
+          "name": "Menu Bar",
+          "height": "fill_container",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "9g7jY",
+              "name": "新品上架",
+              "width": 80,
+              "height": "fill_container",
+              "fill": "$--background",
+              "layout": "none",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "lmaF3",
+                  "x": 12,
+                  "y": 24,
+                  "name": "t1",
+                  "fill": "$--foreground",
+                  "content": "新品上架",
+                  "fontFamily": "Geist",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "text",
+                  "id": "pS8oE",
+                  "x": 34,
+                  "y": 54,
+                  "name": "tri1",
+                  "fill": "$--foreground",
+                  "content": "▼",
+                  "fontFamily": "Inter",
+                  "fontSize": 10,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "CLpmb",
+              "name": "热销商品",
+              "width": 80,
+              "height": "fill_container",
+              "fill": "$--background",
+              "layout": "none",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "BDIo2",
+                  "x": 12,
+                  "y": 24,
+                  "name": "t2",
+                  "fill": "$--foreground",
+                  "content": "热销商品",
+                  "fontFamily": "Geist",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "text",
+                  "id": "7mlYT",
+                  "x": 34,
+                  "y": 54,
+                  "name": "tri2",
+                  "fill": "$--foreground",
+                  "content": "▼",
+                  "fontFamily": "Inter",
+                  "fontSize": 10,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "fZzok",
+              "name": "品牌专区",
+              "width": 80,
+              "height": "fill_container",
+              "fill": "$--background",
+              "layout": "none",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "jQA3A",
+                  "x": 12,
+                  "y": 24,
+                  "name": "t3",
+                  "fill": "$--foreground",
+                  "content": "品牌专区",
+                  "fontFamily": "Geist",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "text",
+                  "id": "ORNhI",
+                  "x": 34,
+                  "y": 54,
+                  "name": "tri3",
+                  "fill": "$--foreground",
+                  "content": "▼",
+                  "fontFamily": "Inter",
+                  "fontSize": 10,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "UQZRH",
+              "name": "限时优惠-selected",
+              "width": 80,
+              "height": "fill_container",
+              "layout": "none",
+              "children": [
+                {
+                  "type": "path",
+                  "id": "UaMge",
+                  "x": 0,
+                  "y": 0,
+                  "name": "bg-notch",
+                  "geometry": "M0 0l80 0 0 54q0 6-6 6l-29 0-5.5-12-5.5 12-28 0q-6 0-6-6z",
+                  "fill": "$--primary",
+                  "width": 80,
+                  "height": 60
+                },
+                {
+                  "type": "text",
+                  "id": "3o4Vl",
+                  "x": 12,
+                  "y": 24,
+                  "name": "t4",
+                  "fill": "$--primary-foreground",
+                  "content": "限时优惠",
+                  "fontFamily": "Geist",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "NK2cd",
+                  "x": 34,
+                  "y": 56,
+                  "name": "arrow",
+                  "fill": "$--primary",
+                  "content": "▲",
+                  "fontFamily": "Inter",
+                  "fontSize": 10,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "CEnrs",
+              "name": "关于我们",
+              "width": 80,
+              "height": "fill_container",
+              "fill": "$--background",
+              "layout": "none",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "5qlwk",
+                  "x": 12,
+                  "y": 24,
+                  "name": "t5",
+                  "fill": "$--foreground",
+                  "content": "关于我们",
+                  "fontFamily": "Geist",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "uJErY",
+          "name": "Right - Actions",
+          "gap": 20,
+          "padding": [
+            16,
+            0
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "I0u7C",
+              "name": "searchIcon",
+              "width": 20,
+              "height": 20,
+              "iconFontName": "search",
+              "iconFontFamily": "lucide",
+              "fill": "$--foreground"
+            },
+            {
+              "type": "icon_font",
+              "id": "5IVB1",
+              "name": "userIcon",
+              "width": 20,
+              "height": 20,
+              "iconFontName": "user",
+              "iconFontFamily": "lucide",
+              "fill": "$--foreground"
+            },
+            {
+              "type": "icon_font",
+              "id": "FVTTj",
+              "name": "themeIcon",
+              "width": 20,
+              "height": 20,
+              "iconFontName": "sun",
+              "iconFontFamily": "lucide",
+              "fill": "$--foreground"
+            },
+            {
+              "type": "frame",
+              "id": "Mgb3b",
+              "name": "Cart",
+              "width": 28,
+              "height": 24,
+              "layout": "none",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "2Etp2",
+                  "x": 0,
+                  "y": 2,
+                  "name": "cartIcon",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "shopping-bag",
+                  "iconFontFamily": "lucide",
+                  "fill": "$--foreground"
+                },
+                {
+                  "type": "frame",
+                  "id": "ysQSk",
+                  "x": 14,
+                  "y": 0,
+                  "name": "Badge",
+                  "width": 16,
+                  "height": 16,
+                  "fill": "$--primary",
+                  "cornerRadius": 999,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "u1F8E",
+                      "x": 4,
+                      "y": 1,
+                      "name": "badgeText",
+                      "fill": "$--primary-foreground",
+                      "content": "2",
+                      "fontFamily": "Geist",
+                      "fontSize": 10,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Epthy",
+              "name": "Country",
+              "gap": 4,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "200z3",
+                  "name": "flagText",
+                  "content": "🇨🇳",
+                  "fontFamily": "Inter",
+                  "fontSize": 18,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "G1vIu",
+                  "name": "countryCode",
+                  "fill": "$--muted-foreground",
+                  "content": "CN",
+                  "fontFamily": "Geist",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "--background": {
+      "type": "color",
+      "value": "#F2F3F0"
+    },
+    "--border": {
+      "type": "color",
+      "value": "#CBCCC9"
+    },
+    "--foreground": {
+      "type": "color",
+      "value": "#111111"
+    },
+    "--muted": {
+      "type": "color",
+      "value": "#F2F3F0"
+    },
+    "--muted-foreground": {
+      "type": "color",
+      "value": "#666666"
+    },
+    "--primary": {
+      "type": "color",
+      "value": "#FF8400"
+    },
+    "--primary-foreground": {
+      "type": "color",
+      "value": "#111111"
+    },
+    "--secondary": {
+      "type": "color",
+      "value": "#E7E8E5"
+    },
+    "--secondary-foreground": {
+      "type": "color",
+      "value": "#111111"
+    }
+  }
+}

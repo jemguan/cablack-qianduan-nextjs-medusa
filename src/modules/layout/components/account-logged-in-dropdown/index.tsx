@@ -6,7 +6,7 @@ import {
   PopoverPanel,
   Transition,
 } from "@headlessui/react"
-import { FaSignOutAlt, FaUser, FaMapMarkerAlt, FaBox, FaHeart, FaStar, FaUsers, FaBell } from "react-icons/fa"
+import { LogOut, User, MapPin, Package, Heart, Star, Users, Bell } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
@@ -22,7 +22,7 @@ interface AccountLoggedInDropdownProps {
 
 // 积分图标 - 使用星形图标
 const PointsIcon = ({ size = 18 }: { size?: number }) => (
-  <FaStar size={size} />
+  <Star size={size} />
 )
 
 const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => {
@@ -97,7 +97,7 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
           aria-label="Account"
           data-testid="nav-account-link"
         >
-          <FaUser size={20} />
+          <User size={20} />
         </PopoverButton>
         <Transition
           show={accountDropdownOpen}
@@ -149,7 +149,7 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                   onClick={close}
                   data-testid="account-overview-link"
                 >
-                  <FaUser size={18} />
+                  <User size={18} />
                   <span>Overview</span>
                 </LocalizedClientLink>
 
@@ -159,7 +159,7 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                   onClick={close}
                   data-testid="account-profile-link"
                 >
-                  <FaUser size={18} />
+                  <User size={18} />
                   <span>Profile</span>
                 </LocalizedClientLink>
 
@@ -169,7 +169,7 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                   onClick={close}
                   data-testid="account-addresses-link"
                 >
-                  <FaMapMarkerAlt size={18} />
+                  <MapPin size={18} />
                   <span>Addresses</span>
                 </LocalizedClientLink>
 
@@ -179,7 +179,7 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                   onClick={close}
                   data-testid="account-orders-link"
                 >
-                  <FaBox size={18} />
+                  <Package size={18} />
                   <span>Orders</span>
                 </LocalizedClientLink>
 
@@ -189,7 +189,7 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                   onClick={close}
                   data-testid="account-wishlist-link"
                 >
-                  <FaHeart size={18} />
+                  <Heart size={18} />
                   <span>Wishlist</span>
                 </LocalizedClientLink>
 
@@ -199,7 +199,7 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                   onClick={close}
                   data-testid="account-notify-me-link"
                 >
-                  <FaBell size={18} />
+                  <Bell size={18} />
                   <span>Notify Me</span>
                 </LocalizedClientLink>
 
@@ -224,7 +224,7 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                     onClick={close}
                     data-testid="account-affiliate-link"
                   >
-                    <FaUsers size={18} />
+                    <Users size={18} />
                     <span>Affiliate Program</span>
                   </LocalizedClientLink>
                 )}
@@ -243,7 +243,7 @@ const AccountLoggedInDropdown = ({ customer }: AccountLoggedInDropdownProps) => 
                   {isLoggingOut ? (
                     <Spinner size="18" />
                   ) : (
-                    <FaSignOutAlt size={18} />
+                    <LogOut size={18} />
                   )}
                   <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
                 </button>

@@ -13,7 +13,7 @@ import { SubmitButton } from "@modules/checkout/components/submit-button"
 import Input from "@modules/common/components/input"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import GoogleLoginButton from "@modules/account/components/google-login-button"
-import { FaUser } from "react-icons/fa"
+import { User } from "lucide-react"
 import { useRouter, useParams } from "next/navigation"
 import { Fragment, useState, useRef, useEffect } from "react"
 import { useActionState } from "react"
@@ -111,7 +111,7 @@ const AccountDropdown = () => {
           aria-label="Account"
           data-testid="nav-account-link"
         >
-          <FaUser size={20} />
+          <User size={20} />
         </PopoverButton>
         <Transition
           show={accountDropdownOpen}
