@@ -61,7 +61,16 @@ export default async function Footer() {
                 </div>
               )}
 
-            <div className="text-small-regular gap-10 md:gap-x-16 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 flex-1">
+            <div
+              className={clx(
+                "text-small-regular gap-10 md:gap-x-16 grid flex-1",
+                footerConfig?.menu?.menuItems?.length === 1 && "grid-cols-1",
+                footerConfig?.menu?.menuItems?.length === 2 && "grid-cols-2",
+                footerConfig?.menu?.menuItems?.length === 3 && "grid-cols-2 sm:grid-cols-3",
+                (footerConfig?.menu?.menuItems?.length ?? 0) >= 4 && "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
+                !footerConfig?.menu?.menuItems?.length && "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
+              )}
+            >
             {footerConfig?.menu?.menuItems && footerConfig.menu.menuItems.length > 0 ? (
               <PreviewFooterMenu serverMenuItems={footerConfig.menu.menuItems} />
             ) : (
@@ -181,7 +190,13 @@ export default async function Footer() {
             </div>
           </div>
 
-          <div className="small:hidden text-small-regular gap-10 grid grid-cols-2 sm:grid-cols-3">
+          <div className={clx(
+              "small:hidden text-small-regular gap-10 grid",
+              footerConfig?.menu?.menuItems?.length === 1 && "grid-cols-1",
+              footerConfig?.menu?.menuItems?.length === 2 && "grid-cols-2",
+              (footerConfig?.menu?.menuItems?.length ?? 0) >= 3 && "grid-cols-2 sm:grid-cols-3",
+              !footerConfig?.menu?.menuItems?.length && "grid-cols-2 sm:grid-cols-3",
+            )}>
             {footerConfig?.menu?.menuItems && footerConfig.menu.menuItems.length > 0 ? (
               <PreviewFooterMenu serverMenuItems={footerConfig.menu.menuItems} />
             ) : null}
