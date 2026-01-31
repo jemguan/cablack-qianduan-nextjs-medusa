@@ -59,17 +59,17 @@ export default async function Nav() {
         >
           <nav
             className="content-container flex items-stretch w-full text-foreground overflow-visible relative"
-            style={{ color: 'var(--header-text-color)', minHeight: '56px' }}
+            style={{ color: 'var(--header-text-color)', minHeight: '44px' }}
           >
             {/* Left: Mobile Menu + Branding */}
-            <div className="flex items-center gap-x-4 shrink-0">
+            <div className="flex items-center gap-x-2 shrink-0">
               <div className="h-full flex items-center small:hidden">
                 <SideMenu regions={regions} menuItems={headerMenuItems} regionId={currentRegionId} customer={customer} />
               </div>
 
               <LocalizedClientLink
                 href="/"
-                className="flex items-center gap-x-2 transition-opacity hover:opacity-80 hover:text-[var(--header-link-hover-color)]"
+                className="flex items-center gap-x-1.5 transition-opacity hover:opacity-80 hover:text-[var(--header-link-hover-color)]"
                 data-testid="nav-store-link"
               >
                 <PreviewLogo serverConfig={logo} type="header" />
@@ -90,15 +90,15 @@ export default async function Nav() {
             )}
 
             {/* Right: Actions */}
-            <div className="flex items-center gap-x-4 shrink-0">
-              <Suspense fallback={<div className="hidden small:flex p-2"><SearchIcon /></div>}>
+            <div className="flex items-center gap-x-1 shrink-0">
+              <Suspense fallback={<div className="hidden small:flex p-1"><SearchIcon /></div>}>
                 <div className="hidden small:flex items-center" style={{ color: 'var(--header-icon-color)' }}>
                   <SearchBox variant="desktop" regionId={currentRegionId} defaultExpanded={false} />
                 </div>
               </Suspense>
               <Suspense fallback={
-                <div className="hidden small:flex p-2">
-                  <User size={20} style={{ color: 'var(--header-icon-color)' }} />
+                <div className="hidden small:flex p-1">
+                  <User size={16} style={{ color: 'var(--header-icon-color)' }} />
                 </div>
               }>
                 <div className="hidden small:flex items-center h-full relative" style={{ color: 'var(--header-icon-color)' }}>
@@ -109,12 +109,12 @@ export default async function Nav() {
               <Suspense
                 fallback={
                   <LocalizedClientLink
-                    className="p-2 text-ui-fg-subtle hover:text-ui-fg-base transition-colors flex items-center justify-center relative"
+                    className="p-1 text-ui-fg-subtle hover:text-ui-fg-base transition-colors flex items-center justify-center relative"
                     href="/cart"
                     aria-label="Cart"
                     style={{ color: 'var(--header-icon-color)' }}
                   >
-                    <ShoppingBag size={20} />
+                    <ShoppingBag size={16} />
                   </LocalizedClientLink>
                 }
               >

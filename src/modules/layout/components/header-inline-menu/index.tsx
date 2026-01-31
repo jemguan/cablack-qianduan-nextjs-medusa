@@ -80,7 +80,7 @@ const HeaderInlineMenu = ({ menuItems: serverMenuItems }: HeaderInlineMenuProps)
               <LocalizedClientLink
                 href={item.url}
                 className={clx(
-                  "relative flex items-center justify-center px-5 text-small-regular transition-all duration-200",
+                  "relative flex items-center justify-center px-3 text-base transition-all duration-200",
                   hasUrl && "hover:text-[var(--header-link-hover-color)]",
                   hasUrl
                     ? "text-[var(--header-text-color)]"
