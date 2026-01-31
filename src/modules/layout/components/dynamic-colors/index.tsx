@@ -5,9 +5,10 @@ export default function DynamicColors({ config }: { config: MedusaConfig | null 
 
   const header = config.headerConfig?.colors
   const inlineColors = config.headerConfig?.inlineColors
+  const megaMenu = config.headerConfig?.megaMenu
   const footer = config.footerConfig?.colors
 
-  if (!header && !inlineColors && !footer) return null
+  if (!header && !inlineColors && !megaMenu && !footer) return null
 
   const css = `
     :root {
@@ -19,6 +20,10 @@ export default function DynamicColors({ config }: { config: MedusaConfig | null 
       ${header?.lightBorderColor ? `--header-border-color: ${header.lightBorderColor};` : ''}
       ${inlineColors?.lightTriangleColor ? `--header-inline-triangle-color: ${inlineColors.lightTriangleColor};` : ''}
       ${inlineColors?.lightActiveBgColor ? `--header-inline-active-bg: ${inlineColors.lightActiveBgColor};` : ''}
+      ${megaMenu?.lightBgColor ? `--mega-menu-bg: ${megaMenu.lightBgColor};` : ''}
+      ${megaMenu?.lightHeadingColor ? `--mega-menu-heading-color: ${megaMenu.lightHeadingColor};` : ''}
+      ${megaMenu?.lightItemBgColor ? `--mega-menu-item-bg: ${megaMenu.lightItemBgColor};` : ''}
+      ${megaMenu?.lightItemTextColor ? `--mega-menu-item-text: ${megaMenu.lightItemTextColor};` : ''}
 
       ${footer?.lightTextColor ? `--footer-text-color: ${footer.lightTextColor};` : ''}
       ${footer?.lightHeadingColor ? `--footer-heading-color: ${footer.lightHeadingColor};` : ''}
@@ -36,6 +41,10 @@ export default function DynamicColors({ config }: { config: MedusaConfig | null 
       ${header?.darkBorderColor ? `--header-border-color: ${header.darkBorderColor};` : ''}
       ${inlineColors?.darkTriangleColor ? `--header-inline-triangle-color: ${inlineColors.darkTriangleColor};` : ''}
       ${inlineColors?.darkActiveBgColor ? `--header-inline-active-bg: ${inlineColors.darkActiveBgColor};` : ''}
+      ${megaMenu?.darkBgColor ? `--mega-menu-bg: ${megaMenu.darkBgColor};` : ''}
+      ${megaMenu?.darkHeadingColor ? `--mega-menu-heading-color: ${megaMenu.darkHeadingColor};` : ''}
+      ${megaMenu?.darkItemBgColor ? `--mega-menu-item-bg: ${megaMenu.darkItemBgColor};` : ''}
+      ${megaMenu?.darkItemTextColor ? `--mega-menu-item-text: ${megaMenu.darkItemTextColor};` : ''}
 
       ${footer?.darkTextColor ? `--footer-text-color: ${footer.darkTextColor};` : ''}
       ${footer?.darkHeadingColor ? `--footer-heading-color: ${footer.darkHeadingColor};` : ''}

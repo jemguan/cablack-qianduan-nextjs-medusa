@@ -4,8 +4,8 @@
     {
       "type": "frame",
       "id": "Z6joD",
-      "x": 0,
-      "y": 0,
+      "x": -140,
+      "y": -648,
       "name": "Storefront Header",
       "width": 1280,
       "height": 68,
@@ -381,6 +381,463 @@
                   "fontWeight": "500"
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "qCr73",
+      "x": -140,
+      "y": -580,
+      "name": "Dropdown Menu",
+      "width": 1280,
+      "fill": "#1A1A1A",
+      "gap": 40,
+      "padding": [
+        40,
+        48
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "vQUy5",
+          "name": "Products By Category",
+          "width": 220,
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "iu9BI",
+              "name": "col1Title",
+              "fill": "#7BC67E",
+              "content": "PRODUCTS BY CATEGORY",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700",
+              "letterSpacing": 1.5
+            },
+            {
+              "type": "rectangle",
+              "id": "IBlWX",
+              "name": "col1Line",
+              "fill": "#7BC67E",
+              "width": "fill_container",
+              "height": 2
+            },
+            {
+              "type": "frame",
+              "id": "F2p8O",
+              "name": "col1Items",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "F3EQk",
+                  "name": "item1",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "#2A2A2A",
+                  "cornerRadius": 8,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Uby8z",
+                      "name": "t1",
+                      "fill": "#E0E0E0",
+                      "content": "Prostate Massagers",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xbxWf",
+                  "name": "item2",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "#2A2A2A",
+                  "cornerRadius": 8,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ouAGK",
+                      "name": "t2",
+                      "fill": "#E0E0E0",
+                      "content": "Anal Beads",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "VpBJt",
+                  "name": "item3",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "#2A2A2A",
+                  "cornerRadius": 8,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "QoMui",
+                      "name": "t3",
+                      "fill": "#E0E0E0",
+                      "content": "Butt Plugs",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "edJcl",
+                  "name": "item4",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "#2A2A2A",
+                  "cornerRadius": 8,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "3vFQu",
+                      "name": "t4",
+                      "fill": "#E0E0E0",
+                      "content": "Anal Pumps",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "zkzWF",
+                  "name": "item5",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "#2A2A2A",
+                  "cornerRadius": 8,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "wrm04",
+                      "name": "t5",
+                      "fill": "#E0E0E0",
+                      "content": "Anal Dildos & Probes",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Epp4L",
+          "name": "Toys By Type",
+          "width": 200,
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "A2NzM",
+              "name": "c2title",
+              "fill": "#7BC67E",
+              "content": "TOYS BY TYPE",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700",
+              "letterSpacing": 1.5
+            },
+            {
+              "type": "rectangle",
+              "id": "T4Ikl",
+              "name": "c2line",
+              "fill": "#7BC67E",
+              "width": "fill_container",
+              "height": 2
+            },
+            {
+              "type": "frame",
+              "id": "AvnWV",
+              "name": "c2items",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "H2y2n",
+                  "name": "c2i1",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "#2A2A2A",
+                  "cornerRadius": 8,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "sKlT6",
+                      "name": "c2t1",
+                      "fill": "#E0E0E0",
+                      "content": "Electric Toys",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "jyUcL",
+                  "name": "c2i2",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "#2A2A2A",
+                  "cornerRadius": 8,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "lzxwu",
+                      "name": "c2t2",
+                      "fill": "#E0E0E0",
+                      "content": "Non-Electric Toys",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "o29N6",
+                  "name": "c2i3",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "#2A2A2A",
+                  "cornerRadius": 8,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "6GCnl",
+                      "name": "c2t3",
+                      "fill": "#E0E0E0",
+                      "content": "Remote Control Toys",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "2NRsz",
+          "name": "Toys By Size",
+          "width": 180,
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "hzvga",
+              "name": "c3title",
+              "fill": "#7BC67E",
+              "content": "TOYS BY SIZE",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700",
+              "letterSpacing": 1.5
+            },
+            {
+              "type": "rectangle",
+              "id": "3RqWu",
+              "name": "c3line",
+              "fill": "#7BC67E",
+              "width": "fill_container",
+              "height": 2
+            },
+            {
+              "type": "frame",
+              "id": "jHLRM",
+              "name": "c3items",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "W99yT",
+                  "name": "c3i1",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "#2A2A2A",
+                  "cornerRadius": 8,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "CioaI",
+                      "name": "c3t1",
+                      "fill": "#E0E0E0",
+                      "content": "Small Sizes",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "JIQES",
+                  "name": "c3i2",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "#2A2A2A",
+                  "cornerRadius": 8,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ZjdDv",
+                      "name": "c3t2",
+                      "fill": "#E0E0E0",
+                      "content": "Medium Sizes",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "DSBua",
+                  "name": "c3i3",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "#2A2A2A",
+                  "cornerRadius": 8,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "0CLWI",
+                      "name": "c3t3",
+                      "fill": "#E0E0E0",
+                      "content": "Large Sizes",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "TcYTh",
+          "name": "Banners",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "frame",
+              "id": "ZmGzZ",
+              "name": "Banner 1",
+              "width": "fill_container",
+              "height": 160,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "./images/generated-1769889623586.png",
+                "mode": "fill"
+              },
+              "cornerRadius": 12
+            },
+            {
+              "type": "frame",
+              "id": "ck2Go",
+              "name": "Banner 2",
+              "width": "fill_container",
+              "height": 160,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "./images/generated-1769889629389.png",
+                "mode": "fill"
+              },
+              "cornerRadius": 12
             }
           ]
         }

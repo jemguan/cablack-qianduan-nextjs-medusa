@@ -118,16 +118,22 @@ export interface MedusaConfig {
         label: string;
         url: string;
         openInNewTab?: boolean;
+        image1Url?: string;
+        image2Url?: string;
         children?: Array<{
           id: string;
           label: string;
           url: string;
           openInNewTab?: boolean;
+          image1Url?: string;
+          image2Url?: string;
           children?: Array<{
             id: string;
             label: string;
             url: string;
             openInNewTab?: boolean;
+            image1Url?: string;
+            image2Url?: string;
           }>;
         }>;
       }>;
@@ -158,6 +164,16 @@ export interface MedusaConfig {
       darkTriangleColor?: string;
       lightActiveBgColor?: string;
       darkActiveBgColor?: string;
+    };
+    megaMenu?: {
+      lightBgColor?: string;
+      darkBgColor?: string;
+      lightHeadingColor?: string;
+      darkHeadingColor?: string;
+      lightItemBgColor?: string;
+      darkItemBgColor?: string;
+      lightItemTextColor?: string;
+      darkItemTextColor?: string;
     };
   };
   footerConfig?: {

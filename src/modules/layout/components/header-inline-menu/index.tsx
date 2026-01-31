@@ -1,59 +1,81 @@
 "use client"
 
-import React from "react"
+import React, { useState, useCallback, useRef } from "react"
 import { usePathname } from "next/navigation"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { clx } from "@medusajs/ui"
 import { usePreviewConfig } from "@lib/context/preview-config-context"
-
-interface MenuItem {
-  id: string
-  label: string
-  url?: string | null
-  openInNewTab?: boolean
-  children?: MenuItem[]
-}
+import MegaMenuPanel, { MegaMenuItem } from "@modules/layout/components/mega-menu-panel"
 
 interface HeaderInlineMenuProps {
-  menuItems: MenuItem[]
+  menuItems: MegaMenuItem[]
 }
 
 const HeaderInlineMenu = ({ menuItems: serverMenuItems }: HeaderInlineMenuProps) => {
   const pathname = usePathname()
   const { previewConfig, isPreviewMode } = usePreviewConfig()
+  const [activeTopIndex, setActiveTopIndex] = useState<number | null>(null)
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const menuItems: MenuItem[] = isPreviewMode && previewConfig?.headerConfig?.menu?.menuItems
-    ? (previewConfig.headerConfig.menu.menuItems as MenuItem[])
+  const menuItems: MegaMenuItem[] = isPreviewMode && previewConfig?.headerConfig?.menu?.menuItems
+    ? (previewConfig.headerConfig.menu.menuItems as MegaMenuItem[])
     : serverMenuItems
+
+  const handleTopItemEnter = useCallback((index: number) => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = null
+    }
+    setActiveTopIndex(index)
+  }, [])
+
+  const handleMenuAreaLeave = useCallback(() => {
+    closeTimeoutRef.current = setTimeout(() => {
+      setActiveTopIndex(null)
+    }, 150)
+  }, [])
+
+  const handleMenuAreaEnter = useCallback(() => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = null
+    }
+  }, [])
 
   return (
     <>
       {/* CSS for hover effects using CSS variables */}
       <style dangerouslySetInnerHTML={{ __html: `
-        .inline-menu-item:hover .inline-menu-bg {
+        .inline-menu-item:hover .inline-menu-bg,
+        .inline-menu-item.is-active .inline-menu-bg {
           opacity: 1;
         }
-        /* Triangle: show down by default, switch to up on hover */
-        .inline-menu-item:hover .tri-down {
+        /* Triangle: show down by default, switch to up on hover/active */
+        .inline-menu-item:hover .tri-down,
+        .inline-menu-item.is-active .tri-down {
           display: none;
         }
         .inline-menu-item .tri-up {
           display: none;
         }
-        .inline-menu-item:hover .tri-up {
+        .inline-menu-item:hover .tri-up,
+        .inline-menu-item.is-active .tri-up {
           display: block;
         }
       `}} />
       <div className="hidden small:flex items-stretch h-full">
-        {menuItems.map((item) => {
+        {menuItems.map((item, index) => {
           const itemUrl = item.url?.trim() || ""
           const hasUrl = itemUrl !== ""
           const hasChildren = item.children && item.children.length > 0
+          const isOpen = activeTopIndex === index
 
           return (
             <div
               key={item.id}
-              className="inline-menu-item relative group flex items-stretch"
+              className={clx("inline-menu-item relative flex items-stretch", isOpen && "is-active")}
+              onMouseEnter={() => handleTopItemEnter(index)}
+              onMouseLeave={handleMenuAreaLeave}
             >
               <LocalizedClientLink
                 href={item.url}
@@ -109,78 +131,14 @@ const HeaderInlineMenu = ({ menuItems: serverMenuItems }: HeaderInlineMenuProps)
                 )}
               </LocalizedClientLink>
 
-              {/* Dropdown submenu */}
-              {hasChildren && (
-                <div className="absolute top-full left-0 hidden group-hover:block pt-3 min-w-[200px] z-50">
-                  <div className="bg-card border border-border rounded-lg shadow-md">
-                    <ul className="flex flex-col py-2">
-                      {item.children!.map((child) => {
-                        const childUrl = child.url?.trim() || ""
-                        const hasChildUrl = childUrl !== ""
-                        const isChildActive = hasChildUrl && (pathname === child.url || pathname.startsWith(`${child.url}/`))
-                        const hasGrandchildren = child.children && child.children.length > 0
-
-                        return (
-                          <li key={child.id} className={clx("relative", hasGrandchildren && "[&:hover>.submenu-level3]:block")}>
-                            <LocalizedClientLink
-                              href={child.url}
-                              className={clx(
-                                "flex items-center justify-between px-4 py-2 text-small-regular transition-all",
-                                isChildActive
-                                  ? "text-primary font-semibold bg-muted/30"
-                                  : hasChildUrl
-                                    ? "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
-                                    : "text-muted-foreground hover:bg-muted/30 cursor-default"
-                              )}
-                              {...(child.openInNewTab && hasChildUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                            >
-                              <span>{child.label}</span>
-                              {hasGrandchildren && (
-                                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              )}
-                            </LocalizedClientLink>
-
-                            {/* Third level menu */}
-                            {hasGrandchildren && (
-                              <div className="submenu-level3 absolute left-full top-0 hidden pl-2 min-w-[180px] z-[60]">
-                                <div className="bg-card border border-border rounded-lg shadow-md">
-                                  <ul className="flex flex-col py-2">
-                                    {child.children!.map((grandchild) => {
-                                      const grandchildUrl = grandchild.url?.trim() || ""
-                                      const hasGrandchildUrl = grandchildUrl !== ""
-                                      const isGrandchildActive = hasGrandchildUrl && (pathname === grandchild.url || pathname.startsWith(`${grandchild.url}/`))
-
-                                      return (
-                                        <li key={grandchild.id}>
-                                          <LocalizedClientLink
-                                            href={grandchild.url}
-                                            className={clx(
-                                              "block px-4 py-2 text-small-regular transition-all whitespace-nowrap",
-                                              isGrandchildActive
-                                                ? "text-primary font-semibold bg-muted/30"
-                                                : hasGrandchildUrl
-                                                  ? "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
-                                                  : "text-muted-foreground cursor-default"
-                                            )}
-                                            {...(grandchild.openInNewTab && hasGrandchildUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                                          >
-                                            {grandchild.label}
-                                          </LocalizedClientLink>
-                                        </li>
-                                      )
-                                    })}
-                                  </ul>
-                                </div>
-                              </div>
-                            )}
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  </div>
-                </div>
+              {/* Mega Menu Dropdown */}
+              {hasChildren && isOpen && (
+                <MegaMenuPanel
+                  item={item}
+                  pathname={pathname}
+                  onMouseEnter={handleMenuAreaEnter}
+                  onMouseLeave={handleMenuAreaLeave}
+                />
               )}
             </div>
           )

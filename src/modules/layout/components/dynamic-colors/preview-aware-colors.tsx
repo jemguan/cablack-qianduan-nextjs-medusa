@@ -44,6 +44,18 @@ function applyConfigToDOM(config: MedusaConfig | null) {
     if (activeBgColor) root.style.setProperty('--header-inline-active-bg', activeBgColor)
   }
 
+  const megaMenu = config.headerConfig?.megaMenu
+  if (megaMenu) {
+    const bgColor = isDark ? megaMenu.darkBgColor : megaMenu.lightBgColor
+    const headingColor = isDark ? megaMenu.darkHeadingColor : megaMenu.lightHeadingColor
+    const itemBgColor = isDark ? megaMenu.darkItemBgColor : megaMenu.lightItemBgColor
+    const itemTextColor = isDark ? megaMenu.darkItemTextColor : megaMenu.lightItemTextColor
+    if (bgColor) root.style.setProperty('--mega-menu-bg', bgColor)
+    if (headingColor) root.style.setProperty('--mega-menu-heading-color', headingColor)
+    if (itemBgColor) root.style.setProperty('--mega-menu-item-bg', itemBgColor)
+    if (itemTextColor) root.style.setProperty('--mega-menu-item-text', itemTextColor)
+  }
+
   if (headerBg) {
     const bgColor = isDark ? headerBg.darkBackgroundColor : headerBg.lightBackgroundColor
     if (bgColor) root.style.setProperty('--header-background-color', bgColor)
@@ -81,12 +93,13 @@ function generateServerCss(config: MedusaConfig | null): string {
 
   const header = config.headerConfig?.colors
   const inlineColors = config.headerConfig?.inlineColors
+  const megaMenu = config.headerConfig?.megaMenu
   const footer = config.footerConfig?.colors
   const headerBg = config.headerConfig?.background
   const footerBg = config.footerConfig?.background
   const footerCopyrightBg = config.footerConfig?.copyrightBackground
 
-  if (!header && !inlineColors && !footer && !headerBg && !footerBg && !footerCopyrightBg) return ''
+  if (!header && !inlineColors && !megaMenu && !footer && !headerBg && !footerBg && !footerCopyrightBg) return ''
 
   return `
     :root {
@@ -98,6 +111,10 @@ function generateServerCss(config: MedusaConfig | null): string {
       ${header?.lightBorderColor ? `--header-border-color: ${header.lightBorderColor};` : ''}
       ${inlineColors?.lightTriangleColor ? `--header-inline-triangle-color: ${inlineColors.lightTriangleColor};` : ''}
       ${inlineColors?.lightActiveBgColor ? `--header-inline-active-bg: ${inlineColors.lightActiveBgColor};` : ''}
+      ${megaMenu?.lightBgColor ? `--mega-menu-bg: ${megaMenu.lightBgColor};` : ''}
+      ${megaMenu?.lightHeadingColor ? `--mega-menu-heading-color: ${megaMenu.lightHeadingColor};` : ''}
+      ${megaMenu?.lightItemBgColor ? `--mega-menu-item-bg: ${megaMenu.lightItemBgColor};` : ''}
+      ${megaMenu?.lightItemTextColor ? `--mega-menu-item-text: ${megaMenu.lightItemTextColor};` : ''}
       ${headerBg?.lightBackgroundColor ? `--header-background-color: ${headerBg.lightBackgroundColor};` : ''}
       ${footer?.lightTextColor ? `--footer-text-color: ${footer.lightTextColor};` : ''}
       ${footer?.lightHeadingColor ? `--footer-heading-color: ${footer.lightHeadingColor};` : ''}
@@ -116,6 +133,10 @@ function generateServerCss(config: MedusaConfig | null): string {
       ${header?.darkBorderColor ? `--header-border-color: ${header.darkBorderColor};` : ''}
       ${inlineColors?.darkTriangleColor ? `--header-inline-triangle-color: ${inlineColors.darkTriangleColor};` : ''}
       ${inlineColors?.darkActiveBgColor ? `--header-inline-active-bg: ${inlineColors.darkActiveBgColor};` : ''}
+      ${megaMenu?.darkBgColor ? `--mega-menu-bg: ${megaMenu.darkBgColor};` : ''}
+      ${megaMenu?.darkHeadingColor ? `--mega-menu-heading-color: ${megaMenu.darkHeadingColor};` : ''}
+      ${megaMenu?.darkItemBgColor ? `--mega-menu-item-bg: ${megaMenu.darkItemBgColor};` : ''}
+      ${megaMenu?.darkItemTextColor ? `--mega-menu-item-text: ${megaMenu.darkItemTextColor};` : ''}
       ${headerBg?.darkBackgroundColor ? `--header-background-color: ${headerBg.darkBackgroundColor};` : ''}
       ${footer?.darkTextColor ? `--footer-text-color: ${footer.darkTextColor};` : ''}
       ${footer?.darkHeadingColor ? `--footer-heading-color: ${footer.darkHeadingColor};` : ''}
