@@ -67,6 +67,8 @@ const MegaMenuPanel = ({
 
   const currentImages = hoveredImages || { image1: item.image1Url, image2: item.image2Url }
   const hasImages = !!(currentImages.image1 || currentImages.image2)
+  const childCount = (item.children || []).length
+  const colsPerRow = Math.min(childCount, 4)
 
   return (
     <div
@@ -84,7 +86,7 @@ const MegaMenuPanel = ({
         }}
       >
         {/* Menu Columns */}
-        <div className="flex gap-8 flex-1 min-w-0">
+        <div className="flex flex-wrap gap-8 flex-1 min-w-0" style={{ maxWidth: hasImages ? 'calc(100% - 352px)' : '100%' }}>
           {(item.children || []).map((child) => {
             const childUrl = child.url?.trim() || ""
             const hasChildUrl = childUrl !== ""
@@ -94,6 +96,7 @@ const MegaMenuPanel = ({
               <div
                 key={child.id}
                 className="flex flex-col gap-3 min-w-[160px]"
+                style={{ width: `calc((100% - ${(colsPerRow - 1) * 32}px) / ${colsPerRow})` }}
                 onMouseEnter={() => handleChildHover(child)}
                 onMouseLeave={handleChildLeave}
               >
