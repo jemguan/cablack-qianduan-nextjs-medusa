@@ -69,7 +69,7 @@ export default async function Nav() {
 
               <LocalizedClientLink
                 href="/"
-                className="flex items-center gap-x-1.5 transition-opacity hover:opacity-80 hover:text-[var(--header-link-hover-color)]"
+                className="flex items-center gap-x-1.5 py-2.5 transition-opacity hover:opacity-80 hover:text-[var(--header-link-hover-color)]"
                 data-testid="nav-store-link"
               >
                 <PreviewLogo serverConfig={logo} type="header" />

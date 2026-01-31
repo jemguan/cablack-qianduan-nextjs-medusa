@@ -72,12 +72,12 @@ const MegaMenuPanel = ({
     <div
       ref={wrapperRef}
       className="fixed left-1/2 -translate-x-1/2 z-50"
-      style={{ width: "60vw", top: topOffset ? `${topOffset}px` : undefined, paddingTop: "8px" }}
+      style={{ width: "60vw", top: topOffset ? `${topOffset}px` : undefined }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
       <div
-        className="rounded-lg shadow-2xl flex gap-8"
+        className="rounded-b-lg shadow-2xl flex gap-8"
         style={{
           backgroundColor: "var(--mega-menu-bg, #1a1a1a)",
           padding: "32px 40px",

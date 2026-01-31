@@ -90,18 +90,18 @@ const HeaderInlineMenu = ({ menuItems: serverMenuItems }: HeaderInlineMenuProps)
               >
                 {/* Background overlay - fixed-size notch with rounded corners via CSS mask */}
                 <div
-                  className="inline-menu-bg absolute inset-0 bottom-[6px] opacity-0 transition-opacity duration-200 pointer-events-none rounded-b-[6px]"
+                  className="inline-menu-bg absolute inset-0 bottom-[10px] opacity-0 transition-opacity duration-200 pointer-events-none rounded-b-[6px]"
                   style={{
                     background: 'var(--header-inline-active-bg, rgba(59,130,246,0.3))',
                     ...(hasChildren ? {
                       maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8'%3E%3Cpolygon points='0,8 7,0 14,8' fill='black'/%3E%3C/svg%3E"), linear-gradient(#000,#000)`,
-                      maskSize: '14px 8px, 100% 100%',
-                      maskPosition: 'center bottom, center center',
+                      maskSize: '18px 12px, 100% 100%',
+                      maskPosition: 'center calc(100% + 2px), center center',
                       maskRepeat: 'no-repeat, no-repeat',
                       maskComposite: 'exclude',
                       WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8'%3E%3Cpolygon points='0,8 7,0 14,8' fill='black'/%3E%3C/svg%3E"), linear-gradient(#000,#000)`,
-                      WebkitMaskSize: '10px 6px, 100% 100%',
-                      WebkitMaskPosition: 'center bottom, center center',
+                      WebkitMaskSize: '18px 12px, 100% 100%',
+                      WebkitMaskPosition: 'center calc(100% + 6px), center center',
                       WebkitMaskRepeat: 'no-repeat, no-repeat',
                       WebkitMaskComposite: 'xor',
                     } as React.CSSProperties : {}),
@@ -113,19 +113,19 @@ const HeaderInlineMenu = ({ menuItems: serverMenuItems }: HeaderInlineMenuProps)
                 {/* Triangle indicators for items with children */}
                 {hasChildren && (
                   <>
-                    {/* Down chevron - default state */}
+                    {/* Down arrow - default state */}
                     <svg
-                      className="tri-down absolute bottom-[2px] left-1/2 -translate-x-1/2 z-10"
-                      width="14" height="8" viewBox="0 0 14 8" fill="none"
+                      className="tri-down absolute bottom-[8px] left-1/2 -translate-x-1/2 z-10"
+                      width="14" height="8" viewBox="0 0 14 8"
                     >
-                      <path d="M1 1l6 6 6-6" stroke="var(--header-inline-triangle-color, currentColor)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M1 1l6 6 6-6" stroke="var(--header-inline-triangle-color, currentColor)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    {/* Up chevron - shown on hover/active, below the notch */}
+                    {/* Up arrow - shown on hover/active */}
                     <svg
-                      className="tri-up absolute -bottom-[2px] left-1/2 -translate-x-1/2 z-10"
-                      width="14" height="8" viewBox="0 0 14 8" fill="none"
+                      className="tri-up absolute bottom-[2px] left-1/2 -translate-x-1/2 z-10"
+                      width="14" height="8" viewBox="0 0 14 8"
                     >
-                      <path d="M1 7l6-6 6 6" stroke="var(--header-inline-triangle-color, currentColor)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M1 7l6-6 6 6" stroke="var(--header-inline-triangle-color, currentColor)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </>
                 )}
