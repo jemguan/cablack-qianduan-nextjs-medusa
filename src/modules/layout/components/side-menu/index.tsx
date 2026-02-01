@@ -394,7 +394,7 @@ const SideMenu = ({ regions, menuItems, regionId, customer, megaMenuColors }: Si
                                                 <img
                                                   src={item.image1Url}
                                                   alt=""
-                                                  className="w-full h-[120px] object-cover"
+                                                  className="w-full object-contain"
                                                 />
                                               </div>
                                             )}
@@ -403,7 +403,7 @@ const SideMenu = ({ regions, menuItems, regionId, customer, megaMenuColors }: Si
                                                 <img
                                                   src={item.image2Url}
                                                   alt=""
-                                                  className="w-full h-[120px] object-cover"
+                                                  className="w-full object-contain"
                                                 />
                                               </div>
                                             )}
