@@ -2,7 +2,6 @@
 
 import { Popover, PopoverButton, PopoverPanel, Transition } from "@headlessui/react"
 import { XMark } from "@medusajs/icons"
-import { Text } from "@medusajs/ui"
 import { Fragment, Suspense, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { usePathname } from "next/navigation"
@@ -427,24 +426,17 @@ const SideMenu = ({ regions, menuItems, regionId, customer, megaMenuColors }: Si
 
                           {/* Footer - Login */}
                           <div
-                            className="flex flex-col gap-y-3 px-6 py-4 shrink-0 mt-auto"
+                            className="px-6 py-4 shrink-0 mt-auto"
                             style={{ borderTop: `1px solid ${colors.itemBg}`, backgroundColor: colors.bg }}
                           >
                             <LocalizedClientLink
                               href="/account"
-                              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors py-2 px-3 rounded-md text-center text-xs font-semibold"
+                              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors py-2 px-3 rounded-md text-center text-xs font-semibold block"
                               onClick={close}
                               data-testid="mobile-login-button"
                             >
                               {customer ? "Account" : "Login"}
                             </LocalizedClientLink>
-
-                            <Text
-                              className="text-xs uppercase tracking-widest px-1"
-                              style={{ color: colors.itemText, opacity: 0.5 }}
-                            >
-                              © {new Date().getFullYear()} Onahole Station
-                            </Text>
                           </div>
                         </div>
                       </PopoverPanel>
