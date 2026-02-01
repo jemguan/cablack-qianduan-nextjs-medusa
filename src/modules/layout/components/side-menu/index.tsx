@@ -427,7 +427,7 @@ const SideMenu = ({ regions, menuItems, regionId, customer, megaMenuColors }: Si
 
                           {/* Footer - Login */}
                           <div
-                            className="flex flex-col gap-y-3 px-6 py-4 shrink-0"
+                            className="flex flex-col gap-y-3 px-6 py-4 shrink-0 mt-auto"
                             style={{ borderTop: `1px solid ${colors.itemBg}`, backgroundColor: colors.bg }}
                           >
                             <LocalizedClientLink
