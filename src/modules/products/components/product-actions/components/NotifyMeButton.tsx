@@ -36,7 +36,7 @@ export function NotifyMeButton({
     >
       <span className="flex items-center gap-1 sm:gap-2">
         <span className="hidden sm:inline">Out of Stock</span>
-        <span className="inline sm:hidden">No Stock</span>
+        <span className="inline sm:hidden">Out of Stock</span>
         <span className="text-gray-400 dark:text-gray-500">|</span>
         {isSubscribed ? <BellOff size={16} /> : <Bell size={16} />}
         {isSubscribed ? "Notified" : "Notify Me"}

@@ -88,7 +88,7 @@ const HeaderCountrySelect = ({ regions }: HeaderCountrySelectProps) => {
 
   return (
     <div
-      className="h-full z-50"
+      className="hidden small:block h-full z-50"
       onMouseEnter={open}
       onMouseLeave={close}
     >

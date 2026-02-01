@@ -91,11 +91,9 @@ export default async function Nav() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-x-1 shrink-0">
-              <Suspense fallback={<div className="hidden small:flex p-1"><SearchIcon /></div>}>
-                <div className="hidden small:flex items-center" style={{ color: 'var(--header-icon-color)' }}>
-                  <SearchBox variant="desktop" regionId={currentRegionId} defaultExpanded={false} />
-                </div>
-              </Suspense>
+              <div className="flex items-center" style={{ color: 'var(--header-icon-color)' }}>
+                <SearchBox variant="desktop" regionId={currentRegionId} defaultExpanded={false} />
+              </div>
               <Suspense fallback={
                 <div className="hidden small:flex p-1">
                   <User size={16} style={{ color: 'var(--header-icon-color)' }} />
@@ -123,7 +121,9 @@ export default async function Nav() {
                 </div>
               </Suspense>
               {regions && regions.length > 0 && (
-                <HeaderCountrySelect regions={regions} />
+                <div className="hidden small:block">
+                  <HeaderCountrySelect regions={regions} />
+                </div>
               )}
             </div>
           </nav>
@@ -180,6 +180,9 @@ export default async function Nav() {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-x-4 h-full flex-1 basis-0 justify-end">
+            <div className="small:hidden flex items-center" style={{ color: 'var(--header-icon-color)' }}>
+              <SearchBox variant="desktop" regionId={currentRegionId} defaultExpanded={false} />
+            </div>
             <Suspense fallback={
               <div className="hidden small:flex p-2">
                 <User size={20} style={{ color: 'var(--header-icon-color)' }} />
@@ -207,7 +210,9 @@ export default async function Nav() {
               </div>
             </Suspense>
             {regions && regions.length > 0 && (
-              <HeaderCountrySelect regions={regions} />
+              <div className="hidden small:block">
+                <HeaderCountrySelect regions={regions} />
+              </div>
             )}
           </div>
         </nav>
@@ -230,24 +235,5 @@ export default async function Nav() {
         </DynamicBackground>
       )}
     </div>
-  )
-}
-
-function SearchIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="11" cy="11" r="8"></circle>
-      <path d="m21 21-4.35-4.35"></path>
-    </svg>
   )
 }

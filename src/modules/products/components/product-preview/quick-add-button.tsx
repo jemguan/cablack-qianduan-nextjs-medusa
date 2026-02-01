@@ -267,7 +267,7 @@ const QuickAddButton = memo(function QuickAddButton({
         isLoading={isTogglingNotify}
       >
         <span className="flex items-center gap-1 justify-center">
-          <span>No Stock</span>
+          <span>Out of Stock</span>
           <span className="text-gray-400 dark:text-gray-500">|</span>
           {isSubscribed ? <BellOff size={compact ? 12 : 14} /> : <Bell size={compact ? 12 : 14} />}
           {isSubscribed ? "Notified" : "Notify Me"}
