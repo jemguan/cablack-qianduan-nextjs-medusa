@@ -24,11 +24,23 @@ export interface MenuItem {
   children?: MenuItem[];
 }
 
+export interface MegaMenuColors {
+  lightBgColor?: string;
+  darkBgColor?: string;
+  lightHeadingColor?: string;
+  darkHeadingColor?: string;
+  lightItemBgColor?: string;
+  darkItemBgColor?: string;
+  lightItemTextColor?: string;
+  darkItemTextColor?: string;
+}
+
 export interface SideMenuProps {
   regions: HttpTypes.StoreRegion[] | null;
   menuItems?: MegaMenuItem[];
   regionId?: string;
   customer?: HttpTypes.StoreCustomer | null;
+  megaMenuColors?: MegaMenuColors;
 }
 
 const getRegionCookie = (): string => {
@@ -37,7 +49,24 @@ const getRegionCookie = (): string => {
   return match ? match[1] : "ca"
 }
 
-const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => {
+const SideMenu = ({ regions, menuItems, regionId, customer, megaMenuColors }: SideMenuProps) => {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => setIsDark(document.documentElement.classList.contains('dark'))
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const mc = megaMenuColors
+  const colors = {
+    bg: (isDark ? mc?.darkBgColor : mc?.lightBgColor) || 'var(--mega-menu-bg, #1a1a1a)',
+    heading: (isDark ? mc?.darkHeadingColor : mc?.lightHeadingColor) || 'var(--mega-menu-heading-color, #7bc67e)',
+    itemBg: (isDark ? mc?.darkItemBgColor : mc?.lightItemBgColor) || 'var(--mega-menu-item-bg, #2a2a2a)',
+    itemText: (isDark ? mc?.darkItemTextColor : mc?.lightItemTextColor) || 'var(--mega-menu-item-text, #e0e0e0)',
+  }
   const pathname = usePathname()
   const router = useRouter()
   const closeRef = useRef<(() => void) | null>(null)
@@ -172,21 +201,22 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                       <PopoverPanel
                         static
                         className="flex flex-col fixed top-0 left-0 w-[85%] sm:w-[400px] h-screen max-h-screen z-[9998] shadow-2xl"
-                        style={{ backgroundColor: 'var(--mega-menu-bg, #1a1a1a)' }}
+                        style={{ backgroundColor: colors.bg }}
                       >
                         <div
                           data-testid="nav-menu-popup"
                           className="flex flex-col h-full min-h-0 relative"
+                          style={{ backgroundColor: colors.bg }}
                         >
                           {/* Top Bar: Country Select + Close */}
-                          <div className="flex justify-between items-center px-6 h-[60px] shrink-0">
+                          <div className="flex justify-between items-center px-6 h-[60px] shrink-0" style={{ backgroundColor: colors.bg }}>
                             {/* Country Selector */}
                             {countryOptions.length > 0 && (
                               <div className="relative">
                                 <button
                                   onClick={() => setCountryOpen(!countryOpen)}
                                   className="flex items-center gap-x-1.5 transition-opacity hover:opacity-70"
-                                  style={{ color: 'var(--mega-menu-item-text, #e0e0e0)' }}
+                                  style={{ color: colors.itemText }}
                                 >
                                   {selectedCountry ? (
                                     <>
@@ -207,7 +237,7 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                                 {countryOpen && (
                                   <div
                                     className="absolute top-full left-0 mt-2 w-[220px] max-h-[300px] overflow-y-auto rounded-lg shadow-xl z-10"
-                                    style={{ backgroundColor: 'var(--mega-menu-item-bg, #2a2a2a)' }}
+                                    style={{ backgroundColor: colors.itemBg }}
                                   >
                                     <div className="p-1.5">
                                       {countryOptions.map((option, i) => (
@@ -216,8 +246,8 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                                           onClick={() => handleCountryChange(option)}
                                           className="w-full text-left px-3 py-2 rounded-md text-xs flex items-center gap-x-2 transition-opacity hover:opacity-70"
                                           style={{
-                                            color: 'var(--mega-menu-item-text, #e0e0e0)',
-                                            backgroundColor: selectedCountry?.country === option.country ? 'var(--mega-menu-bg, #1a1a1a)' : 'transparent',
+                                            color: colors.itemText,
+                                            backgroundColor: selectedCountry?.country === option.country ? colors.bg : 'transparent',
                                           }}
                                         >
                                           <div className="flex-shrink-0" style={{ width: "16px", height: "16px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
@@ -242,7 +272,7 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                             >
                               <XMark
                                 className="w-5 h-5"
-                                style={{ color: 'var(--mega-menu-item-text, #e0e0e0)' }}
+                                style={{ color: colors.itemText }}
                               />
                             </button>
                           </div>
@@ -250,11 +280,11 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                           {/* Top divider */}
                           <div
                             className="h-px w-full shrink-0"
-                            style={{ backgroundColor: 'var(--mega-menu-item-bg, #2a2a2a)' }}
+                            style={{ backgroundColor: colors.itemBg }}
                           />
 
                           {/* Menu Items - Scrollable */}
-                          <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
+                          <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar" style={{ backgroundColor: colors.bg }}>
                             <div className="px-6">
                               {displayMenuItems.map((item, index) => {
                                 const hasChildren = item.children && item.children.length > 0
@@ -270,7 +300,7 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                                         href={item.url}
                                         className="transition-opacity hover:opacity-70"
                                         style={{
-                                          color: 'var(--mega-menu-item-text, #e0e0e0)',
+                                          color: colors.itemText,
                                           fontSize: '13px',
                                           fontWeight: 500,
                                           letterSpacing: '1px',
@@ -288,14 +318,14 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                                           onClick={() => toggleExpand(item.id)}
                                           className="w-6 h-6 flex items-center justify-center rounded transition-opacity hover:opacity-70"
                                           style={{
-                                            border: '1px solid var(--mega-menu-heading-color, #7bc67e)',
+                                            border: `1px solid ${colors.heading}`,
                                           }}
                                           aria-label={isExpanded ? "Collapse" : "Expand"}
                                         >
                                           {isExpanded ? (
-                                            <Minus size={16} style={{ color: 'var(--mega-menu-heading-color, #7bc67e)' }} />
+                                            <Minus size={16} style={{ color: colors.heading }} />
                                           ) : (
-                                            <Plus size={16} style={{ color: 'var(--mega-menu-heading-color, #7bc67e)' }} />
+                                            <Plus size={16} style={{ color: colors.heading }} />
                                           )}
                                         </button>
                                       )}
@@ -314,7 +344,7 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                                                 <span
                                                   className="text-xs font-bold uppercase block"
                                                   style={{
-                                                    color: 'var(--mega-menu-heading-color, #7bc67e)',
+                                                    color: colors.heading,
                                                     letterSpacing: '1.5px',
                                                     fontSize: '13px',
                                                   }}
@@ -323,7 +353,7 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                                                 </span>
                                                 <div
                                                   className="h-0.5 mt-2 w-full rounded"
-                                                  style={{ backgroundColor: 'var(--mega-menu-heading-color, #7bc67e)' }}
+                                                  style={{ backgroundColor: colors.heading }}
                                                 />
                                               </div>
 
@@ -340,8 +370,8 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                                                         href={grandchild.url}
                                                         className="flex items-center justify-center h-[36px] px-4 rounded-lg text-xs transition-opacity hover:opacity-80"
                                                         style={{
-                                                          backgroundColor: 'var(--mega-menu-item-bg, #2a2a2a)',
-                                                          color: 'var(--mega-menu-item-text, #e0e0e0)',
+                                                          backgroundColor: colors.itemBg,
+                                                          color: colors.itemText,
                                                         }}
                                                         onClick={hasGcUrl ? close : undefined}
                                                         {...(grandchild.openInNewTab && hasGcUrl ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
@@ -386,7 +416,7 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                                     {index < displayMenuItems.length - 1 && (
                                       <div
                                         className="h-px w-full"
-                                        style={{ backgroundColor: 'var(--mega-menu-item-bg, #2a2a2a)' }}
+                                        style={{ backgroundColor: colors.itemBg }}
                                       />
                                     )}
                                   </div>
@@ -398,7 +428,7 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
                           {/* Footer - Login */}
                           <div
                             className="flex flex-col gap-y-3 px-6 py-4 shrink-0"
-                            style={{ borderTop: '1px solid var(--mega-menu-item-bg, #2a2a2a)' }}
+                            style={{ borderTop: `1px solid ${colors.itemBg}`, backgroundColor: colors.bg }}
                           >
                             <LocalizedClientLink
                               href="/account"
@@ -411,7 +441,7 @@ const SideMenu = ({ regions, menuItems, regionId, customer }: SideMenuProps) => 
 
                             <Text
                               className="text-xs uppercase tracking-widest px-1"
-                              style={{ color: 'var(--mega-menu-item-text, #e0e0e0)', opacity: 0.5 }}
+                              style={{ color: colors.itemText, opacity: 0.5 }}
                             >
                               © {new Date().getFullYear()} Onahole Station
                             </Text>

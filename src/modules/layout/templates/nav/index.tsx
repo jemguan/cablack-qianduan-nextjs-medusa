@@ -43,6 +43,19 @@ export default async function Nav() {
   const background = headerConfig?.background
   const hasCustomBackground = background?.lightBackgroundColor || background?.darkBackgroundColor
 
+  // Mega menu colors for mobile sidebar
+  const megaMenu = headerConfig?.megaMenu
+  const megaMenuColors = megaMenu ? {
+    lightBgColor: megaMenu.lightBgColor,
+    darkBgColor: megaMenu.darkBgColor,
+    lightHeadingColor: megaMenu.lightHeadingColor,
+    darkHeadingColor: megaMenu.darkHeadingColor,
+    lightItemBgColor: megaMenu.lightItemBgColor,
+    darkItemBgColor: megaMenu.darkItemBgColor,
+    lightItemTextColor: megaMenu.lightItemTextColor,
+    darkItemTextColor: megaMenu.darkItemTextColor,
+  } : undefined
+
   if (isInline) {
     // Inline style: single row - Brand(left) + Menu(center) + Actions(right)
     return (
@@ -64,7 +77,7 @@ export default async function Nav() {
             {/* Left: Mobile Menu + Branding */}
             <div className="flex items-center gap-x-2 shrink-0">
               <div className="h-full flex items-center small:hidden">
-                <SideMenu regions={regions} menuItems={headerMenuItems} regionId={currentRegionId} customer={customer} />
+                <SideMenu regions={regions} menuItems={headerMenuItems} regionId={currentRegionId} customer={customer} megaMenuColors={megaMenuColors} />
               </div>
 
               <LocalizedClientLink
@@ -152,7 +165,7 @@ export default async function Nav() {
           {/* Left: Branding & Mobile Menu */}
           <div className="flex-1 basis-0 h-full flex items-center gap-x-4">
             <div className="h-full flex items-center small:hidden">
-              <SideMenu regions={regions} menuItems={headerMenuItems} regionId={currentRegionId} customer={customer} />
+              <SideMenu regions={regions} menuItems={headerMenuItems} regionId={currentRegionId} customer={customer} megaMenuColors={megaMenuColors} />
             </div>
 
             <LocalizedClientLink
