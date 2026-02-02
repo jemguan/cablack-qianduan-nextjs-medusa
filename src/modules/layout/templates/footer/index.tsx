@@ -2,6 +2,7 @@ import { listCategories } from "@lib/data/categories"
 import { listCollections } from "@lib/data/collections"
 import { Text, clx } from "@medusajs/ui"
 import { getMedusaConfig } from "@lib/admin-api/config"
+import { getPageTitleConfig } from "@lib/data/page-title-config"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import MedusaCTA from "@modules/layout/components/medusa-cta"
@@ -14,11 +15,13 @@ import type { SocialPlatform } from "@modules/layout/components/social-share/typ
 
 export default async function Footer() {
   // 并行获取所有数据，减少等待时间
-  const [collectionsResult, productCategories, config] = await Promise.all([
+  const [collectionsResult, productCategories, config, titleConfig] = await Promise.all([
     listCollections({ fields: "*products" }),
     listCategories(),
     getMedusaConfig(),
+    getPageTitleConfig(),
   ])
+  const siteName = titleConfig.site_name || "Store"
   
   const { collections } = collectionsResult
   const footerConfig = config?.footerConfig
@@ -261,7 +264,7 @@ export default async function Footer() {
               </Text>
             ) : !footerConfig?.copyright?.enabled && !footerConfig?.poweredBy?.enabled ? (
               <Text className="txt-compact-small text-center text-[var(--footer-copyright-text-color)]">
-                © {new Date().getFullYear()} Onahole Station. All rights reserved.
+                © {new Date().getFullYear()} {siteName}. All rights reserved.
               </Text>
             ) : null}
 

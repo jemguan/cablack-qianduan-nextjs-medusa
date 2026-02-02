@@ -16,16 +16,19 @@ import DynamicBackground from "@modules/layout/components/dynamic-background"
 import PreviewLogo from "@modules/layout/components/preview-logo"
 import PreviewBrandName from "@modules/layout/components/preview-brand-name"
 import { getMedusaConfig } from "@lib/admin-api/config"
+import { getPageTitleConfig } from "@lib/data/page-title-config"
 import { clx } from "@medusajs/ui"
 import { User, ShoppingBag } from "lucide-react"
 
 export default async function Nav() {
   // 并行获取所有数据，减少等待时间
-  const [regions, config, customer] = await Promise.all([
+  const [regions, config, customer, titleConfig] = await Promise.all([
     listRegions().then((regions: StoreRegion[]) => regions),
     getMedusaConfig(),
     retrieveCustomer().catch(() => null),
+    getPageTitleConfig(),
   ])
+  const siteName = titleConfig.site_name || "Store"
 
   const headerConfig = config?.headerConfig
   const headerMenuItems = headerConfig?.menu?.menuItems || []
@@ -90,7 +93,7 @@ export default async function Nav() {
                   serverConfig={brand}
                   serverLogoConfig={logo}
                   type="header"
-                  fallbackName="Onahole Station"
+                  fallbackName={siteName}
                 />
               </LocalizedClientLink>
             </div>
@@ -178,7 +181,7 @@ export default async function Nav() {
                 serverConfig={brand}
                 serverLogoConfig={logo}
                 type="header"
-                fallbackName="Onahole Station"
+                fallbackName={siteName}
               />
             </LocalizedClientLink>
           </div>

@@ -10,9 +10,10 @@ import { signup } from "@lib/data/customer"
 
 type Props = {
   setCurrentView: (view: LOGIN_VIEW) => void
+  storeName?: string
 }
 
-const Register = ({ setCurrentView }: Props) => {
+const Register = ({ setCurrentView, storeName = "Store" }: Props) => {
   const [message, formAction, isPending] = useActionState(signup, null)
   const [showVerificationMessage, setShowVerificationMessage] = useState(false)
   const [hasSubmitted, setHasSubmitted] = useState(false)
@@ -45,10 +46,10 @@ const Register = ({ setCurrentView }: Props) => {
       data-testid="register-page"
     >
       <h1 className="text-large-semi uppercase mb-6">
-        Become an Onahole Station Member
+        Become a {storeName} Member
       </h1>
       <p className="text-center text-base-regular text-ui-fg-base mb-4">
-        Create your Onahole Station Member profile, and get access to an enhanced
+        Create your {storeName} Member profile, and get access to an enhanced
         shopping experience.
       </p>
       {showVerificationMessage && (
@@ -114,7 +115,7 @@ const Register = ({ setCurrentView }: Props) => {
         </div>
         <ErrorMessage error={typeof message === "string" ? message : null} data-testid="register-error" />
         <span className="text-center text-ui-fg-base text-small-regular mt-6">
-          By creating an account, you agree to Onahole Station&apos;s{" "}
+          By creating an account, you agree to {storeName}&apos;s{" "}
           <LocalizedClientLink
             href="/content/privacy-policy"
             className="underline"

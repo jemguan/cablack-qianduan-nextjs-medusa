@@ -2,6 +2,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import ChevronDown from "@modules/common/icons/chevron-down"
 import MedusaCTA from "@modules/layout/components/medusa-cta"
 import { getMedusaConfig } from "@lib/admin-api/config"
+import { getPageTitleConfig } from "@lib/data/page-title-config"
 import { clx } from "@medusajs/ui"
 import Image from "next/image"
 
@@ -10,14 +11,15 @@ export default async function CheckoutLayout({
 }: {
   children: React.ReactNode
 }) {
-  const config = await getMedusaConfig()
+  const [config, titleConfig] = await Promise.all([getMedusaConfig(), getPageTitleConfig()])
+  const siteName = titleConfig.site_name || "Store"
   const checkoutConfig = config?.checkoutPageConfig
 
   // Store brand configuration
   const storeBrand = checkoutConfig?.storeBrand || {
     type: 'text' as const,
     text: {
-      storeName: 'Onahole Station',
+      storeName: siteName,
       textSize: 'text-xl',
       textColor: 'text-ui-fg-subtle',
     },
@@ -39,7 +41,7 @@ export default async function CheckoutLayout({
         // Fallback to text if no logo
         return (
           <span className="txt-compact-xlarge-plus text-ui-fg-subtle hover:text-ui-fg-base uppercase">
-            {storeBrand.text?.storeName || 'Onahole Station'}
+            {storeBrand.text?.storeName || siteName}
           </span>
         )
       }
@@ -96,7 +98,7 @@ export default async function CheckoutLayout({
         storeBrand.text?.textColor || "text-ui-fg-subtle",
         storeBrand.text?.textSize || "text-xl"
       )}>
-        {storeBrand.text?.storeName || 'Onahole Station'}
+        {storeBrand.text?.storeName || siteName}
       </span>
     )
   }

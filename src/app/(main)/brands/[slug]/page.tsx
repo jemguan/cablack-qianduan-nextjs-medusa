@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 
 import { getBrandBySlug } from "@lib/data/brands"
 import { getCountryCode } from "@lib/data/regions"
-import { getPageTitle } from "@lib/data/page-title-config"
+import { getPageTitle, getPageTitleConfig } from "@lib/data/page-title-config"
 import BrandTemplate from "@modules/brands/templates"
 import Breadcrumb from "@modules/common/components/breadcrumb"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -45,8 +45,12 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     }
 
     // 使用元标题和元描述，如果为空则使用默认值
-    const title = await getPageTitle("brand_detail", { name: brand.name, title: brand.name })
-    const metaDescription = brand.meta_description || `Shop ${brand.name} products at Onahole Station`
+    const [title, titleConfig] = await Promise.all([
+      getPageTitle("brand_detail", { name: brand.name, title: brand.name }),
+      getPageTitleConfig(),
+    ])
+    const siteName = titleConfig.site_name || "Store"
+    const metaDescription = brand.meta_description || `Shop ${brand.name} products at ${siteName}`
     const baseUrl = getBaseURL()
     const brandUrl = `${baseUrl}/brands/${params.slug}`
 

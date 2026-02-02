@@ -11,7 +11,7 @@ export enum LOGIN_VIEW {
   REGISTER = "register",
 }
 
-const LoginTemplate = () => {
+const LoginTemplate = ({ storeName = "Store" }: { storeName?: string }) => {
   const searchParams = useSearchParams()
   const viewParam = searchParams?.get("view")
   
@@ -34,7 +34,7 @@ const LoginTemplate = () => {
       {currentView === LOGIN_VIEW.SIGN_IN ? (
         <Login setCurrentView={setCurrentView} />
       ) : (
-        <Register setCurrentView={setCurrentView} />
+        <Register setCurrentView={setCurrentView} storeName={storeName} />
       )}
     </div>
   )
