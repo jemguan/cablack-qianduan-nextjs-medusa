@@ -77,7 +77,7 @@ function BannerModule({ module, mobileGridCols = 1 }: { module: BannerModuleData
  * 用于在移动端展示多个 banner 模块，支持网格布局
  */
 export function MobileBannerBlock({ data }: BannerBlockProps) {
-  const { modules, mobileGridCols = 1 } = data;
+  const { modules, mobileGridCols = 1, gridGap = 16 } = data;
 
   if (!modules || modules.length === 0) {
     return (
@@ -94,7 +94,7 @@ export function MobileBannerBlock({ data }: BannerBlockProps) {
   const gridStyle = {
     display: 'grid',
     gridTemplateColumns: `repeat(${mobileGridCols}, 1fr)`,
-    gap: '1rem',
+    gap: `${gridGap}px`,
     width: '100%',
   };
 

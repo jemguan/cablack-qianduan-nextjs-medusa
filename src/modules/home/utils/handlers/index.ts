@@ -30,3 +30,4 @@ export { handleFAQBlock } from './faq';
 export { handleFeaturedBlogBlock } from './featuredBlog';
 export { handleFeaturedProductBlock } from './featuredProduct';
 export { handleBannerBlockBlock } from './bannerBlock';
+export { handleCompositeContainerBlock } from './compositeContainer';

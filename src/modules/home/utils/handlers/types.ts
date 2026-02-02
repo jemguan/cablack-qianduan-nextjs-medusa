@@ -26,6 +26,7 @@ export interface BlockConfig {
   config: Record<string, any>;
   componentName?: string;
   props?: Record<string, any>;
+  sourceBlockId?: string;
 }
 
 /**

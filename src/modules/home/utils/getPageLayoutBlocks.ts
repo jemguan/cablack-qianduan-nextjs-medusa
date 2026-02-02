@@ -17,6 +17,7 @@ import {
   handleFAQBlock,
   handleFeaturedBlogBlock,
   handleFeaturedProductBlock,
+  handleCompositeContainerBlock,
 } from './handlers';
 
 // 重新导出 BlockConfig 类型供外部使用
@@ -51,6 +52,8 @@ export async function getHomePageLayoutBlocks(
   for (const block of blocks) {
     const blockConfig = await getBlockConfigForBlock(block, config, categories, region, products, articles);
     if (blockConfig) {
+      // 保留原始 block ID，供树形渲染器匹配使用
+      blockConfig.sourceBlockId = block.id;
       blockConfigs.push(blockConfig);
     }
   }
@@ -99,6 +102,9 @@ async function getBlockConfigForBlock(
 
     case 'featuredProduct':
       return handleFeaturedProductBlock(block, block.config, region);
+
+    case 'compositeContainer':
+      return handleCompositeContainerBlock(block, block.config);
 
     // 可以在这里添加更多 block 类型的处理
     // case 'hero':

@@ -299,6 +299,7 @@ export function PreviewConfigProvider({ children }: PreviewConfigProviderProps) 
         'banner-block': 'bannerBlock',
         'featured-collections': 'featuredCollections',
         'faq': 'faq',
+        'composite-container': 'compositeContainer',
       }
 
       const enabledSections = sections
@@ -328,6 +329,9 @@ export function PreviewConfigProvider({ children }: PreviewConfigProviderProps) 
             type: blockType,
             enabled: section.enabled,
             order: section.position,
+            parent_id: section.settings?.parent_id || null,
+            slot_id: section.settings?.slot_id || null,
+            visibility: section.settings?.visibility || 'all',
           })
 
           transformedConfig.blockConfigs[blockType][section.id] = section.settings

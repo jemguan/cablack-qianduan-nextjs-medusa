@@ -80,6 +80,9 @@ export interface MedusaConfig {
         type: string;
         enabled: boolean;
         order: number;
+        parent_id?: string | null;
+        slot_id?: string | null;
+        visibility?: 'all' | 'desktop_only' | 'mobile_only';
       }>;
     };
   };
@@ -465,6 +468,7 @@ export const getMedusaConfig = cache(async (): Promise<MedusaConfig | null> => {
         'banner-block': 'bannerBlock',
         'featured-collections': 'featuredCollections',
         'faq': 'faq',
+        'composite-container': 'compositeContainer',
       };
 
       // 筛选出有映射的 sections
@@ -494,6 +498,9 @@ export const getMedusaConfig = cache(async (): Promise<MedusaConfig | null> => {
           type: blockType,
           enabled: section.enabled,
           order: section.position,
+          parent_id: section.settings?.parent_id || null,
+          slot_id: section.settings?.slot_id || null,
+          visibility: section.settings?.visibility || 'all',
         });
 
         mergedConfig.blockConfigs[blockType][section.id] = section.settings;

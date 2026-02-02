@@ -4,8 +4,11 @@ import nextDynamic from "next/dynamic"
 import { listCategories } from "@lib/data/categories"
 import { getCurrentRegion, getCountryCode } from "@lib/data/regions"
 import { getMedusaConfig } from "@lib/admin-api/config"
-import { getPageLayoutBlocks } from "@lib/admin-api/pageLayoutUtils"
+import { getPageLayoutBlocks, getPageLayoutBlocksTree, type PageBlockNode } from "@lib/admin-api/pageLayoutUtils"
 import { getHomePageLayoutBlocks } from "@modules/home/utils/getPageLayoutBlocks"
+import type { BlockConfig } from "@modules/home/utils/handlers"
+import { SectionRenderer } from "@modules/home/components/section-renderer"
+import { CompositeContainer } from "@modules/home/components/composite-container"
 import { listBlogs } from "@lib/data/blogs"
 import { sdk } from "@lib/config"
 import { getAuthHeaders, getCacheOptions } from "@lib/data/cookies"
@@ -147,8 +150,21 @@ export default async function Home() {
     }
   }
 
-  // 根据 pageLayouts 配置获取首页 blocks
+  // 获取 block 配置（componentName + props）
   const pageBlocks = await getHomePageLayoutBlocks(config, categories, region, collageHeroProducts, blogArticles)
+
+  // 构建 blockConfigs Map 供 SectionRenderer 使用
+  // handlers 给 ID 加了前缀 (如 "banner-block-sec_xxx")，用 sourceBlockId（原始ID）索引供树形节点匹配
+  const blockConfigsMap = new Map<string, BlockConfig>()
+  for (const bc of pageBlocks) {
+    blockConfigsMap.set(bc.id, bc)
+    if (bc.sourceBlockId) {
+      blockConfigsMap.set(bc.sourceBlockId, bc)
+    }
+  }
+
+  // 构建树形结构
+  const pageBlocksTree = getPageLayoutBlocksTree(config, 'home')
 
   // 收集已渲染的 featured-collections block IDs（供预览占位组件排除用）
   const renderedFcBlockIds = pageBlocks
@@ -165,7 +181,7 @@ export default async function Home() {
     FAQBlock,
     FeaturedBlog,
     FeaturedProduct,
-    // 可以在这里添加更多组件映射
+    CompositeContainer,
   }
 
   return (
@@ -173,26 +189,13 @@ export default async function Home() {
       <Schema type="Organization" data={pageTitleConfig} />
       <Schema type="WebSite" data={pageTitleConfig} />
 
-      {/* 根据配置动态渲染 blocks */}
-      {pageBlocks.map((blockConfig) => {
-        if (!blockConfig.enabled || !blockConfig.componentName) {
-          return null
-        }
-
-        const Component = componentMap[blockConfig.componentName]
-        if (!Component) {
-          console.warn(`[Medusa HomePage] Unknown component: ${blockConfig.componentName}`)
-          return null
-        }
-
-        return (
-          <Component
-            key={blockConfig.id}
-            {...blockConfig.props}
-            countryCode={countryCode}
-          />
-        )
-      })}
+      {/* 递归渲染树形 blocks */}
+      <SectionRenderer
+        nodes={pageBlocksTree}
+        componentMap={componentMap}
+        blockConfigs={blockConfigsMap}
+        sharedProps={{ countryCode }}
+      />
 
       {/* 预览模式下的 FeaturedCollections 占位：当服务端尚未保存 section 时在客户端渲染 */}
       <PreviewFeaturedCollectionsPlaceholder
