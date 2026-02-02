@@ -21,7 +21,7 @@ function safeParseInt(value: any, defaultValue: number): number {
  * 在 iframe 预览模式下从 previewConfig 读取最新配置
  * 非预览模式下直接使用服务端传入的 props
  */
-export function PreviewAwareBannerBlock(props: BannerBlockProps) {
+export function PreviewAwareBannerBlock(props: BannerBlockProps & { blockId?: string }) {
   const { previewConfig, isPreviewMode } = usePreviewConfig()
 
   const previewData = useMemo<BannerBlockData | null>(() => {
@@ -30,11 +30,11 @@ export function PreviewAwareBannerBlock(props: BannerBlockProps) {
     const bannerConfigs = previewConfig.blockConfigs?.bannerBlock
     if (!bannerConfigs) return null
 
-    // 取第一个 banner-block 配置
-    const configEntries = Object.values(bannerConfigs)
-    if (configEntries.length === 0) return null
-
-    const blockConfig = configEntries[0] as Record<string, any>
+    // 通过 blockId 查找对应配置，回退到第一个
+    const blockConfig = (props.blockId && bannerConfigs[props.blockId]
+      ? bannerConfigs[props.blockId]
+      : Object.values(bannerConfigs)[0]) as Record<string, any>
+    if (!blockConfig) return null
 
     return {
       modules: (blockConfig.modules || []).map((module: any) => ({
@@ -52,7 +52,7 @@ export function PreviewAwareBannerBlock(props: BannerBlockProps) {
       mobileGridCols: safeParseInt(blockConfig.mobileGridCols, 1),
       fullWidth: blockConfig.fullWidth === true,
     }
-  }, [isPreviewMode, previewConfig])
+  }, [isPreviewMode, previewConfig, props.blockId])
 
   const data = previewData || props.data
 

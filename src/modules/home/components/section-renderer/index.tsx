@@ -85,7 +85,7 @@ export function SectionRenderer({
               insideContainer ? "slot-child" : "",
             ].filter(Boolean).join(" ") || undefined}
           >
-            <Component {...blockConfig.props} {...sharedProps} />
+            <Component {...blockConfig.props} blockId={node.id} {...sharedProps} />
           </div>
         )
       })}

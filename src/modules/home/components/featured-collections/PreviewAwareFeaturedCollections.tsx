@@ -6,6 +6,7 @@ import { FeaturedCollectionsClient } from "./FeaturedCollectionsClient"
 import type { HttpTypes } from "@medusajs/types"
 
 interface PreviewAwareFeaturedCollectionsProps {
+  blockId?: string
   category: HttpTypes.StoreProductCategory
   region: HttpTypes.StoreRegion
   products: HttpTypes.StoreProduct[]
@@ -63,9 +64,13 @@ export function PreviewAwareFeaturedCollections(
     if (!isPreviewMode || !previewConfig) return null
     const fcConfigs = previewConfig.blockConfigs?.featuredCollections
     if (!fcConfigs) return null
+    // 通过 blockId 查找对应配置，回退到第一个
+    if (props.blockId && fcConfigs[props.blockId]) {
+      return fcConfigs[props.blockId] as Record<string, any>
+    }
     const entries = Object.values(fcConfigs)
     return entries.length > 0 ? (entries[0] as Record<string, any>) : null
-  }, [isPreviewMode, previewConfig])
+  }, [isPreviewMode, previewConfig, props.blockId])
 
   const previewCategoryId = useMemo(() => {
     if (!blockConfig) return null

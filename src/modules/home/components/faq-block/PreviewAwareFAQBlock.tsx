@@ -9,18 +9,19 @@ import type { FAQBlockProps, FAQData } from "./types"
  * 预览感知的 FAQBlock 包装组件
  * 预览模式下从 previewConfig 读取 FAQ 配置，实时更新
  */
-export function PreviewAwareFAQBlock(props: FAQBlockProps) {
+export function PreviewAwareFAQBlock(props: FAQBlockProps & { blockId?: string }) {
   const { previewConfig, isPreviewMode } = usePreviewConfig()
 
   const finalData = useMemo<FAQData>(() => {
     if (!isPreviewMode || !previewConfig) return props.data
 
-    // 从 blockConfigs.faq 中获取第一个配置
     const faqConfigs = previewConfig.blockConfigs?.faq
     if (!faqConfigs) return props.data
 
-    const entries = Object.values(faqConfigs)
-    const blockConfig = entries.length > 0 ? (entries[0] as Record<string, any>) : null
+    // 通过 blockId 查找对应配置，回退到第一个
+    const blockConfig = (props.blockId && faqConfigs[props.blockId]
+      ? faqConfigs[props.blockId]
+      : Object.values(faqConfigs)[0]) as Record<string, any> | null
     if (!blockConfig) return props.data
 
     // 用预览配置覆盖服务端 props
@@ -42,7 +43,7 @@ export function PreviewAwareFAQBlock(props: FAQBlockProps) {
       allowMultiple: blockConfig.allowMultiple ?? props.data.allowMultiple,
       defaultOpenFirst: blockConfig.defaultOpenFirst ?? props.data.defaultOpenFirst,
     }
-  }, [isPreviewMode, previewConfig, props.data])
+  }, [isPreviewMode, previewConfig, props.data, props.blockId])
 
   return <FAQBlock data={finalData} />
 }
