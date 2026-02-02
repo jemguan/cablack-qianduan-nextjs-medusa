@@ -469,6 +469,7 @@ export const getMedusaConfig = cache(async (): Promise<MedusaConfig | null> => {
         'featured-collections': 'featuredCollections',
         'faq': 'faq',
         'composite-container': 'compositeContainer',
+        'slideshow': 'slideshow',
       };
 
       // 筛选出有映射的 sections

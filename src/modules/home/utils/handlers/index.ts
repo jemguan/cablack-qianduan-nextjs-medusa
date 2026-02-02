@@ -31,3 +31,4 @@ export { handleFeaturedBlogBlock } from './featuredBlog';
 export { handleFeaturedProductBlock } from './featuredProduct';
 export { handleBannerBlockBlock } from './bannerBlock';
 export { handleCompositeContainerBlock } from './compositeContainer';
+export { handleSlideshowBlock } from './slideshow';

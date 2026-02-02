@@ -93,7 +93,7 @@ export function SectionRenderer({
       {insideContainer && (
         <style
           dangerouslySetInnerHTML={{
-            __html: `.slot-child .content-container { max-width: none !important; padding: 0 !important; margin: 0 !important; }`,
+            __html: `.slot-child .content-container { max-width: none !important; padding: 0 !important; margin: 0 !important; } .container-slot { height: 100%; } .container-slot > .slot-child { height: 100%; } .container-slot > .slot-child > div { height: 100%; } .slot-child .slideshow-wrapper { padding: 0 !important; height: 100%; } .slot-child .slideshow-wrapper > .relative.group { height: 100%; } .slot-child .slideshow-wrapper .overflow-hidden { height: 100%; } .slot-child .slideshow-wrapper .overflow-hidden > .flex { height: 100%; } .slot-child .slideshow-wrapper .flex-\\[0_0_100\\%\\] { height: 100%; } .slot-child .slideshow-wrapper .flex-\\[0_0_100\\%\\] > div, .slot-child .slideshow-wrapper .flex-\\[0_0_100\\%\\] > a { height: 100%; } .slot-child .slideshow-wrapper img, .slot-child .slideshow-wrapper video { width: 100%; height: 100%; object-fit: fill; }`,
           }}
         />
       )}

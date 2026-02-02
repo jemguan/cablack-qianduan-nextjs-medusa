@@ -18,6 +18,7 @@ import {
   handleFeaturedBlogBlock,
   handleFeaturedProductBlock,
   handleCompositeContainerBlock,
+  handleSlideshowBlock,
 } from './handlers';
 
 // 重新导出 BlockConfig 类型供外部使用
@@ -105,6 +106,9 @@ async function getBlockConfigForBlock(
 
     case 'compositeContainer':
       return handleCompositeContainerBlock(block, block.config);
+
+    case 'slideshow':
+      return handleSlideshowBlock(block, block.config);
 
     // 可以在这里添加更多 block 类型的处理
     // case 'hero':

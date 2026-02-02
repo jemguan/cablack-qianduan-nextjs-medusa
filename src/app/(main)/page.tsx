@@ -24,6 +24,7 @@ import FeaturedCollections from "@modules/home/components/featured-collections"
 import { TextBlock } from "@modules/home/components/text-block"
 import { PreviewAwareBannerBlock } from "@modules/home/components/banner-block"
 import { PreviewFeaturedCollectionsPlaceholder } from "@modules/home/components/featured-collections/PreviewFeaturedCollectionsPlaceholder"
+import { PreviewAwareSlideshowBlock } from "@modules/home/components/slideshow-block"
 
 // 非首屏组件 - 动态导入以减少初始 JS 包大小
 const BrandShowcase = nextDynamic(
@@ -182,6 +183,7 @@ export default async function Home() {
     FeaturedBlog,
     FeaturedProduct,
     CompositeContainer,
+    SlideshowBlock: PreviewAwareSlideshowBlock,
   }
 
   return (
