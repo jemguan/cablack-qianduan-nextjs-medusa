@@ -500,6 +500,7 @@ export const getMedusaConfig = cache(async (): Promise<MedusaConfig | null> => {
           order: section.position,
           parent_id: section.settings?.parent_id || null,
           slot_id: section.settings?.slot_id || null,
+          slot_bindings: section.settings?.slot_bindings || undefined,
           visibility: section.settings?.visibility || 'all',
         });
 

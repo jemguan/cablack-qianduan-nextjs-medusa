@@ -155,19 +155,18 @@ export function getPageLayoutBlocksTree(
     const node = blockMap.get(block.id)!;
 
     // 多绑定：slot_bindings 数组，将 block 克隆到多个父容器
-    if (block.slot_bindings && block.slot_bindings.length > 0) {
-      for (const binding of block.slot_bindings) {
-        if (binding.parent_id && blockMap.has(binding.parent_id)) {
-          const clone: PageBlockNode = {
-            ...block,
-            parent_id: binding.parent_id,
-            slot_id: binding.slot_id || 'default',
-            children: [],
-          };
-          blockMap.get(binding.parent_id)!.children.push(clone);
-        }
+    const validBindings = (block.slot_bindings || []).filter(b => b.parent_id && blockMap.has(b.parent_id));
+    if (validBindings.length > 0) {
+      for (const binding of validBindings) {
+        const clone: PageBlockNode = {
+          ...block,
+          parent_id: binding.parent_id,
+          slot_id: binding.slot_id || 'default',
+          children: [],
+        };
+        blockMap.get(binding.parent_id)!.children.push(clone);
       }
-      // 多绑定的 block 不作为根节点
+      // 有效绑定的 block 不作为根节点
       continue;
     }
 
