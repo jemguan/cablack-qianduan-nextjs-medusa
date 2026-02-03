@@ -300,6 +300,8 @@ export function PreviewConfigProvider({ children }: PreviewConfigProviderProps) 
         'featured-collections': 'featuredCollections',
         'faq': 'faq',
         'composite-container': 'compositeContainer',
+        'slideshow': 'slideshow',
+        'countdown-banner': 'countdownBanner',
       }
 
       const enabledSections = sections
@@ -331,6 +333,7 @@ export function PreviewConfigProvider({ children }: PreviewConfigProviderProps) 
             order: section.position,
             parent_id: section.settings?.parent_id || null,
             slot_id: section.settings?.slot_id || null,
+            slot_bindings: section.settings?.slot_bindings || undefined,
             visibility: section.settings?.visibility || 'all',
           })
 

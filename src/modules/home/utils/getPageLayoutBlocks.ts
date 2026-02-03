@@ -19,6 +19,7 @@ import {
   handleFeaturedProductBlock,
   handleCompositeContainerBlock,
   handleSlideshowBlock,
+  handleCountdownBannerBlock,
 } from './handlers';
 
 // 重新导出 BlockConfig 类型供外部使用
@@ -109,6 +110,9 @@ async function getBlockConfigForBlock(
 
     case 'slideshow':
       return handleSlideshowBlock(block, block.config);
+
+    case 'countdownBanner':
+      return handleCountdownBannerBlock(block, block.config);
 
     // 可以在这里添加更多 block 类型的处理
     // case 'hero':

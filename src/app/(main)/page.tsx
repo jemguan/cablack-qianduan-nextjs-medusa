@@ -26,6 +26,14 @@ import { PreviewAwareBannerBlock } from "@modules/home/components/banner-block"
 import { PreviewFeaturedCollectionsPlaceholder } from "@modules/home/components/featured-collections/PreviewFeaturedCollectionsPlaceholder"
 import { PreviewAwareSlideshowBlock } from "@modules/home/components/slideshow-block"
 
+const PreviewAwareCountdownBannerBlock = nextDynamic(
+  () => import("@modules/home/components/countdown-banner-block/PreviewAwareCountdownBannerBlock").then(mod => mod.PreviewAwareCountdownBannerBlock),
+  {
+    loading: () => <div className="min-h-[100px]" />,
+    ssr: true
+  }
+)
+
 // 非首屏组件 - 动态导入以减少初始 JS 包大小
 const BrandShowcase = nextDynamic(
   () => import("@modules/home/components/brand-showcase").then(mod => mod.BrandShowcase),
@@ -184,6 +192,7 @@ export default async function Home() {
     FeaturedProduct,
     CompositeContainer,
     SlideshowBlock: PreviewAwareSlideshowBlock,
+    CountdownBannerBlock: PreviewAwareCountdownBannerBlock,
   }
 
   return (

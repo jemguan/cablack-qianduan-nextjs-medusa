@@ -32,3 +32,4 @@ export { handleFeaturedProductBlock } from './featuredProduct';
 export { handleBannerBlockBlock } from './bannerBlock';
 export { handleCompositeContainerBlock } from './compositeContainer';
 export { handleSlideshowBlock } from './slideshow';
+export { handleCountdownBannerBlock } from './countdownBanner';

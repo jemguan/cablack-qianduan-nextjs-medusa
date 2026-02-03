@@ -82,6 +82,7 @@ export interface MedusaConfig {
         order: number;
         parent_id?: string | null;
         slot_id?: string | null;
+        slot_bindings?: Array<{ parent_id: string; slot_id: string }>;
         visibility?: 'all' | 'desktop_only' | 'mobile_only';
       }>;
     };
@@ -470,6 +471,7 @@ export const getMedusaConfig = cache(async (): Promise<MedusaConfig | null> => {
         'faq': 'faq',
         'composite-container': 'compositeContainer',
         'slideshow': 'slideshow',
+        'countdown-banner': 'countdownBanner',
       };
 
       // 筛选出有映射的 sections
