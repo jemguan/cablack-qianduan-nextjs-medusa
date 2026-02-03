@@ -5,6 +5,7 @@
 
 import { HttpTypes } from '@medusajs/types';
 import { listProducts } from '@lib/data/products';
+import { getProductBrand, Brand } from '@lib/data/brands';
 import { PreviewAwareFeaturedCollections } from './PreviewAwareFeaturedCollections';
 
 /**
@@ -64,6 +65,7 @@ interface FeaturedCollectionsProps {
   showViewAll?: boolean; // 是否显示查看全部按钮
   viewAllUrl?: string; // 查看全部链接
   viewAllText?: string; // 查看全部按钮文字
+  customer?: HttpTypes.StoreCustomer | null; // 当前客户
 }
 
 export default async function FeaturedCollections({
@@ -85,6 +87,7 @@ export default async function FeaturedCollections({
   showViewAll = false,
   viewAllUrl,
   viewAllText = 'View All',
+  customer,
 }: FeaturedCollectionsProps) {
   if (!category) {
     return null;
@@ -113,6 +116,18 @@ export default async function FeaturedCollections({
     return null;
   }
 
+  // 批量获取产品品牌
+  const brandPromises = productsInStock.map((product) =>
+    getProductBrand(product.id).catch(() => null)
+  );
+  const brands = await Promise.all(brandPromises);
+
+  // 创建产品ID到品牌的映射
+  const productBrands: Record<string, Brand | null> = {};
+  productsInStock.forEach((product, index) => {
+    productBrands[product.id] = brands[index];
+  });
+
   // 如果没有配置 viewAllUrl，使用分类的链接
   const finalViewAllUrl = viewAllUrl || `/categories/${category.handle}`;
 
@@ -121,6 +136,7 @@ export default async function FeaturedCollections({
       category={category}
       region={region}
       products={productsInStock}
+      productBrands={productBrands}
       title={title}
       subtitle={subtitle}
       showTitle={showTitle}
@@ -137,6 +153,7 @@ export default async function FeaturedCollections({
       showViewAll={showViewAll}
       viewAllUrl={finalViewAllUrl}
       viewAllText={viewAllText}
+      customer={customer}
     />
   );
 }

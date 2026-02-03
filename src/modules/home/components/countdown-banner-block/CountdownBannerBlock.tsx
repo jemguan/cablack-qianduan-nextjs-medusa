@@ -62,12 +62,16 @@ const positionClasses: Record<ContentPosition, string> = {
 }
 
 export function CountdownBannerBlock({ data }: CountdownBannerBlockProps) {
-  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(() =>
-    data.endTime ? calculateTimeLeft(data.endTime) : null
-  )
+  // 初始为 null，避免 SSR hydration 不匹配（服务端和客户端时间不同）
+  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null)
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
+    setIsClient(true)
     if (!data.endTime) return
+
+    // 立即计算一次
+    setTimeLeft(calculateTimeLeft(data.endTime))
 
     const timer = setInterval(() => {
       const tl = calculateTimeLeft(data.endTime)
@@ -77,6 +81,15 @@ export function CountdownBannerBlock({ data }: CountdownBannerBlockProps) {
 
     return () => clearInterval(timer)
   }, [data.endTime])
+
+  // 服务端渲染时显示加载占位符，避免 hydration 不匹配
+  if (!isClient) {
+    return (
+      <div className={data.fullWidth ? "w-full" : "content-container"} style={{ paddingTop: data.paddingY ?? 16, paddingBottom: data.paddingY ?? 16 }}>
+        <div className="relative overflow-hidden rounded-lg animate-pulse" style={{ backgroundColor: data.backgroundColor, minHeight: 100 }} />
+      </div>
+    )
+  }
 
   if (!data.endTime || !timeLeft) return null
 

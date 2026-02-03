@@ -1,13 +1,15 @@
 "use client"
 
 import { HttpTypes } from '@medusajs/types';
-import ProductPreview from '@modules/products/components/product-preview';
+import DynamicProductCard from '@modules/products/components/dynamic-product-card';
 import { EmblaCarousel } from '@lib/ui/embla-carousel';
+import type { Brand } from '@lib/data/brands';
 
 interface DesktopFeaturedCollectionsProps {
   category: HttpTypes.StoreProductCategory;
   region: HttpTypes.StoreRegion;
   products: HttpTypes.StoreProduct[];
+  productBrands?: Record<string, Brand | null>;
   maxCount?: number;
   desktopCols?: number;
   desktopMaxCount?: number;
@@ -22,6 +24,7 @@ interface DesktopFeaturedCollectionsProps {
     align?: 'start' | 'center' | 'end';
     draggable?: boolean;
   };
+  customer?: HttpTypes.StoreCustomer | null;
 }
 
 /**
@@ -31,11 +34,13 @@ export function DesktopFeaturedCollections({
   category: _category,
   region,
   products,
+  productBrands,
   maxCount = 6,
   desktopCols = 3,
   desktopMaxCount,
   desktopEnableCarousel = false,
   desktopCarouselConfig,
+  customer,
 }: DesktopFeaturedCollectionsProps) {
   if (!products || products.length === 0) {
     return null;
@@ -63,7 +68,7 @@ export function DesktopFeaturedCollections({
           draggable={desktopCarouselConfig?.draggable ?? true}
         >
           {displayProducts.map((product) => (
-            <ProductPreview key={product.id} product={product} region={region} isFeatured />
+            <DynamicProductCard key={product.id} product={product} region={region} isFeatured customer={customer} brand={productBrands?.[product.id]} />
           ))}
         </EmblaCarousel>
     );
@@ -71,7 +76,7 @@ export function DesktopFeaturedCollections({
 
   // 网格布局
   return (
-    <ul 
+    <ul
         className="grid gap-x-6 gap-y-24 small:gap-y-36 place-items-center"
         style={{
           gridTemplateColumns: `repeat(${desktopCols}, minmax(0, 1fr))`
@@ -79,7 +84,7 @@ export function DesktopFeaturedCollections({
       >
         {displayProducts.map((product) => (
           <li key={product.id}>
-            <ProductPreview product={product} region={region} isFeatured />
+            <DynamicProductCard product={product} region={region} isFeatured customer={customer} brand={productBrands?.[product.id]} />
           </li>
         ))}
       </ul>

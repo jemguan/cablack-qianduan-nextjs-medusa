@@ -294,6 +294,22 @@ export interface MedusaConfig {
     text?: string;
   };
   reviewsEnabled?: boolean; // 是否启用评论功能
+  productCardConfig?: {
+    cardType?: 'default' | 'card2' | 'card3';
+    default?: {
+      showSubtitle?: boolean;
+      buttonBackgroundColor?: string;
+    };
+    card2?: {
+      showSubtitle?: boolean;
+      buttonBackgroundColor?: string;
+    };
+    card3?: {
+      showSubtitle?: boolean;
+      buttonBackgroundColor?: string;
+      brandBadgeColor?: string;
+    };
+  };
   checkoutPageConfig?: {
     storeBrand: {
       type: 'logo' | 'text';
@@ -347,6 +363,7 @@ interface LayoutConfigResponse {
     headerConfig: MedusaConfig['headerConfig'];
     footerConfig: MedusaConfig['footerConfig'];
     ageVerification?: MedusaConfig['ageVerification'];
+    productCardConfig?: MedusaConfig['productCardConfig'];
     pageSections?: Record<string, PageSectionData[]>;
   };
 }
@@ -451,6 +468,7 @@ export const getMedusaConfig = cache(async (): Promise<MedusaConfig | null> => {
     headerConfig: layoutConfig?.headerConfig || otherConfig?.headerConfig,
     footerConfig: layoutConfig?.footerConfig || otherConfig?.footerConfig,
     ageVerification: layoutConfig?.ageVerification,
+    productCardConfig: layoutConfig?.productCardConfig,
   };
 
   console.log('[getMedusaConfig] headerConfig source:', layoutConfig?.headerConfig ? 'layoutConfig' : 'otherConfig');

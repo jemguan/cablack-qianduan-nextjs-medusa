@@ -7,11 +7,13 @@ import LocalizedClientLink from '@modules/common/components/localized-client-lin
 import { Button } from '@/components/ui/button';
 import { DesktopFeaturedCollections } from './DesktopFeaturedCollections';
 import { MobileFeaturedCollections } from './MobileFeaturedCollections';
+import type { Brand } from '@lib/data/brands';
 
 interface FeaturedCollectionsClientProps {
   category: HttpTypes.StoreProductCategory;
   region: HttpTypes.StoreRegion;
   products: HttpTypes.StoreProduct[];
+  productBrands?: Record<string, Brand | null>;
   title?: string;
   subtitle?: string;
   showTitle?: boolean;
@@ -47,6 +49,7 @@ interface FeaturedCollectionsClientProps {
   showViewAll?: boolean;
   viewAllUrl?: string;
   viewAllText?: string;
+  customer?: HttpTypes.StoreCustomer | null;
 }
 
 /**
@@ -62,6 +65,7 @@ export function FeaturedCollectionsClient({
   showTitle = true,
   showSubtitle = true,
   titleAlign = 'left',
+  productBrands,
   ...props
 }: FeaturedCollectionsClientProps) {
   const { isDesktop, isHydrated } = useResponsiveRender();
@@ -106,9 +110,9 @@ export function FeaturedCollectionsClient({
         </div>
       )}
       {isDesktop ? (
-        <DesktopFeaturedCollections {...props} />
+        <DesktopFeaturedCollections {...props} productBrands={productBrands} />
       ) : (
-        <MobileFeaturedCollections {...props} />
+        <MobileFeaturedCollections {...props} productBrands={productBrands} />
       )}
     </>
   );

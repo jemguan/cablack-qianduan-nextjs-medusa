@@ -4,12 +4,14 @@ import { useMemo, useEffect, useState, useCallback } from "react"
 import { usePreviewConfig } from "@lib/context/preview-config-context"
 import { FeaturedCollectionsClient } from "./FeaturedCollectionsClient"
 import type { HttpTypes } from "@medusajs/types"
+import type { Brand } from "@lib/data/brands"
 
 interface PreviewAwareFeaturedCollectionsProps {
   blockId?: string
   category: HttpTypes.StoreProductCategory
   region: HttpTypes.StoreRegion
   products: HttpTypes.StoreProduct[]
+  productBrands?: Record<string, Brand | null>
   title?: string
   subtitle?: string
   showTitle?: boolean
@@ -26,6 +28,7 @@ interface PreviewAwareFeaturedCollectionsProps {
   showViewAll?: boolean
   viewAllUrl?: string
   viewAllText?: string
+  customer?: HttpTypes.StoreCustomer | null
 }
 
 function hasProductInStock(product: HttpTypes.StoreProduct): boolean {
@@ -180,6 +183,8 @@ export function PreviewAwareFeaturedCollections(
     viewAllUrl,
     viewAllText,
     region,
+    customer,
+    productBrands,
   } = overriddenProps
 
   if (isLoadingProducts) {
@@ -209,6 +214,7 @@ export function PreviewAwareFeaturedCollections(
         category={finalCategory}
         region={region}
         products={finalProducts}
+        productBrands={productBrands}
         title={title}
         subtitle={subtitle}
         showTitle={showTitle}
@@ -225,6 +231,7 @@ export function PreviewAwareFeaturedCollections(
         showViewAll={showViewAll}
         viewAllUrl={finalViewAllUrl}
         viewAllText={viewAllText}
+        customer={customer}
       />
     </div>
   )

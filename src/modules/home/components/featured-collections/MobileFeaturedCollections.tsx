@@ -1,13 +1,15 @@
 "use client"
 
 import { HttpTypes } from '@medusajs/types';
-import ProductPreview from '@modules/products/components/product-preview';
+import DynamicProductCard from '@modules/products/components/dynamic-product-card';
 import { EmblaCarousel } from '@lib/ui/embla-carousel';
+import type { Brand } from '@lib/data/brands';
 
 interface MobileFeaturedCollectionsProps {
   category: HttpTypes.StoreProductCategory;
   region: HttpTypes.StoreRegion;
   products: HttpTypes.StoreProduct[];
+  productBrands?: Record<string, Brand | null>;
   maxCount?: number;
   mobileLayout?: 'grid' | 'carousel';
   mobileCols?: number;
@@ -22,6 +24,7 @@ interface MobileFeaturedCollectionsProps {
     align?: 'start' | 'center' | 'end';
     draggable?: boolean;
   };
+  customer?: HttpTypes.StoreCustomer | null;
 }
 
 /**
@@ -31,10 +34,12 @@ export function MobileFeaturedCollections({
   category: _category,
   region,
   products,
+  productBrands,
   maxCount = 6,
   mobileLayout = 'carousel',
   mobileCols = 2,
   mobileCarouselConfig,
+  customer,
 }: MobileFeaturedCollectionsProps) {
   if (!products || products.length === 0) {
     return null;
@@ -45,7 +50,7 @@ export function MobileFeaturedCollections({
   if (mobileLayout === 'grid') {
     // 网格布局
     return (
-      <ul 
+      <ul
           className="grid gap-x-6 gap-y-24 place-items-center"
           style={{
             gridTemplateColumns: `repeat(${mobileCols}, minmax(0, 1fr))`
@@ -53,7 +58,7 @@ export function MobileFeaturedCollections({
         >
           {displayProducts.map((product) => (
             <li key={product.id}>
-              <ProductPreview product={product} region={region} isFeatured />
+              <DynamicProductCard product={product} region={region} isFeatured customer={customer} brand={productBrands?.[product.id]} />
             </li>
           ))}
         </ul>
@@ -75,7 +80,7 @@ export function MobileFeaturedCollections({
         draggable={mobileCarouselConfig?.draggable ?? true}
       >
         {displayProducts.map((product) => (
-          <ProductPreview key={product.id} product={product} region={region} isFeatured />
+          <DynamicProductCard key={product.id} product={product} region={region} isFeatured customer={customer} brand={productBrands?.[product.id]} />
         ))}
       </EmblaCarousel>
   );
